@@ -10,6 +10,8 @@ export type Resources = {
 export type Buildings = {
   lumberMill: number
   miner: number
+  workbench: number
+  lab: number
 }
 
 export type Upgrades = {
@@ -78,6 +80,8 @@ export const initialState: GameState = {
   buildings: {
     lumberMill: 0,
     miner: 0,
+    workbench: 0,
+    lab: 0,
   },
   upgrades: {
     betterAxe: false,
@@ -87,8 +91,8 @@ export const initialState: GameState = {
   },
   unlocks: {
     scrapAction: false,
-    lumberMill: false,
-    miner: false,
+    lumberMill: true,
+    miner: true,
   },
   productionProgress: {
     lumberMill: 0,

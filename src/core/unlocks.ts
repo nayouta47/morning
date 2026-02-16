@@ -7,14 +7,14 @@ type UnlockKey = keyof GameState['unlocks']
 
 const UNLOCK_LOG: Record<UnlockKey, string> = {
   scrapAction: '새 행동 해금: 고물 줍기',
-  lumberMill: '건물 해금: 벌목소',
+  lumberMill: '건물 해금: 벌목기',
   miner: '건물 해금: 분쇄기',
 }
 
-type CostLike = { readonly wood: number; readonly iron: number }
+type CostLike = { readonly wood: number; readonly scrap: number; readonly iron: number }
 
 function meetsCost(resources: Resources, cost: CostLike): boolean {
-  return resources.wood >= cost.wood && resources.iron >= cost.iron
+  return resources.wood >= cost.wood && resources.scrap >= cost.scrap && resources.iron >= cost.iron
 }
 
 export function evaluateUnlocks(state: GameState): string[] {

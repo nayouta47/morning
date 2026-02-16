@@ -40,11 +40,19 @@ function moduleName(type: ModuleType): string {
   return type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'
 }
 
+function getBuildingName(key: BuildingKey): string {
+  if (key === 'lumberMill') return '벌목기'
+  if (key === 'miner') return '분쇄기'
+  if (key === 'workbench') return '제작대'
+  return '실험실'
+}
+
 export function getBuildingCost(state: GameState, key: BuildingKey): CostLike {
   const count = state.buildings[key]
   const base = BUILDING_BASE_COST[key]
   return {
     wood: Math.ceil(base.wood * COST_SCALE ** count),
+    scrap: Math.ceil(base.scrap * COST_SCALE ** count),
     iron: Math.ceil(base.iron * COST_SCALE ** count),
   }
 }
@@ -74,7 +82,7 @@ export function gatherScrap(state: GameState): void {
 }
 
 export function buyBuilding(state: GameState, key: BuildingKey): void {
-  const unlocked = key === 'lumberMill' ? state.unlocks.lumberMill : state.unlocks.miner
+  const unlocked = key === 'lumberMill' || key === 'workbench' || key === 'lab' ? state.unlocks.lumberMill : state.unlocks.miner
   if (!unlocked) return
 
   const cost = getBuildingCost(state, key)
@@ -85,12 +93,12 @@ export function buyBuilding(state: GameState, key: BuildingKey): void {
 
   payCost(state.resources, cost)
   state.buildings[key] += 1
-  const name = key === 'lumberMill' ? '벌목소' : '분쇄기'
-  pushLog(state, `${name} 건설 (${state.buildings[key]})`)
+  pushLog(state, `${getBuildingName(key)} 설치 (${state.buildings[key]})`)
   applyUnlocks(state)
 }
 
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {
+  if (state.buildings.lab <= 0) return
   if (state.upgrades[key]) return
 
   const def = UPGRADE_DEFS[key]
@@ -114,6 +122,8 @@ export function selectWeapon(state: GameState, weaponId: string | null): void {
 }
 
 export function startWeaponCraft(state: GameState, type: WeaponType): void {
+  if (state.buildings.workbench <= 0) return
+
   if (state.craftProgress[type] > 0) {
     pushLog(state, '이미 제작 중입니다.')
     return
@@ -131,6 +141,8 @@ export function startWeaponCraft(state: GameState, type: WeaponType): void {
 }
 
 export function startModuleCraft(state: GameState): void {
+  if (state.buildings.workbench <= 0) return
+
   if (state.craftProgress.module > 0) {
     pushLog(state, '이미 제작 중입니다.')
     return
@@ -147,6 +159,8 @@ export function startModuleCraft(state: GameState): void {
 }
 
 export function startShovelCraft(state: GameState): void {
+  if (state.buildings.workbench <= 0) return
+
   if (state.craftProgress.shovel > 0) {
     pushLog(state, '이미 제작 중입니다.')
     return
