@@ -43,6 +43,23 @@ export const UPGRADE_DEFS = {
   },
 } as const
 
+export const WEAPON_CRAFT_DURATION_MS = 30000
+
+export const WEAPON_CRAFT_COST = {
+  pistol: { wood: 25, metal: 8 },
+  rifle: { wood: 50, metal: 20 },
+} as const
+
+export const MODULE_CRAFT_COST = {
+  wood: 18,
+  metal: 10,
+} as const
+
+export const WEAPON_BASE_STATS = {
+  pistol: { damage: 3, cooldown: 5 },
+  rifle: { damage: 8, cooldown: 10 },
+} as const
+
 export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): { wood: number; metal: number } {
   const base = UPGRADE_DEFS[key].baseCost
   return {

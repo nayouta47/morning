@@ -40,6 +40,32 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.hidden {
+  display: none !important;
+}
+
+.tabs {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  max-width: 220px;
+}
+
+.tab-btn.active {
+  border-color: #d7b168;
+  color: #f2dfb7;
+}
+
+.panel-stack {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .panel {
   background: #151515;
   border: 1px solid #2b2b2b;
@@ -170,8 +196,91 @@ li {
   font-size: 13px;
 }
 
+.assembly {
+  grid-column: 1 / -1;
+}
+
+.assembly-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 10px;
+}
+
+.weapon-list,
+.weapon-board-wrap,
+.module-inventory {
+  border: 1px solid #2b2b2b;
+  border-radius: 6px;
+  padding: 10px;
+  background: #121212;
+}
+
+.weapon-item.selected {
+  border-color: #d7b168;
+}
+
+.weapon-board {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.slot {
+  min-height: 28px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b5ad9c;
+}
+
+.slot.active {
+  border-color: #6c5a3a;
+  background: #1a1712;
+}
+
+.slot.inactive {
+  opacity: 0.45;
+}
+
+.slot.filled {
+  background: #332818;
+  color: #e7d4ab;
+}
+
+.module-list {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.module-item {
+  border: 1px solid #4a4337;
+  border-radius: 4px;
+  padding: 8px;
+  background: #1a1a1a;
+  font-size: 12px;
+  cursor: grab;
+}
+
+.base-stat {
+  color: #9f9a8c;
+}
+
+.final-stat {
+  color: #d8be82;
+}
+
 @media (max-width: 760px) {
-  .layout {
+  .layout,
+  .panel-stack,
+  .assembly-grid {
     grid-template-columns: 1fr;
+  }
+
+  .module-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

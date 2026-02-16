@@ -1,5 +1,16 @@
 import './style.css'
-import { buyBuilding, buyUpgrade, gatherMetal, gatherWood } from './core/actions.ts'
+import {
+  buyBuilding,
+  buyUpgrade,
+  equipModuleToSlot,
+  gatherMetal,
+  gatherWood,
+  selectWeapon,
+  setActiveTab,
+  startModuleCraft,
+  startWeaponCraft,
+  unequipModuleFromSlot,
+} from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { advanceState } from './core/tick.ts'
@@ -117,6 +128,41 @@ function redraw(nowOverride?: number): void {
         onBuyUpgrade: (key) => {
           syncState()
           buyUpgrade(state, key)
+          redraw()
+        },
+        onSelectTab: (tab) => {
+          setActiveTab(state, tab)
+          redraw()
+        },
+        onCraftPistol: () => {
+          syncState()
+          startWeaponCraft(state, 'pistol')
+          redraw()
+        },
+        onCraftRifle: () => {
+          syncState()
+          startWeaponCraft(state, 'rifle')
+          redraw()
+        },
+        onCraftModule: () => {
+          syncState()
+          startModuleCraft(state)
+          redraw()
+        },
+        onSelectWeapon: (weaponId) => {
+          selectWeapon(state, weaponId)
+          redraw()
+        },
+        onEquipModule: (moduleId, slotIndex) => {
+          if (!state.selectedWeaponId) return
+          syncState()
+          equipModuleToSlot(state, state.selectedWeaponId, moduleId, slotIndex)
+          redraw()
+        },
+        onUnequipModule: (slotIndex) => {
+          if (!state.selectedWeaponId) return
+          syncState()
+          unequipModuleFromSlot(state, state.selectedWeaponId, slotIndex)
           redraw()
         },
       },

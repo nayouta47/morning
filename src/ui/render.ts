@@ -1,6 +1,14 @@
-import { BUILDING_CYCLE_MS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
+import {
+  BUILDING_CYCLE_MS,
+  MODULE_CRAFT_COST,
+  UPGRADE_DEFS,
+  WEAPON_BASE_STATS,
+  WEAPON_CRAFT_COST,
+  WEAPON_CRAFT_DURATION_MS,
+  getUpgradeCost,
+} from '../data/balance.ts'
 import { getBuildingCost } from '../core/actions.ts'
-import type { GameState } from '../core/state.ts'
+import type { GameState, WeaponInstance } from '../core/state.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
@@ -17,6 +25,13 @@ type Handlers = {
   onBuyLumberMill: () => void
   onBuyMiner: () => void
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
+  onSelectTab: (tab: 'base' | 'assembly') => void
+  onCraftPistol: () => void
+  onCraftRifle: () => void
+  onCraftModule: () => void
+  onSelectWeapon: (weaponId: string) => void
+  onEquipModule: (moduleId: string, slotIndex: number) => void
+  onUnequipModule: (slotIndex: number) => void
 }
 
 export type ActionUI = {
@@ -40,23 +55,15 @@ function setText(app: ParentNode, selector: string, text: string): void {
 function setHidden(app: ParentNode, selector: string, hidden: boolean): void {
   const node = app.querySelector<HTMLElement>(selector)
   if (node) {
-    if (hidden) {
-      node.setAttribute('hidden', '')
-    } else {
-      node.removeAttribute('hidden')
-    }
+    if (hidden) node.setAttribute('hidden', '')
+    else node.removeAttribute('hidden')
   }
 }
 
 function renderGaugeButton(id: string, text: string, ariaLabel: string, action: ActionGaugeView): string {
   const progress = Math.round(clamp01(action.progress) * 100)
   return `
-    <button
-      id="${id}"
-      class="gauge-action gauge-${action.phase}"
-      aria-label="${ariaLabel}"
-      ${action.disabled ? 'disabled' : ''}
-    >
+    <button id="${id}" class="gauge-action gauge-${action.phase}" aria-label="${ariaLabel}" ${action.disabled ? 'disabled' : ''}>
       <span class="gauge-fill" style="width:${progress}%"></span>
       <span class="gauge-content">
         <span class="gauge-title">${text}</span>
@@ -89,14 +96,10 @@ function patchActionGauge(app: ParentNode, id: string, action: ActionGaugeView):
   button.disabled = action.disabled
 
   const fill = button.querySelector<HTMLElement>('.gauge-fill')
-  if (fill) {
-    fill.style.width = `${progress}%`
-  }
+  if (fill) fill.style.width = `${progress}%`
 
   const state = button.querySelector<HTMLElement>('.gauge-state')
-  if (state) {
-    state.textContent = action.label
-  }
+  if (state) state.textContent = action.label
 }
 
 function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string): void {
@@ -105,14 +108,10 @@ function patchBuildingGauge(app: ParentNode, id: string, progress: number, state
 
   const width = Math.round(clamp01(progress) * 100)
   const fill = gauge.querySelector<HTMLElement>('.gauge-fill')
-  if (fill) {
-    fill.style.width = `${width}%`
-  }
+  if (fill) fill.style.width = `${width}%`
 
   const state = gauge.querySelector<HTMLElement>('.gauge-state')
-  if (state) {
-    state.textContent = stateText
-  }
+  if (state) state.textContent = stateText
 }
 
 function patchLogs(app: ParentNode, state: GameState): void {
@@ -126,9 +125,190 @@ function patchLogs(app: ParentNode, state: GameState): void {
   logList.dataset.signature = signature
 }
 
+function getActiveSlots(weapon: WeaponInstance): Set<number> {
+  if (weapon.type === 'pistol') {
+    return new Set([22, 23, 24, 25, 26, 27])
+  }
+  return new Set([13, 14, 15, 16, 23, 24, 25, 26])
+}
+
+function getSelectedWeapon(state: GameState): WeaponInstance | null {
+  if (!state.selectedWeaponId) return null
+  return state.weapons.find((w) => w.id === state.selectedWeaponId) ?? null
+}
+
+function getWeaponStats(weapon: WeaponInstance): {
+  baseDamage: number
+  baseCooldown: number
+  finalDamage: number
+  finalCooldown: number
+} {
+  const base = WEAPON_BASE_STATS[weapon.type]
+  let damageBonus = 0
+  let cooldownBonus = 0
+  weapon.slots.forEach((moduleId) => {
+    if (!moduleId) return
+    if (moduleId.startsWith('DMG-')) damageBonus += 1
+    if (moduleId.startsWith('CDN-')) cooldownBonus += 1
+  })
+
+  return {
+    baseDamage: base.damage,
+    baseCooldown: base.cooldown,
+    finalDamage: base.damage + damageBonus,
+    finalCooldown: Math.max(0.5, base.cooldown - cooldownBonus),
+  }
+}
+
+function craftView(remainingMs: number): ActionGaugeView {
+  if (remainingMs <= 0) return { phase: 'ready', progress: 1, disabled: false, label: '준비됨' }
+  const progress = (WEAPON_CRAFT_DURATION_MS - remainingMs) / WEAPON_CRAFT_DURATION_MS
+  return { phase: 'cooldown', progress, disabled: true, label: `${Math.ceil(remainingMs / 1000)}초` }
+}
+
+function renderAssemblyPanel(state: GameState): string {
+  const selected = getSelectedWeapon(state)
+  const stats = selected ? getWeaponStats(selected) : null
+  const active = selected ? getActiveSlots(selected) : new Set<number>()
+
+  const pistolView = craftView(state.craftProgress.pistol)
+  const rifleView = craftView(state.craftProgress.rifle)
+  const moduleView = craftView(state.craftProgress.module)
+
+  return `
+    <section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
+      <h2>무기 조립</h2>
+      <div class="assembly-actions">
+        ${renderGaugeButton('craft-pistol', '권총 제작 (30초)', '권총 제작', pistolView)}
+        ${renderGaugeButton('craft-rifle', '소총 제작 (30초)', '소총 제작', rifleView)}
+        ${renderGaugeButton('craft-module', '모듈 제작 (30초)', '모듈 제작', moduleView)}
+        <p class="hint">권총: 나무 ${WEAPON_CRAFT_COST.pistol.wood}, 금속 ${WEAPON_CRAFT_COST.pistol.metal} / 소총: 나무 ${WEAPON_CRAFT_COST.rifle.wood}, 금속 ${WEAPON_CRAFT_COST.rifle.metal} / 모듈: 나무 ${MODULE_CRAFT_COST.wood}, 금속 ${MODULE_CRAFT_COST.metal}</p>
+      </div>
+      <div class="assembly-grid">
+        <aside class="weapon-list" aria-label="무기 인벤토리">
+          <h3>무기 인벤토리</h3>
+          <div id="weapon-list-items" data-signature=""></div>
+        </aside>
+        <div class="weapon-board-wrap">
+          <h3>선택 무기 슬롯 (5x10)</h3>
+          <div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div>
+          <p class="hint" id="weapon-stat-text">
+            ${
+              stats
+                ? `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>`
+                : '무기를 선택하세요.'
+            }
+          </p>
+          <p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭)</p>
+          <div id="active-signature" data-sig="${[...active].join(',')}" hidden></div>
+        </div>
+      </div>
+      <div class="module-inventory" aria-label="모듈 인벤토리">
+        <h3>보유 모듈</h3>
+        <div id="module-list-items" class="module-list" data-signature=""></div>
+      </div>
+    </section>
+  `
+}
+
+function patchTabs(app: ParentNode, state: GameState): void {
+  const baseTab = app.querySelector<HTMLButtonElement>('#tab-base')
+  const assTab = app.querySelector<HTMLButtonElement>('#tab-assembly')
+  const panelBase = app.querySelector<HTMLElement>('#panel-base')
+  const panelAssembly = app.querySelector<HTMLElement>('#panel-assembly')
+  if (!baseTab || !assTab || !panelBase || !panelAssembly) return
+
+  const isBase = state.activeTab === 'base'
+  baseTab.classList.toggle('active', isBase)
+  assTab.classList.toggle('active', !isBase)
+  baseTab.setAttribute('aria-selected', String(isBase))
+  assTab.setAttribute('aria-selected', String(!isBase))
+  panelBase.classList.toggle('hidden', !isBase)
+  panelAssembly.classList.toggle('hidden', isBase)
+}
+
+function patchWeaponInventory(app: ParentNode, state: GameState): void {
+  const root = app.querySelector<HTMLDivElement>('#weapon-list-items')
+  if (!root) return
+  const sig = `${state.weapons.length}:${state.selectedWeaponId}:${state.weapons.map((w) => w.id).join('|')}`
+  if (root.dataset.signature === sig) return
+  root.innerHTML = state.weapons
+    .map(
+      (w) => `<button class="weapon-item ${w.id === state.selectedWeaponId ? 'selected' : ''}" data-weapon-id="${w.id}" aria-label="${
+        w.type === 'pistol' ? '권총' : '소총'
+      } ${w.id}">${w.type === 'pistol' ? '권총' : '소총'} · ${w.id}</button>`,
+    )
+    .join('')
+  if (state.weapons.length === 0) root.innerHTML = '<p class="hint">제작된 무기가 없습니다.</p>'
+  root.dataset.signature = sig
+}
+
+function patchModuleInventory(app: ParentNode, state: GameState): void {
+  const root = app.querySelector<HTMLDivElement>('#module-list-items')
+  if (!root) return
+  const sig = `${state.modules.length}:${state.modules.map((m) => m.id).join('|')}`
+  if (root.dataset.signature === sig) return
+
+  root.innerHTML = state.modules
+    .map(
+      (m) => `<div class="module-item" draggable="true" data-module-id="${m.id}" aria-label="모듈 ${m.id}">${
+        m.type === 'damage' ? '공격력 +1' : '쿨다운 -1s'
+      } · ${m.id}</div>`,
+    )
+    .join('')
+  if (state.modules.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'
+  root.dataset.signature = sig
+}
+
+function patchWeaponBoard(app: ParentNode, state: GameState): void {
+  const board = app.querySelector<HTMLDivElement>('#weapon-board')
+  if (!board) return
+  const selected = getSelectedWeapon(state)
+  if (!selected) {
+    board.innerHTML = '<p class="hint">무기를 선택하면 슬롯 보드가 표시됩니다.</p>'
+    return
+  }
+
+  const active = getActiveSlots(selected)
+  const sig = `${selected.id}:${selected.slots.join('|')}:${[...active].join(',')}`
+  if (board.dataset.signature === sig) return
+
+  board.innerHTML = Array.from({ length: 50 }, (_, index) => {
+    const moduleId = selected.slots[index]
+    const isActive = active.has(index)
+    const isFilled = Boolean(moduleId)
+    return `<div
+      class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''}"
+      role="gridcell"
+      data-slot-index="${index}"
+      data-accepts="${isActive ? 'true' : 'false'}"
+      aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${moduleId ? moduleId : '비어 있음'}"
+      tabindex="0"
+    >${moduleId ? moduleId : ''}</div>`
+  }).join('')
+
+  board.dataset.signature = sig
+
+  const stats = getWeaponStats(selected)
+  const statText = app.querySelector<HTMLElement>('#weapon-stat-text')
+  if (statText) {
+    statText.innerHTML = `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(
+      1,
+    )}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>`
+  }
+}
+
+function patchCraftButtons(app: ParentNode, state: GameState): void {
+  patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol))
+  patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle))
+  patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module))
+}
+
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
+
+  patchTabs(app, state)
 
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-metal', actionUI.gatherMetal)
@@ -140,9 +320,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   setText(app, '#gather-metal-title', `금속 찾기 (+${1 + (state.upgrades.sortingWork ? 1 : 0)})`)
 
   const gatherMetalButton = app.querySelector<HTMLButtonElement>('#gather-metal')
-  if (gatherMetalButton) {
-    gatherMetalButton.setAttribute('aria-label', state.unlocks.metalAction ? '금속 찾기 행동' : '잠긴 금속 찾기 행동')
-  }
+  if (gatherMetalButton) gatherMetalButton.setAttribute('aria-label', state.unlocks.metalAction ? '금속 찾기 행동' : '잠긴 금속 찾기 행동')
   setHidden(app, '#metal-hint', state.unlocks.metalAction)
 
   const lumberCost = getBuildingCost(state, 'lumberMill')
@@ -166,12 +344,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   const lumberProgress = state.buildings.lumberMill > 0 ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
   const minerProgress = state.buildings.miner > 0 ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
 
-  patchBuildingGauge(
-    app,
-    'lumber-progress',
-    lumberProgress,
-    state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기',
-  )
+  patchBuildingGauge(app, 'lumber-progress', lumberProgress, state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기')
   patchBuildingGauge(app, 'miner-progress', minerProgress, state.buildings.miner > 0 ? `${Math.round(minerProgress * 100)}%` : '대기')
 
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
@@ -189,6 +362,10 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
     setText(app, `#upgrade-hint-${key}`, `${def.effectText}${done ? ' (완료)' : ''}`)
   })
 
+  patchCraftButtons(app, state)
+  patchWeaponInventory(app, state)
+  patchWeaponBoard(app, state)
+  patchModuleInventory(app, state)
   patchLogs(app, state)
 }
 
@@ -207,6 +384,16 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.innerHTML = `
     <main class="layout">
       <h1>Morning</h1>
+      <section class="tabs" role="tablist" aria-label="메인 탭">
+        <button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${
+          state.activeTab === 'base'
+        }" aria-controls="panel-base">거점</button>
+        <button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${
+          state.activeTab === 'assembly'
+        }" aria-controls="panel-assembly">무기 조립</button>
+      </section>
+
+      <section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
       <section class="panel resources">
         <h2>자원</h2>
         <p>나무: <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
@@ -259,6 +446,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           })
           .join('')}
       </section>
+      </section>
+
+      ${renderAssemblyPanel(state)}
 
       <section class="panel logs">
         <h2>로그</h2>
@@ -272,6 +462,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-metal .gauge-title')?.setAttribute('id', 'gather-metal-title')
 
+  app.querySelector<HTMLButtonElement>('#tab-base')?.addEventListener('click', () => handlers.onSelectTab('base'))
+  app.querySelector<HTMLButtonElement>('#tab-assembly')?.addEventListener('click', () => handlers.onSelectTab('assembly'))
+
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)
   app.querySelector<HTMLButtonElement>('#gather-metal')?.addEventListener('click', handlers.onGatherMetal)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
@@ -282,6 +475,70 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       const key = button.dataset.upgrade as keyof typeof UPGRADE_DEFS
       handlers.onBuyUpgrade(key)
     })
+  })
+
+  app.querySelector<HTMLButtonElement>('#craft-pistol')?.addEventListener('click', handlers.onCraftPistol)
+  app.querySelector<HTMLButtonElement>('#craft-rifle')?.addEventListener('click', handlers.onCraftRifle)
+  app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
+
+  app.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement
+    const button = target.closest<HTMLElement>('[data-weapon-id]')
+    if (!button) return
+    const id = button.getAttribute('data-weapon-id')
+    if (id) handlers.onSelectWeapon(id)
+  })
+
+  app.addEventListener('dragstart', (event) => {
+    const target = event.target as HTMLElement
+    const moduleItem = target.closest<HTMLElement>('[data-module-id]')
+    if (!moduleItem || !event.dataTransfer) return
+    const moduleId = moduleItem.getAttribute('data-module-id')
+    if (!moduleId) return
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/module-id', moduleId)
+  })
+
+  app.addEventListener('dragover', (event) => {
+    const target = event.target as HTMLElement
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (!slot) return
+    if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
+    event.preventDefault()
+    event.dataTransfer!.dropEffect = 'move'
+  })
+
+  app.addEventListener('drop', (event) => {
+    const target = event.target as HTMLElement
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (!slot || !event.dataTransfer) return
+    const moduleId = event.dataTransfer.getData('text/module-id')
+    if (!moduleId) return
+    const slotIndex = Number(slot.getAttribute('data-slot-index'))
+    if (!Number.isFinite(slotIndex)) return
+    if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
+    event.preventDefault()
+    handlers.onEquipModule(moduleId, slotIndex)
+  })
+
+  app.addEventListener('contextmenu', (event) => {
+    const target = event.target as HTMLElement
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (!slot || !slot.classList.contains('filled')) return
+    event.preventDefault()
+    const slotIndex = Number(slot.getAttribute('data-slot-index'))
+    if (!Number.isFinite(slotIndex)) return
+    handlers.onUnequipModule(slotIndex)
+  })
+
+  app.addEventListener('auxclick', (event) => {
+    if (event.button !== 1) return
+    const target = event.target as HTMLElement
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (!slot || !slot.classList.contains('filled')) return
+    const slotIndex = Number(slot.getAttribute('data-slot-index'))
+    if (!Number.isFinite(slotIndex)) return
+    handlers.onUnequipModule(slotIndex)
   })
 
   if (focusedId) {
