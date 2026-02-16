@@ -1,7 +1,7 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 
-const SAVE_KEY = 'morning-save-v2'
+const SAVE_KEY = 'morning-save-v3'
 const AUTOSAVE_MS = 5000
 
 function clampProgress(value: unknown): number {
@@ -43,6 +43,8 @@ function normalizeState(raw: unknown): GameState | null {
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
     base.buildings.miner = Number(loaded.buildings.miner ?? base.buildings.miner)
+    base.buildings.workbench = Number(loaded.buildings.workbench ?? base.buildings.workbench)
+    base.buildings.lab = Number(loaded.buildings.lab ?? base.buildings.lab)
   }
   if (loaded.upgrades) {
     base.upgrades.betterAxe = Boolean(loaded.upgrades.betterAxe)

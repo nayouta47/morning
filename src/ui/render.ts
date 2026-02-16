@@ -26,6 +26,8 @@ type Handlers = {
   onGatherScrap: () => void
   onBuyLumberMill: () => void
   onBuyMiner: () => void
+  onBuyWorkbench: () => void
+  onBuyLab: () => void
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
   onSelectTab: (tab: 'base' | 'assembly') => void
   onCraftPistol: () => void
@@ -91,7 +93,7 @@ function formatActionTime(progress: number, totalMs: number, isActive: boolean):
   return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
 }
 
-type BuildingKey = 'lumberMill' | 'miner'
+type ProductionBuildingKey = 'lumberMill' | 'miner'
 
 type BuildingGaugeView = {
   progress: number
@@ -99,7 +101,7 @@ type BuildingGaugeView = {
   timeText: string
 }
 
-function getBuildingGaugeView(state: GameState, key: BuildingKey, now = Date.now()): BuildingGaugeView {
+function getBuildingGaugeView(state: GameState, key: ProductionBuildingKey, now = Date.now()): BuildingGaugeView {
   const isActive = state.buildings[key] > 0
   if (!isActive) {
     return {
@@ -494,27 +496,35 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   const lumberCost = getBuildingCost(state, 'lumberMill')
   const minerCost = getBuildingCost(state, 'miner')
+  const workbenchCost = getBuildingCost(state, 'workbench')
+  const labCost = getBuildingCost(state, 'lab')
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
   if (buyLumber) buyLumber.disabled = !state.unlocks.lumberMill
-  setText(app, '#buy-lumber-label', `벌목소 구매 (${lumberCost.wood} 나무)`)
-  setHidden(app, '#lumber-hint', state.unlocks.lumberMill)
+  setText(app, '#buy-lumber-label', `벌목기 설치 (${lumberCost.scrap} 고물)`)
 
   const buyMiner = app.querySelector<HTMLButtonElement>('#buy-miner')
   if (buyMiner) buyMiner.disabled = !state.unlocks.miner
-  setText(app, '#buy-miner-label', `분쇄기 구매 (${minerCost.wood} 나무, ${minerCost.iron} 철)`)
-  setHidden(app, '#miner-hint', state.unlocks.miner)
+  setText(app, '#buy-miner-label', `분쇄기 설치 (${minerCost.wood} 나무, ${minerCost.scrap} 고물)`)
+
+  setText(app, '#buy-workbench-label', `제작대 설치 (${workbenchCost.wood} 나무, ${workbenchCost.scrap} 고물)`)
+  setText(app, '#buy-lab-label', `실험실 설치 (${labCost.wood} 나무, ${labCost.scrap} 고물, ${labCost.iron} 철)`)
 
   setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
   setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
   setText(app, '#miner-count', `${state.buildings.miner}`)
   setText(app, '#miner-output', `${state.buildings.miner}`)
+  setText(app, '#workbench-count', `${state.buildings.workbench}`)
+  setText(app, '#lab-count', `${state.buildings.lab}`)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
 
   patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText)
   patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText)
+
+  setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
+  setHidden(app, '#crafting-panel', state.buildings.workbench <= 0)
 
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
     const def = UPGRADE_DEFS[key]
@@ -547,6 +557,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   const lumberCost = getBuildingCost(state, 'lumberMill')
   const minerCost = getBuildingCost(state, 'miner')
+  const workbenchCost = getBuildingCost(state, 'workbench')
+  const labCost = getBuildingCost(state, 'lab')
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
@@ -576,8 +588,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             <p>삽: <strong id="res-shovel">${state.resources.shovel}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
-            <p>벌목소: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
+            <p>벌목기: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
             <p>분쇄기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 <span id="miner-output">${state.buildings.miner}</span> 고물 처리)</p>
+            <p>제작대: <span id="workbench-count">${state.buildings.workbench}</span></p>
+            <p>실험실: <span id="lab-count">${state.buildings.lab}</span></p>
           </section>
         </div>
       </section>
@@ -596,19 +610,25 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel buildings">
         <h2>건설</h2>
-        <button id="buy-lumber" aria-label="벌목소 구매" ${state.unlocks.lumberMill ? '' : 'disabled'}>
-          <span id="buy-lumber-label">벌목소 구매 (${lumberCost.wood} 나무)</span>
+        <button id="buy-lumber" aria-label="벌목기 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}>
+          <span id="buy-lumber-label">벌목기 설치 (${lumberCost.scrap} 고물)</span>
         </button>
-        <p class="hint" id="lumber-hint" ${state.unlocks.lumberMill ? 'hidden' : ''}>해금 조건: 나무 30</p>
 
-        <button id="buy-miner" aria-label="분쇄기 구매" ${state.unlocks.miner ? '' : 'disabled'}>
-          <span id="buy-miner-label">분쇄기 구매 (${minerCost.wood} 나무, ${minerCost.iron} 철)</span>
+        <button id="buy-miner" aria-label="분쇄기 설치" ${state.unlocks.miner ? '' : 'disabled'}>
+          <span id="buy-miner-label">분쇄기 설치 (${minerCost.wood} 나무, ${minerCost.scrap} 고물)</span>
         </button>
-        <p class="hint" id="miner-hint" ${state.unlocks.miner ? 'hidden' : ''}>해금 조건: 나무 60 + 철 15</p>
+
+        <button id="buy-workbench" aria-label="제작대 설치">
+          <span id="buy-workbench-label">제작대 설치 (${workbenchCost.wood} 나무, ${workbenchCost.scrap} 고물)</span>
+        </button>
+
+        <button id="buy-lab" aria-label="실험실 설치">
+          <span id="buy-lab-label">실험실 설치 (${labCost.wood} 나무, ${labCost.scrap} 고물, ${labCost.iron} 철)</span>
+        </button>
 
         ${renderBuildingGauge(
           'lumber-progress',
-          '벌목소 가동',
+          '벌목기 가동',
           lumberGauge.progress,
           lumberGauge.percentText,
           lumberGauge.timeText,
@@ -623,7 +643,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         )}
       </section>
 
-      <section class="panel upgrades">
+      <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}>
         <h2>업그레이드</h2>
         ${Object.entries(UPGRADE_DEFS)
           .map(([key, def]) => {
@@ -639,7 +659,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           .join('')}
       </section>
 
-      <section class="panel crafting">
+      <section id="crafting-panel" class="panel crafting" ${state.buildings.workbench > 0 ? '' : 'hidden'}>
         <h2>제작</h2>
         ${renderCraftActions(state)}
       </section>
@@ -666,6 +686,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#gather-scrap')?.addEventListener('click', handlers.onGatherScrap)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)
+  app.querySelector<HTMLButtonElement>('#buy-workbench')?.addEventListener('click', handlers.onBuyWorkbench)
+  app.querySelector<HTMLButtonElement>('#buy-lab')?.addEventListener('click', handlers.onBuyLab)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-upgrade]').forEach((button) => {
     button.addEventListener('click', () => {

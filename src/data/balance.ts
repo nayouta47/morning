@@ -10,8 +10,10 @@ export const ACTION_DURATION_MS = {
 export const BUILDING_CYCLE_MS = 10000
 
 export const BUILDING_BASE_COST = {
-  lumberMill: { wood: 30, iron: 0 },
-  miner: { wood: 60, iron: 15 },
+  lumberMill: { wood: 0, scrap: 10, iron: 0 },
+  miner: { wood: 200, scrap: 15, iron: 0 },
+  workbench: { wood: 120, scrap: 20, iron: 0 },
+  lab: { wood: 220, scrap: 50, iron: 30 },
 } as const
 
 const UPGRADE_COST_DIVISOR = 4
@@ -34,7 +36,7 @@ export const UPGRADE_DEFS = {
   sharpSaw: {
     name: '톱날 개선',
     baseCost: { wood: 120, iron: 30 },
-    effectText: '벌목소 생산 +25%',
+    effectText: '벌목기 생산 +25%',
   },
   drillBoost: {
     name: '드릴 개선',
@@ -51,7 +53,7 @@ export const WEAPON_CRAFT_COST = {
 } as const
 
 export const SHOVEL_CRAFT_COST = {
-  wood: 20,
+  wood: 10,
 } as const
 
 export const MODULE_CRAFT_COST = {
@@ -73,6 +75,6 @@ export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): { wood: number; 
 }
 
 export const UNLOCK_CONDITIONS = {
-  lumberMill: { wood: 30, iron: 0 },
-  miner: { wood: 60, iron: 15 },
+  lumberMill: { wood: 0, scrap: 0, iron: 0 },
+  miner: { wood: 0, scrap: 0, iron: 0 },
 } as const

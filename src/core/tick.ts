@@ -27,7 +27,7 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
 
   if (key === 'lumberMill') {
     state.resources.wood += capacity
-    appendLog(state, `벌목소 생산: 나무 +${capacity}`)
+    appendLog(state, `벌목기 생산: 나무 +${capacity}`)
     return
   }
 

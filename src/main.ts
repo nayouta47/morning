@@ -135,6 +135,16 @@ function redraw(nowOverride?: number): void {
           buyBuilding(state, 'miner')
           redraw()
         },
+        onBuyWorkbench: () => {
+          syncState()
+          buyBuilding(state, 'workbench')
+          redraw()
+        },
+        onBuyLab: () => {
+          syncState()
+          buyBuilding(state, 'lab')
+          redraw()
+        },
         onBuyUpgrade: (key) => {
           syncState()
           buyUpgrade(state, key)
