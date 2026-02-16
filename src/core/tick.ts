@@ -1,23 +1,32 @@
-import { BUILDING_BASE_PRODUCTION, TICK_MS } from '../data/balance.ts'
+import { BUILDING_CYCLE_MS, TICK_MS } from '../data/balance.ts'
 import type { GameState } from './state.ts'
 import { appendLog } from './actions.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 
+function processBuildingCycle(state: GameState, key: 'lumberMill' | 'miner'): void {
+  const count = state.buildings[key]
+  if (count <= 0) {
+    state.productionProgress[key] = 0
+    return
+  }
+
+  state.productionProgress[key] += TICK_MS
+
+  while (state.productionProgress[key] >= BUILDING_CYCLE_MS) {
+    state.productionProgress[key] -= BUILDING_CYCLE_MS
+    if (key === 'lumberMill') {
+      state.resources.wood += count
+      appendLog(state, `벌목소 생산: 나무 +${count}`)
+    } else {
+      state.resources.metal += count
+      appendLog(state, `채굴기 생산: 금속 +${count}`)
+    }
+  }
+}
+
 export function runTick(state: GameState): void {
-  let woodPerTick = state.buildings.lumberMill * BUILDING_BASE_PRODUCTION.lumberMill.wood
-  let metalPerTick = state.buildings.miner * BUILDING_BASE_PRODUCTION.miner.metal
-
-  if (state.upgrades.sharpSaw) {
-    woodPerTick *= 1.25
-  }
-  if (state.upgrades.drillBoost) {
-    metalPerTick *= 1.25
-  }
-
-  if (woodPerTick > 0 || metalPerTick > 0) {
-    state.resources.wood += woodPerTick
-    state.resources.metal += metalPerTick
-  }
+  processBuildingCycle(state, 'lumberMill')
+  processBuildingCycle(state, 'miner')
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))

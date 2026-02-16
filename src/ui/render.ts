@@ -1,8 +1,8 @@
-import { UPGRADE_DEFS } from '../data/balance.ts'
+import { BUILDING_CYCLE_MS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import type { GameState } from '../core/state.ts'
 
-type ActionPhase = 'ready' | 'casting' | 'cooldown' | 'locked'
+type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
 type ActionGaugeView = {
   phase: ActionPhase
@@ -50,6 +50,19 @@ function renderGaugeButton(id: string, text: string, ariaLabel: string, action: 
   `
 }
 
+function renderBuildingGauge(id: string, title: string, progress: number, stateText: string): string {
+  const width = Math.round(clamp01(progress) * 100)
+  return `
+    <div class="building-gauge" role="group" aria-label="${title} 진행 상태" tabindex="0" id="${id}">
+      <span class="gauge-fill" style="width:${width}%"></span>
+      <span class="gauge-content">
+        <span class="gauge-title">${title}</span>
+        <span class="gauge-state">${stateText}</span>
+      </span>
+    </div>
+  `
+}
+
 export function renderApp(state: GameState, handlers: Handlers, actionUI: ActionUI): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
@@ -58,6 +71,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   const lumberCost = getBuildingCost(state, 'lumberMill')
   const minerCost = getBuildingCost(state, 'miner')
+
+  const lumberProgress = state.buildings.lumberMill > 0 ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
+  const minerProgress = state.buildings.miner > 0 ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
 
   app.innerHTML = `
     <main class="layout">
@@ -97,8 +113,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         </button>
         ${state.unlocks.miner ? '' : '<p class="hint">해금 조건: 나무 60 + 금속 15</p>'}
 
-        <p>벌목소: ${state.buildings.lumberMill} (틱당 +${(state.buildings.lumberMill * 0.2 * (state.upgrades.sharpSaw ? 1.25 : 1)).toFixed(2)} 나무)</p>
-        <p>채굴기: ${state.buildings.miner} (틱당 +${(state.buildings.miner * 0.1 * (state.upgrades.drillBoost ? 1.25 : 1)).toFixed(2)} 금속)</p>
+        <p>벌목소: ${state.buildings.lumberMill} (10초마다 +${state.buildings.lumberMill} 나무)</p>
+        ${renderBuildingGauge('lumber-progress', '벌목소 가동', lumberProgress, state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기')}
+
+        <p>채굴기: ${state.buildings.miner} (10초마다 +${state.buildings.miner} 금속)</p>
+        ${renderBuildingGauge('miner-progress', '채굴기 가동', minerProgress, state.buildings.miner > 0 ? `${Math.round(minerProgress * 100)}%` : '대기')}
       </section>
 
       <section class="panel upgrades">
@@ -106,9 +125,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         ${Object.entries(UPGRADE_DEFS)
           .map(([key, def]) => {
             const done = state.upgrades[key as keyof typeof state.upgrades]
+            const cost = getUpgradeCost(key as keyof typeof UPGRADE_DEFS)
             return `
               <button data-upgrade="${key}" aria-label="업그레이드 ${def.name}" ${done ? 'disabled' : ''}>
-                ${def.name} (${def.cost.wood} 나무, ${def.cost.metal} 금속)
+                ${def.name} (${cost.wood} 나무, ${cost.metal} 금속)
               </button>
               <p class="hint">${def.effectText}${done ? ' (완료)' : ''}</p>
             `
