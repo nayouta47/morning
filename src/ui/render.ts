@@ -49,6 +49,8 @@ const MODULE_LABEL: Record<ModuleType, string> = {
   cooldown: '쿨다운 -1s',
 }
 
+let selectedModuleType: ModuleType | null = null
+
 function fmt(n: number): string {
   return n.toFixed(1)
 }
@@ -249,6 +251,8 @@ function renderCraftActions(state: GameState): string {
 }
 
 function renderAssemblyPanel(state: GameState): string {
+  syncSelectedModuleType(state)
+
   const selected = getSelectedWeapon(state)
   const stats = selected ? getWeaponStats(selected) : null
   const active = selected ? getActiveSlots(selected) : new Set<number>()
@@ -275,9 +279,15 @@ function renderAssemblyPanel(state: GameState): string {
           <div id="active-signature" data-sig="${[...active].join(',')}" hidden></div>
         </div>
       </div>
-      <div class="module-inventory" aria-label="모듈 인벤토리">
-        <h3>보유 모듈</h3>
-        <div id="module-list-items" class="module-list" data-signature=""></div>
+      <div class="module-grid">
+        <section class="module-detail" aria-label="모듈 상세 정보">
+          <h3>모듈 상세</h3>
+          <p id="module-detail-effect" class="module-effect hint">${selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'}</p>
+        </section>
+        <section class="module-inventory" aria-label="모듈 인벤토리">
+          <h3>보유 모듈</h3>
+          <div id="module-list-items" class="module-list" data-signature=""></div>
+        </section>
       </div>
     </section>
   `
@@ -315,16 +325,31 @@ function patchWeaponInventory(app: ParentNode, state: GameState): void {
   root.dataset.signature = sig
 }
 
+function syncSelectedModuleType(state: GameState): void {
+  if (selectedModuleType && state.modules[selectedModuleType] > 0) return
+  selectedModuleType = (Object.keys(state.modules) as ModuleType[]).find((type) => state.modules[type] > 0) ?? null
+}
+
+function patchModuleDetail(app: ParentNode, state: GameState): void {
+  syncSelectedModuleType(state)
+  const detail = app.querySelector<HTMLElement>('#module-detail-effect')
+  if (!detail) return
+  const text = selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'
+  if (detail.textContent !== text) detail.textContent = text
+}
+
 function patchModuleInventory(app: ParentNode, state: GameState): void {
+  syncSelectedModuleType(state)
+
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${selectedModuleType ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])
     .filter((type) => state.modules[type] > 0)
     .map(
-      (type) => `<div class="module-item" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개">
+      (type) => `<div class="module-item ${selectedModuleType === type ? 'selected' : ''}" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개">
         <span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span>
         <span class="module-count">x${state.modules[type]}</span>
       </div>`,
@@ -442,6 +467,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchWeaponInventory(app, state)
   patchWeaponBoard(app, state)
   patchModuleInventory(app, state)
+  patchModuleDetail(app, state)
   patchLogs(app, state)
 }
 
@@ -572,6 +598,20 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-rifle')?.addEventListener('click', handlers.onCraftRifle)
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
 
+  const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
+    const target = eventTarget as HTMLElement | null
+    const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
+    const moduleType = moduleItem?.getAttribute('data-module-type') as ModuleType | null
+    if (!moduleType) return
+    selectedModuleType = moduleType
+    patchModuleInventory(app, state)
+    patchModuleDetail(app, state)
+  }
+
+  app.addEventListener('pointerdown', (event) => {
+    selectModuleForDetail(event.target)
+  })
+
   app.addEventListener('click', (event) => {
     const target = event.target as HTMLElement
     const button = target.closest<HTMLElement>('[data-weapon-id]')
@@ -581,6 +621,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   })
 
   app.addEventListener('dragstart', (event) => {
+    selectModuleForDetail(event.target)
+
     const target = event.target as HTMLElement
     const moduleItem = target.closest<HTMLElement>('[data-module-type]')
     if (!moduleItem || !event.dataTransfer) return
