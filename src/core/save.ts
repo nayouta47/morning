@@ -13,8 +13,13 @@ function toWeaponType(value: unknown): WeaponType {
   return value === 'rifle' ? 'rifle' : 'pistol'
 }
 
-function inferModuleType(id: string): ModuleType {
-  return id.startsWith('DMG-') ? 'damage' : 'cooldown'
+function inferModuleType(value: unknown): ModuleType {
+  if (value === 'damage' || value === 'cooldown') return value
+  if (typeof value === 'string') {
+    if (value.startsWith('DMG-')) return 'damage'
+    if (value.startsWith('CDN-')) return 'cooldown'
+  }
+  return 'cooldown'
 }
 
 function normalizeState(raw: unknown): GameState | null {
@@ -24,6 +29,7 @@ function normalizeState(raw: unknown): GameState | null {
   const loaded = raw as Partial<GameState> & {
     productionProgress?: Partial<GameState['productionProgress']>
     craftProgress?: Partial<GameState['craftProgress']>
+    modules?: unknown
   }
 
   if (loaded.resources) {
@@ -72,18 +78,23 @@ function normalizeState(raw: unknown): GameState | null {
         type: toWeaponType(w.type),
         slots: Array.from({ length: 50 }, (_, index) => {
           const value = Array.isArray(w.slots) ? w.slots[index] : null
-          return typeof value === 'string' ? value : null
+          if (value == null) return null
+          return inferModuleType(value)
         }),
       }))
   }
 
+  if (loaded.modules && typeof loaded.modules === 'object' && !Array.isArray(loaded.modules)) {
+    const modules = loaded.modules as Partial<Record<ModuleType, unknown>>
+    base.modules.damage = Math.max(0, Number(modules.damage ?? 0) || 0)
+    base.modules.cooldown = Math.max(0, Number(modules.cooldown ?? 0) || 0)
+  }
+
   if (Array.isArray(loaded.modules)) {
-    base.modules = loaded.modules
-      .filter((m): m is GameState['modules'][number] => Boolean(m && typeof m.id === 'string'))
-      .map((m) => ({
-        id: m.id,
-        type: m.type === 'damage' || m.type === 'cooldown' ? m.type : inferModuleType(m.id),
-      }))
+    loaded.modules.forEach((moduleLike) => {
+      const type = inferModuleType((moduleLike as { type?: unknown; id?: unknown })?.type ?? (moduleLike as { id?: unknown })?.id)
+      base.modules[type] += 1
+    })
   }
 
   base.selectedWeaponId =
@@ -94,11 +105,6 @@ function normalizeState(raw: unknown): GameState | null {
   base.nextWeaponId = Math.max(
     Number(loaded.nextWeaponId) || 1,
     ...base.weapons.map((w) => Number(w.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
-    1,
-  )
-  base.nextModuleId = Math.max(
-    Number(loaded.nextModuleId) || 1,
-    ...base.modules.map((m) => Number(m.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
     1,
   )
 
