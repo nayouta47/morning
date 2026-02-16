@@ -64,6 +64,36 @@ function formatBuildingTime(progress: number, isActive: boolean): string {
   return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
 }
 
+type BuildingKey = 'lumberMill' | 'miner'
+
+type BuildingGaugeView = {
+  progress: number
+  percentText: string
+  timeText: string
+}
+
+function getBuildingGaugeView(state: GameState, key: BuildingKey, now = Date.now()): BuildingGaugeView {
+  const isActive = state.buildings[key] > 0
+  if (!isActive) {
+    return {
+      progress: 0,
+      percentText: '대기',
+      timeText: formatBuildingTime(0, false),
+    }
+  }
+
+  const baseProgressMs = state.productionProgress[key]
+  const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
+  const smoothedProgressMs = (baseProgressMs + elapsedSinceUpdate) % BUILDING_CYCLE_MS
+  const progress = clamp01(smoothedProgressMs / BUILDING_CYCLE_MS)
+
+  return {
+    progress,
+    percentText: `${Math.round(progress * 100)}%`,
+    timeText: formatBuildingTime(progress, true),
+  }
+}
+
 function setText(app: ParentNode, selector: string, text: string): void {
   const node = app.querySelector<HTMLElement>(selector)
   if (node && node.textContent !== text) node.textContent = text
@@ -350,7 +380,7 @@ function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module))
 }
 
-export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
+export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
 
@@ -387,25 +417,11 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   setText(app, '#miner-count', `${state.buildings.miner}`)
   setText(app, '#miner-output', `${state.buildings.miner}`)
 
-  const lumberActive = state.buildings.lumberMill > 0
-  const minerActive = state.buildings.miner > 0
-  const lumberProgress = lumberActive ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
-  const minerProgress = minerActive ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
+  const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
+  const minerGauge = getBuildingGaugeView(state, 'miner', now)
 
-  patchBuildingGauge(
-    app,
-    'lumber-progress',
-    lumberProgress,
-    lumberActive ? `${Math.round(lumberProgress * 100)}%` : '대기',
-    formatBuildingTime(lumberProgress, lumberActive),
-  )
-  patchBuildingGauge(
-    app,
-    'miner-progress',
-    minerProgress,
-    minerActive ? `${Math.round(minerProgress * 100)}%` : '대기',
-    formatBuildingTime(minerProgress, minerActive),
-  )
+  patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText)
+  patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText)
 
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
     const def = UPGRADE_DEFS[key]
@@ -429,7 +445,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   patchLogs(app, state)
 }
 
-export function renderApp(state: GameState, handlers: Handlers, actionUI: ActionUI): void {
+export function renderApp(state: GameState, handlers: Handlers, actionUI: ActionUI, now = Date.now()): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
 
@@ -438,10 +454,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const lumberCost = getBuildingCost(state, 'lumberMill')
   const minerCost = getBuildingCost(state, 'miner')
 
-  const lumberActive = state.buildings.lumberMill > 0
-  const minerActive = state.buildings.miner > 0
-  const lumberProgress = lumberActive ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
-  const minerProgress = minerActive ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
+  const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
+  const minerGauge = getBuildingGaugeView(state, 'miner', now)
 
   app.innerHTML = `
     <main class="layout">
@@ -493,18 +507,18 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         ${renderBuildingGauge(
           'lumber-progress',
           '벌목소 가동',
-          lumberProgress,
-          lumberActive ? `${Math.round(lumberProgress * 100)}%` : '대기',
-          formatBuildingTime(lumberProgress, lumberActive),
+          lumberGauge.progress,
+          lumberGauge.percentText,
+          lumberGauge.timeText,
         )}
 
         <p>채굴기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 +<span id="miner-output">${state.buildings.miner}</span> 금속)</p>
         ${renderBuildingGauge(
           'miner-progress',
           '채굴기 가동',
-          minerProgress,
-          minerActive ? `${Math.round(minerProgress * 100)}%` : '대기',
-          formatBuildingTime(minerProgress, minerActive),
+          minerGauge.progress,
+          minerGauge.percentText,
+          minerGauge.timeText,
         )}
       </section>
 

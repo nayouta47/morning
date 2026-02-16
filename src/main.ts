@@ -167,12 +167,13 @@ function redraw(nowOverride?: number): void {
         },
       },
       actionUI,
+      now,
     )
     appMounted = true
     return
   }
 
-  patchAnimatedUI(state, actionUI)
+  patchAnimatedUI(state, actionUI, now)
 }
 
 function frameLoop(): void {
