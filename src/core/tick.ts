@@ -27,7 +27,7 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
 
   if (key === 'lumberMill') {
     state.resources.wood += capacity
-    appendLog(state, `벌목기 생산: 🌲 나무 +${capacity}`)
+    appendLog(state, `벌목기 생산: 🪵 나무 +${capacity}`)
     return
   }
 
@@ -71,7 +71,7 @@ function makeModule(state: GameState, type: ModuleType): void {
 
 function makeShovel(state: GameState): void {
   state.resources.shovel += 1
-  appendLog(state, '⛏️ 삽 제작 완료: ⛏️ 삽 +1')
+  appendLog(state, '🪏 삽 제작 완료: 🪏 삽 +1')
 }
 
 function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number): void {

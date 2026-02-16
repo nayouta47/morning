@@ -66,7 +66,7 @@ function applyUnlocks(state: GameState): void {
 export function gatherWood(state: GameState): void {
   const amount = 6 + (state.upgrades.betterAxe ? 1 : 0)
   state.resources.wood += amount
-  pushLog(state, `🌲 나무 +${amount}`)
+  pushLog(state, `🪵 나무 +${amount}`)
   applyUnlocks(state)
 }
 
@@ -180,7 +180,7 @@ export function startShovelCraft(state: GameState): void {
 
   payCost(state.resources, SHOVEL_CRAFT_COST)
   state.craftProgress.shovel = WEAPON_CRAFT_DURATION_MS
-  pushLog(state, '⛏️ 삽 제작 시작 (30초)')
+  pushLog(state, '🪏 삽 제작 시작 (30초)')
 }
 
 export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {
