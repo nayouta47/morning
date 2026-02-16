@@ -2,11 +2,14 @@ import './style.css'
 import { buyBuilding, buyUpgrade, gatherMetal, gatherWood } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
-import { runTick, startTicker } from './core/tick.ts'
+import { advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
+
+const SIMULATION_INTERVAL_MS = 250
+const RENDER_INTERVAL_MS = 250
 
 type ActionTiming = {
   cooldownStartedAt: number
@@ -76,6 +79,10 @@ function triggerActionFeedback(key: ActionKey): number {
   return now
 }
 
+function syncState(now = Date.now()): void {
+  advanceState(state, now)
+}
+
 function redraw(nowOverride?: number, animationOnly = false): void {
   const now = nowOverride ?? Date.now()
 
@@ -93,6 +100,7 @@ function redraw(nowOverride?: number, animationOnly = false): void {
     state,
     {
       onGatherWood: () => {
+        syncState()
         const view = toActionView('gatherWood', false)
         if (view.disabled) return
         gatherWood(state)
@@ -100,6 +108,7 @@ function redraw(nowOverride?: number, animationOnly = false): void {
         redraw(actionStartAt)
       },
       onGatherMetal: () => {
+        syncState()
         const view = toActionView('gatherMetal', !state.unlocks.metalAction)
         if (view.disabled) return
         gatherMetal(state)
@@ -107,14 +116,17 @@ function redraw(nowOverride?: number, animationOnly = false): void {
         redraw(actionStartAt)
       },
       onBuyLumberMill: () => {
+        syncState()
         buyBuilding(state, 'lumberMill')
         redraw()
       },
       onBuyMiner: () => {
+        syncState()
         buyBuilding(state, 'miner')
         redraw()
       },
       onBuyUpgrade: (key) => {
+        syncState()
         buyUpgrade(state, key)
         redraw()
       },
@@ -123,15 +135,20 @@ function redraw(nowOverride?: number, animationOnly = false): void {
   )
 }
 
+syncState()
 redraw()
 
-startTicker(() => {
-  runTick(state)
+setInterval(() => {
+  syncState()
+}, SIMULATION_INTERVAL_MS)
+
+setInterval(() => {
   redraw()
-})
+}, RENDER_INTERVAL_MS)
 
 startAutosave(() => state)
 
 window.addEventListener('beforeunload', () => {
+  syncState()
   saveGame(state)
 })

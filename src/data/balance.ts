@@ -2,8 +2,6 @@ export type ResourceKey = 'wood' | 'metal'
 
 export const COST_SCALE = 1.15
 
-export const TICK_MS = 1000
-
 export const ACTION_DURATION_MS = {
   gatherWood: 5000,
   gatherMetal: 7000,

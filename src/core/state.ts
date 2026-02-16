@@ -32,6 +32,7 @@ export type GameState = {
   upgrades: Upgrades
   unlocks: Unlocks
   productionProgress: ProductionProgress
+  lastUpdate: number
   log: string[]
 }
 
@@ -59,5 +60,6 @@ export const initialState: GameState = {
     lumberMill: 0,
     miner: 0,
   },
+  lastUpdate: Date.now(),
   log: ['게임 시작. 나무를 모아보자.'],
 }
