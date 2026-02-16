@@ -1,16 +1,9 @@
-import {
-  BUILDING_CYCLE_MS,
-  MODULE_CRAFT_COST,
-  SHOVEL_CRAFT_COST,
-  UPGRADE_DEFS,
-  WEAPON_BASE_STATS,
-  WEAPON_CRAFT_COST,
-  WEAPON_CRAFT_DURATION_MS,
-  getUpgradeCost,
-} from '../data/balance.ts'
+import { BUILDING_CYCLE_MS, UPGRADE_DEFS, WEAPON_BASE_STATS, WEAPON_CRAFT_DURATION_MS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingCost } from '../core/actions.ts'
-import { getCraftRecipeMissingRequirement } from '../data/crafting.ts'
+import { CRAFT_RECIPE_DEFS, getCraftRecipeMissingRequirement } from '../data/crafting.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
+import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../data/resources.ts'
+import { getBuildingLabel } from '../data/buildings.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
@@ -47,6 +40,33 @@ export type ActionUI = {
   gatherScrap: ActionGaugeView
 }
 
+type InteractionIntent =
+  | { type: 'weapon/select'; weaponId: string }
+  | { type: 'weapon/reorder'; sourceWeaponId: string; targetWeaponId: string | null }
+  | { type: 'module/equip'; moduleType: ModuleType; slotIndex: number }
+  | { type: 'module/move'; fromSlotIndex: number; toSlotIndex: number }
+  | { type: 'module/unequip'; slotIndex: number }
+
+function dispatchInteractionIntent(handlers: Handlers, intent: InteractionIntent): void {
+  switch (intent.type) {
+    case 'weapon/select':
+      handlers.onSelectWeapon(intent.weaponId)
+      return
+    case 'weapon/reorder':
+      handlers.onReorderWeapons(intent.sourceWeaponId, intent.targetWeaponId)
+      return
+    case 'module/equip':
+      handlers.onEquipModule(intent.moduleType, intent.slotIndex)
+      return
+    case 'module/move':
+      handlers.onMoveEquippedModule(intent.fromSlotIndex, intent.toSlotIndex)
+      return
+    case 'module/unequip':
+      handlers.onUnequipModule(intent.slotIndex)
+      return
+  }
+}
+
 const MODULE_EMOJI: Record<ModuleType, string> = {
   damage: '💥',
   cooldown: '⏱️',
@@ -58,34 +78,6 @@ const MODULE_LABEL: Record<ModuleType, string> = {
 }
 
 let selectedModuleType: ModuleType | null = null
-
-function fmt(n: number): string {
-  return n.toFixed(1)
-}
-
-const RESOURCE_LABEL: Record<'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel', string> = {
-  wood: '🪵나무',
-  scrap: '🗑️고물',
-  iron: '⛓️철',
-  chromium: '🟢크롬',
-  molybdenum: '🔵몰리브덴',
-  shovel: '🪏삽',
-}
-
-function formatResourceAmount(
-  key: 'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel',
-  value: number | string,
-): string {
-  return `${RESOURCE_LABEL[key]} ${value}`
-}
-
-function formatCraftCost(cost: Partial<Record<'wood' | 'iron' | 'chromium' | 'molybdenum' | 'scrap', number>>): string {
-  const keys: Array<'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum'> = ['wood', 'scrap', 'iron', 'chromium', 'molybdenum']
-  return keys
-    .filter((key) => (cost[key] ?? 0) > 0)
-    .map((key) => formatResourceAmount(key, cost[key] ?? 0))
-    .join(', ')
-}
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
@@ -307,25 +299,25 @@ function renderCraftActions(state: GameState): string {
     <div class="craft-actions" role="group" aria-label="제작 행동">
       ${renderGaugeButton(
         'craft-pistol',
-        `권총 제작 (30초 · ${formatCraftCost(WEAPON_CRAFT_COST.pistol)})`,
+        `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.pistol.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.pistol.costs)})`,
         '권총 제작',
         pistolView,
       )}
       ${renderGaugeButton(
         'craft-rifle',
-        `소총 제작 (30초 · ${formatCraftCost(WEAPON_CRAFT_COST.rifle)})`,
+        `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.rifle.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.rifle.costs)})`,
         '소총 제작',
         rifleView,
       )}
       ${renderGaugeButton(
         'craft-module',
-        `모듈 제작 (30초 · ${formatResourceAmount('wood', MODULE_CRAFT_COST.wood)}, ${formatResourceAmount('iron', MODULE_CRAFT_COST.iron)})`,
+        `${CRAFT_RECIPE_DEFS.module.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.module.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.module.costs)})`,
         '모듈 제작',
         moduleView,
       )}
       ${renderGaugeButton(
         'craft-shovel',
-        `🪏 삽 제작 (30초 · ${formatCraftCost(SHOVEL_CRAFT_COST)})`,
+        `${getResourceDisplay('shovel')} 제작 (${Math.round(CRAFT_RECIPE_DEFS.shovel.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.shovel.costs)})`,
         '🪏 삽 제작',
         shovelView,
       )}
@@ -503,12 +495,12 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-scrap', actionUI.gatherScrap)
 
-  setText(app, '#res-wood', fmt(state.resources.wood))
-  setText(app, '#res-scrap', fmt(state.resources.scrap))
-  setText(app, '#res-iron', fmt(state.resources.iron))
-  setText(app, '#res-chromium', fmt(state.resources.chromium))
-  setText(app, '#res-molybdenum', fmt(state.resources.molybdenum))
-  setText(app, '#res-shovel', `${state.resources.shovel}`)
+  setText(app, '#res-wood', formatResourceValue('wood', state.resources.wood))
+  setText(app, '#res-scrap', formatResourceValue('scrap', state.resources.scrap))
+  setText(app, '#res-iron', formatResourceValue('iron', state.resources.iron))
+  setText(app, '#res-chromium', formatResourceValue('chromium', state.resources.chromium))
+  setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
+  setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}`)
 
   setText(app, '#gather-wood-title', `🪵 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`)
@@ -524,14 +516,14 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
   if (buyLumber) buyLumber.disabled = !state.unlocks.lumberMill
-  setText(app, '#buy-lumber-label', `벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})`)
+  setText(app, '#buy-lumber-label', `${getBuildingLabel('lumberMill')} 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})`)
 
   const buyMiner = app.querySelector<HTMLButtonElement>('#buy-miner')
   if (buyMiner) buyMiner.disabled = !state.unlocks.miner
-  setText(app, '#buy-miner-label', `분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})`)
+  setText(app, '#buy-miner-label', `${getBuildingLabel('miner')} 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})`)
 
-  setText(app, '#buy-workbench-label', `제작대 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})`)
-  setText(app, '#buy-lab-label', `실험실 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})`)
+  setText(app, '#buy-workbench-label', `${getBuildingLabel('workbench')} 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})`)
+  setText(app, '#buy-lab-label', `${getBuildingLabel('lab')} 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})`)
 
   setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
   setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
@@ -602,18 +594,18 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         <h2>자원</h2>
         <div class="resources-split">
           <section class="resources-owned" aria-label="보유 자원">
-            <p>${RESOURCE_LABEL.wood} <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
-            <p>${RESOURCE_LABEL.scrap} <strong id="res-scrap">${fmt(state.resources.scrap)}</strong></p>
-            <p>${RESOURCE_LABEL.iron} <strong id="res-iron">${fmt(state.resources.iron)}</strong></p>
-            <p>${RESOURCE_LABEL.chromium} <strong id="res-chromium">${fmt(state.resources.chromium)}</strong></p>
-            <p>${RESOURCE_LABEL.molybdenum} <strong id="res-molybdenum">${fmt(state.resources.molybdenum)}</strong></p>
-            <p>${RESOURCE_LABEL.shovel} <strong id="res-shovel">${state.resources.shovel}</strong></p>
+            <p>${getResourceDisplay('wood')} <strong id="res-wood">${formatResourceValue('wood', state.resources.wood)}</strong></p>
+            <p>${getResourceDisplay('scrap')} <strong id="res-scrap">${formatResourceValue('scrap', state.resources.scrap)}</strong></p>
+            <p>${getResourceDisplay('iron')} <strong id="res-iron">${formatResourceValue('iron', state.resources.iron)}</strong></p>
+            <p>${getResourceDisplay('chromium')} <strong id="res-chromium">${formatResourceValue('chromium', state.resources.chromium)}</strong></p>
+            <p>${getResourceDisplay('molybdenum')} <strong id="res-molybdenum">${formatResourceValue('molybdenum', state.resources.molybdenum)}</strong></p>
+            <p>${getResourceDisplay('shovel')} <strong id="res-shovel">${formatResourceValue('shovel', state.resources.shovel)}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
-            <p>벌목기: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${RESOURCE_LABEL.wood} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
-            <p>분쇄기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 ${RESOURCE_LABEL.scrap} <span id="miner-output">${state.buildings.miner}</span> 처리)</p>
-            <p>제작대: <span id="workbench-count">${state.buildings.workbench}</span></p>
-            <p>실험실: <span id="lab-count">${state.buildings.lab}</span></p>
+            <p>${getBuildingLabel('lumberMill')}: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${getResourceDisplay('wood')} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
+            <p>${getBuildingLabel('miner')}: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 ${getResourceDisplay('scrap')} <span id="miner-output">${state.buildings.miner}</span> 처리)</p>
+            <p>${getBuildingLabel('workbench')}: <span id="workbench-count">${state.buildings.workbench}</span></p>
+            <p>${getBuildingLabel('lab')}: <span id="lab-count">${state.buildings.lab}</span></p>
           </section>
         </div>
       </section>
@@ -627,7 +619,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동',
           actionUI.gatherScrap,
         )}
-        <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${RESOURCE_LABEL.shovel} 1개 이상</p>
+        <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p>
       </section>
 
       <section id="crafting-panel" class="panel crafting">
@@ -637,19 +629,19 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel buildings">
         <h2>건설</h2>
-        <button id="buy-lumber" aria-label="벌목기 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}>
+        <button id="buy-lumber" aria-label="건물 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}>
           <span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span>
         </button>
 
-        <button id="buy-miner" aria-label="분쇄기 설치" ${state.unlocks.miner ? '' : 'disabled'}>
+        <button id="buy-miner" aria-label="건물 설치" ${state.unlocks.miner ? '' : 'disabled'}>
           <span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span>
         </button>
 
-        <button id="buy-workbench" aria-label="제작대 설치">
+        <button id="buy-workbench" aria-label="건물 설치">
           <span id="buy-workbench-label">제작대 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})</span>
         </button>
 
-        <button id="buy-lab" aria-label="실험실 설치">
+        <button id="buy-lab" aria-label="건물 설치">
           <span id="buy-lab-label">실험실 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})</span>
         </button>
 
@@ -742,7 +734,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const button = target?.closest<HTMLElement>('[data-weapon-id]')
     if (!button) return
     const id = button.getAttribute('data-weapon-id')
-    if (id) handlers.onSelectWeapon(id)
+    if (id) dispatchInteractionIntent(handlers, { type: 'weapon/select', weaponId: id })
   })
 
   app.addEventListener('dragstart', (event) => {
@@ -833,7 +825,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       const targetWeaponId = targetWeapon?.getAttribute('data-weapon-id') ?? null
 
       event.preventDefault()
-      handlers.onReorderWeapons(sourceWeaponId, targetWeaponId)
+      dispatchInteractionIntent(handlers, { type: 'weapon/reorder', sourceWeaponId, targetWeaponId })
       return
     }
 
@@ -847,7 +839,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       const sourceWeaponId = event.dataTransfer.getData('text/module-weapon-id')
       if (!Number.isFinite(sourceSlotIndex) || !state.selectedWeaponId || sourceWeaponId !== state.selectedWeaponId) return
       event.preventDefault()
-      handlers.onUnequipModule(sourceSlotIndex)
+      dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex: sourceSlotIndex })
       return
     }
 
@@ -861,7 +853,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     if (dragKind === 'inventory') {
       if (slot.classList.contains('filled')) return
       event.preventDefault()
-      handlers.onEquipModule(moduleType, slotIndex)
+      dispatchInteractionIntent(handlers, { type: 'module/equip', moduleType, slotIndex })
       return
     }
 
@@ -870,7 +862,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       const sourceWeaponId = event.dataTransfer.getData('text/module-weapon-id')
       if (!Number.isFinite(sourceSlotIndex) || !state.selectedWeaponId || sourceWeaponId !== state.selectedWeaponId) return
       event.preventDefault()
-      handlers.onMoveEquippedModule(sourceSlotIndex, slotIndex)
+      dispatchInteractionIntent(handlers, { type: 'module/move', fromSlotIndex: sourceSlotIndex, toSlotIndex: slotIndex })
     }
   })
 
@@ -881,7 +873,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     event.preventDefault()
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (!Number.isFinite(slotIndex)) return
-    handlers.onUnequipModule(slotIndex)
+    dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex })
   })
 
   app.addEventListener('auxclick', (event) => {
@@ -891,7 +883,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     if (!slot || !slot.classList.contains('filled')) return
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (!Number.isFinite(slotIndex)) return
-    handlers.onUnequipModule(slotIndex)
+    dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex })
   })
 
   if (focusedId) {
