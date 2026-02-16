@@ -41,24 +41,30 @@ let simulationLastTickAt = Date.now()
 let appMounted = false
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
+  const duration = ACTION_DURATION_MS[key]
+  const totalSecText = `${(duration / 1000).toFixed(1)}s`
+
   if (locked) {
     return {
       phase: 'locked' as const,
       progress: 0,
       disabled: true,
       label: '잠김',
+      timeText: `- / ${totalSecText}`,
     }
   }
 
   const timing = actionTiming[key]
   if (now < timing.cooldownUntil) {
-    const duration = ACTION_DURATION_MS[key]
     const elapsed = (now - timing.cooldownStartedAt) / duration
+    const clampedElapsed = Math.min(1, Math.max(0, elapsed))
+    const remainingSec = (1 - clampedElapsed) * (duration / 1000)
     return {
       phase: 'cooldown' as const,
       progress: elapsed,
       disabled: true,
       label: '진행 중',
+      timeText: `${remainingSec.toFixed(1)}s / ${totalSecText}`,
     }
   }
 
@@ -67,6 +73,7 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
     progress: 1,
     disabled: false,
     label: '준비됨',
+    timeText: `- / ${totalSecText}`,
   }
 }
 
