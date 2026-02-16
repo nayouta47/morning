@@ -31,7 +31,7 @@ export const UPGRADE_DEFS = {
   sortingWork: {
     name: '분류 작업',
     baseCost: { wood: 70, iron: 20 },
-    effectText: '🧰 고물 줍기 +1',
+    effectText: '🗑️ 고물 줍기 +1',
   },
   sharpSaw: {
     name: '톱날 개선',

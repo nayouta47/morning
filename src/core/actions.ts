@@ -72,13 +72,13 @@ export function gatherWood(state: GameState): void {
 
 export function gatherScrap(state: GameState): void {
   if (!state.unlocks.scrapAction) {
-    pushLog(state, '아직 🧰 고물을 주울 방법이 없다.')
+    pushLog(state, '아직 🗑️ 고물을 주울 방법이 없다.')
     return
   }
 
   const amount = 7 + (state.upgrades.sortingWork ? 1 : 0)
   state.resources.scrap += amount
-  pushLog(state, `🧰 고물 +${amount}`)
+  pushLog(state, `🗑️ 고물 +${amount}`)
   applyUnlocks(state)
 }
 

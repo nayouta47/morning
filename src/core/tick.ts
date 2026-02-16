@@ -48,11 +48,11 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
   if (molybdenum > 0) state.resources.molybdenum += molybdenum
 
   const bonusParts: string[] = []
-  if (chromium > 0) bonusParts.push(`🧪 크롬 +${chromium}`)
-  if (molybdenum > 0) bonusParts.push(`⚙️ 몰리브덴 +${molybdenum}`)
+  if (chromium > 0) bonusParts.push(`🟢 크롬 +${chromium}`)
+  if (molybdenum > 0) bonusParts.push(`🔵 몰리브덴 +${molybdenum}`)
 
   const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
-  appendLog(state, `분쇄기 처리: 🧰 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
+  appendLog(state, `분쇄기 처리: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
 }
 
 function makeWeapon(state: GameState, type: WeaponType): void {
