@@ -80,6 +80,13 @@ h1 {
   color: #c29a4a;
 }
 
+.subheading {
+  margin: 10px 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b8ad95;
+}
+
 .resources {
   grid-column: 1 / -1;
 }
