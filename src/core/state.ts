@@ -23,6 +23,16 @@ export type ProductionProgress = {
   miner: number
 }
 
+export type ProductionRunning = {
+  lumberMill: boolean
+  miner: boolean
+}
+
+export type ActionProgress = {
+  gatherWood: number
+  gatherScrap: number
+}
+
 export type TabKey = 'base' | 'assembly'
 
 export type WeaponType = 'pistol' | 'rifle'
@@ -49,6 +59,8 @@ export type GameState = {
   upgrades: Upgrades
   unlocks: Unlocks
   productionProgress: ProductionProgress
+  productionRunning: ProductionRunning
+  actionProgress: ActionProgress
   lastUpdate: number
   log: string[]
   activeTab: TabKey
@@ -88,6 +100,14 @@ export const initialState: GameState = {
   productionProgress: {
     lumberMill: 0,
     miner: 0,
+  },
+  productionRunning: {
+    lumberMill: true,
+    miner: true,
+  },
+  actionProgress: {
+    gatherWood: 0,
+    gatherScrap: 0,
   },
   lastUpdate: Date.now(),
   log: ['게임 시작. 🪵 나무를 모아보자.'],

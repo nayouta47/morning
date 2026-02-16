@@ -22,6 +22,8 @@ type Handlers = {
   onBuyMiner: () => void
   onBuyWorkbench: () => void
   onBuyLab: () => void
+  onToggleLumberMillRun: () => void
+  onToggleMinerRun: () => void
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
   onSelectTab: (tab: 'base' | 'assembly') => void
   onCraftPistol: () => void
@@ -103,27 +105,31 @@ type BuildingGaugeView = {
   progress: number
   percentText: string
   timeText: string
+  phase: 'running' | 'paused' | 'idle'
 }
 
 function getBuildingGaugeView(state: GameState, key: ProductionBuildingKey, now = Date.now()): BuildingGaugeView {
-  const isActive = state.buildings[key] > 0
-  if (!isActive) {
+  const isInstalled = state.buildings[key] > 0
+  if (!isInstalled) {
     return {
       progress: 0,
       percentText: '대기',
       timeText: formatBuildingTime(0, false),
+      phase: 'idle',
     }
   }
 
+  const isRunning = state.productionRunning[key]
   const baseProgressMs = state.productionProgress[key]
-  const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
+  const elapsedSinceUpdate = isRunning ? Math.max(0, now - state.lastUpdate) : 0
   const smoothedProgressMs = (baseProgressMs + elapsedSinceUpdate) % BUILDING_CYCLE_MS
   const progress = clamp01(smoothedProgressMs / BUILDING_CYCLE_MS)
 
   return {
     progress,
-    percentText: `${Math.round(progress * 100)}%`,
-    timeText: formatBuildingTime(progress, true),
+    percentText: isRunning ? `${Math.round(progress * 100)}%` : '중지됨',
+    timeText: isRunning ? formatBuildingTime(progress, true) : '일시정지',
+    phase: isRunning ? 'running' : 'paused',
   }
 }
 
@@ -163,10 +169,17 @@ function renderGaugeButton(id: string, text: string, ariaLabel: string, action: 
   `
 }
 
-function renderBuildingGauge(id: string, title: string, progress: number, stateText: string, timeText: string): string {
+function renderBuildingGauge(
+  id: string,
+  title: string,
+  progress: number,
+  stateText: string,
+  timeText: string,
+  phase: BuildingGaugeView['phase'],
+): string {
   const width = Math.round(clamp01(progress) * 100)
   return `
-    <div class="building-gauge" role="group" aria-label="${title} 진행 상태" tabindex="0" id="${id}">
+    <button class="building-gauge gauge-${phase}" aria-label="${title} 가동 토글" id="${id}" ${phase === 'idle' ? 'disabled' : ''}>
       <span class="gauge-fill" style="width:${width}%"></span>
       <span class="gauge-content">
         <span class="gauge-title">${title}</span>
@@ -175,7 +188,7 @@ function renderBuildingGauge(id: string, title: string, progress: number, stateT
           <span class="gauge-time">${timeText}</span>
         </span>
       </span>
-    </div>
+    </button>
   `
 }
 
@@ -198,9 +211,20 @@ function patchActionGauge(app: ParentNode, id: string, action: ActionGaugeView):
   if (time) time.textContent = action.timeText
 }
 
-function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string, timeText: string): void {
+function patchBuildingGauge(
+  app: ParentNode,
+  id: string,
+  progress: number,
+  stateText: string,
+  timeText: string,
+  phase: BuildingGaugeView['phase'],
+): void {
   const gauge = app.querySelector<HTMLElement>(`#${id}`)
   if (!gauge) return
+
+  gauge.classList.remove('gauge-running', 'gauge-paused', 'gauge-idle')
+  gauge.classList.add(`gauge-${phase}`)
+  if (gauge instanceof HTMLButtonElement) gauge.disabled = phase === 'idle'
 
   const width = Math.round(clamp01(progress) * 100)
   const fill = gauge.querySelector<HTMLElement>('.gauge-fill')
@@ -535,8 +559,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
 
-  patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText)
-  patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText)
+  patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)
+  patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText, minerGauge.phase)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
 
@@ -651,6 +675,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           lumberGauge.progress,
           lumberGauge.percentText,
           lumberGauge.timeText,
+          lumberGauge.phase,
         )}
 
         ${renderBuildingGauge(
@@ -659,6 +684,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           minerGauge.progress,
           minerGauge.percentText,
           minerGauge.timeText,
+          minerGauge.phase,
         )}
       </section>
 
@@ -702,6 +728,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)
   app.querySelector<HTMLButtonElement>('#buy-workbench')?.addEventListener('click', handlers.onBuyWorkbench)
   app.querySelector<HTMLButtonElement>('#buy-lab')?.addEventListener('click', handlers.onBuyLab)
+  app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)
+  app.querySelector<HTMLButtonElement>('#miner-progress')?.addEventListener('click', handlers.onToggleMinerRun)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-upgrade]').forEach((button) => {
     button.addEventListener('click', () => {

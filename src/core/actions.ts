@@ -1,4 +1,4 @@
-import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
+import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { CRAFT_RECIPE_DEFS, isCraftRecipeUnlocked, type CraftRecipeKey } from '../data/crafting.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../data/buildings.ts'
 import type { GameState, ModuleType, Resources, TabKey } from './state.ts'
@@ -40,10 +40,13 @@ function applyUnlocks(state: GameState): void {
 export { getBuildingCost }
 
 export function gatherWood(state: GameState): void {
-  const amount = 6 + (state.upgrades.betterAxe ? 1 : 0)
-  state.resources.wood += amount
-  pushLog(state, `🪵 나무 +${amount}`)
-  applyUnlocks(state)
+  if (state.actionProgress.gatherWood > 0) {
+    pushLog(state, '이미 나무를 줍는 중입니다.')
+    return
+  }
+
+  state.actionProgress.gatherWood = ACTION_DURATION_MS.gatherWood
+  pushLog(state, `🪵 나무 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherWood / 1000)}초)`)
 }
 
 export function gatherScrap(state: GameState): void {
@@ -52,10 +55,24 @@ export function gatherScrap(state: GameState): void {
     return
   }
 
-  const amount = 7 + (state.upgrades.sortingWork ? 1 : 0)
-  state.resources.scrap += amount
-  pushLog(state, `🗑️ 고물 +${amount}`)
-  applyUnlocks(state)
+  if (state.actionProgress.gatherScrap > 0) {
+    pushLog(state, '이미 고물을 줍는 중입니다.')
+    return
+  }
+
+  state.actionProgress.gatherScrap = ACTION_DURATION_MS.gatherScrap
+  pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherScrap / 1000)}초)`)
+}
+
+export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner'): void {
+  if (state.buildings[key] <= 0) {
+    pushLog(state, '설치된 건물이 없습니다.')
+    return
+  }
+
+  state.productionRunning[key] = !state.productionRunning[key]
+  const targetLabel = key === 'lumberMill' ? '벌목기' : '분쇄기'
+  pushLog(state, `${targetLabel} ${state.productionRunning[key] ? '가동 재개' : '가동 중지'}`)
 }
 
 export function buyBuilding(state: GameState, key: BuildingId): void {
