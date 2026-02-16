@@ -666,7 +666,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         </button>
 
         <button id="buy-lab" aria-label="건물 설치">
-          <span id="buy-lab-label">실험실 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})</span>
+          <span id="buy-lab-label">연구대 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})</span>
         </button>
 
         ${renderBuildingGauge(
