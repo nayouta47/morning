@@ -6,7 +6,7 @@ type ThresholdUnlockKey = keyof typeof UNLOCK_CONDITIONS
 type UnlockKey = keyof GameState['unlocks']
 
 const UNLOCK_LOG: Record<UnlockKey, string> = {
-  scrapAction: '새 행동 해금: 고물 줍기',
+  scrapAction: '새 행동 해금: 🧰 고물 줍기',
   lumberMill: '건물 해금: 벌목기',
   miner: '건물 해금: 분쇄기',
 }
