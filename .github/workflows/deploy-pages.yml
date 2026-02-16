@@ -52,10 +52,43 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+  debug-ci:
+    name: CI Debug Summary
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always()
+    steps:
+      - name: Write debug summary
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
+        run: |
+          {
+            echo "## CI Debug Summary"
+            echo "- Repository: $REPOSITORY"
+            echo "- Branch: $BRANCH"
+            echo "- Commit: \`$SHA\`"
+            echo "- Actor: $ACTOR"
+            echo "- Build: **$BUILD_RESULT**"
+            echo "- Deploy: **$DEPLOY_RESULT**"
+            echo "- Run: $SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID"
+            if [ "$BUILD_RESULT" != "success" ] || [ "$DEPLOY_RESULT" != "success" ]; then
+              echo ""
+              echo "### Failure hint"
+              echo "빌드/배포 로그를 열어 실패한 step의 stderr를 먼저 확인하세요."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   notify-discord:
     name: Notify Discord
     runs-on: ubuntu-latest
-    needs: [build, deploy]
+    needs: [build, deploy, debug-ci]
     if: always()
     steps:
       - name: Send deployment result to Discord webhook
