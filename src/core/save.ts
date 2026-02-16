@@ -40,6 +40,9 @@ function normalizeState(raw: unknown): GameState | null {
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
   base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
 
+  const loadedLastUpdate = Number(loaded.lastUpdate)
+  base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
+
   if (Array.isArray(loaded.log)) {
     base.log = loaded.log.filter((line): line is string => typeof line === 'string').slice(-30)
     if (base.log.length === 0) base.log = [...initialState.log]
