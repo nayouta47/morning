@@ -10,6 +10,7 @@ import {
   selectWeapon,
   setActiveTab,
   startModuleCraft,
+  startShovelCraft,
   startWeaponCraft,
   unequipModuleFromSlot,
 } from './core/actions.ts'
@@ -156,6 +157,11 @@ function redraw(nowOverride?: number): void {
         onCraftModule: () => {
           syncState()
           startModuleCraft(state)
+          redraw()
+        },
+        onCraftShovel: () => {
+          syncState()
+          startShovelCraft(state)
           redraw()
         },
         onSelectWeapon: (weaponId) => {

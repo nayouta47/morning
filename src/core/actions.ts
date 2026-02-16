@@ -2,6 +2,7 @@ import {
   BUILDING_BASE_COST,
   COST_SCALE,
   MODULE_CRAFT_COST,
+  SHOVEL_CRAFT_COST,
   UPGRADE_DEFS,
   WEAPON_CRAFT_COST,
   WEAPON_CRAFT_DURATION_MS,
@@ -12,7 +13,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 
 type BuildingKey = keyof typeof BUILDING_BASE_COST
 type UpgradeKey = keyof typeof UPGRADE_DEFS
-type CostLike = { wood: number; iron: number }
+type CostLike = Partial<Record<keyof Resources, number>>
 
 function pushLog(state: GameState, text: string): void {
   state.log.push(text)
@@ -22,12 +23,17 @@ function pushLog(state: GameState, text: string): void {
 }
 
 function canAfford(resources: Resources, cost: CostLike): boolean {
-  return resources.wood >= cost.wood && resources.iron >= cost.iron
+  return Object.entries(cost).every(([key, value]) => {
+    if (!value || value <= 0) return true
+    return resources[key as keyof Resources] >= value
+  })
 }
 
 function payCost(resources: Resources, cost: CostLike): void {
-  resources.wood -= cost.wood
-  resources.iron -= cost.iron
+  Object.entries(cost).forEach(([key, value]) => {
+    if (!value || value <= 0) return
+    resources[key as keyof Resources] -= value
+  })
 }
 
 function moduleName(type: ModuleType): string {
@@ -49,7 +55,7 @@ function applyUnlocks(state: GameState): void {
 }
 
 export function gatherWood(state: GameState): void {
-  const amount = 1 + (state.upgrades.betterAxe ? 1 : 0)
+  const amount = 6 + (state.upgrades.betterAxe ? 1 : 0)
   state.resources.wood += amount
   pushLog(state, `나무 +${amount}`)
   applyUnlocks(state)
@@ -61,7 +67,7 @@ export function gatherScrap(state: GameState): void {
     return
   }
 
-  const amount = 1 + (state.upgrades.sortingWork ? 1 : 0)
+  const amount = 7 + (state.upgrades.sortingWork ? 1 : 0)
   state.resources.scrap += amount
   pushLog(state, `고물 +${amount}`)
   applyUnlocks(state)
@@ -138,6 +144,22 @@ export function startModuleCraft(state: GameState): void {
   payCost(state.resources, MODULE_CRAFT_COST)
   state.craftProgress.module = WEAPON_CRAFT_DURATION_MS
   pushLog(state, '모듈 제작 시작 (30초)')
+}
+
+export function startShovelCraft(state: GameState): void {
+  if (state.craftProgress.shovel > 0) {
+    pushLog(state, '이미 제작 중입니다.')
+    return
+  }
+
+  if (!canAfford(state.resources, SHOVEL_CRAFT_COST)) {
+    pushLog(state, '자원이 부족합니다.')
+    return
+  }
+
+  payCost(state.resources, SHOVEL_CRAFT_COST)
+  state.craftProgress.shovel = WEAPON_CRAFT_DURATION_MS
+  pushLog(state, '삽 제작 시작 (30초)')
 }
 
 export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {

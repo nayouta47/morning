@@ -9,7 +9,7 @@ const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
 type BuildingKey = 'lumberMill' | 'miner'
 
-type CraftKey = 'pistol' | 'rifle' | 'module'
+type CraftKey = 'pistol' | 'rifle' | 'module' | 'shovel'
 
 function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: number): void {
   const count = state.buildings[key]
@@ -69,6 +69,11 @@ function makeModule(state: GameState, type: ModuleType): void {
   appendLog(state, `모듈 제작 완료: ${type === 'damage' ? '💥 공격력(+1)' : '⏱️ 쿨다운(-1초)'}`)
 }
 
+function makeShovel(state: GameState): void {
+  state.resources.shovel += 1
+  appendLog(state, '삽 제작 완료: 삽 +1')
+}
+
 function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number): void {
   const current = state.craftProgress[key]
   if (current <= 0) return
@@ -79,6 +84,11 @@ function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number)
   if (key === 'module') {
     const type: ModuleType = Math.random() < 0.5 ? 'damage' : 'cooldown'
     makeModule(state, type)
+    return
+  }
+
+  if (key === 'shovel') {
+    makeShovel(state)
     return
   }
 
@@ -98,6 +108,7 @@ export function advanceState(state: GameState, now = Date.now()): void {
   processCraftElapsed(state, 'pistol', elapsed)
   processCraftElapsed(state, 'rifle', elapsed)
   processCraftElapsed(state, 'module', elapsed)
+  processCraftElapsed(state, 'shovel', elapsed)
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))
