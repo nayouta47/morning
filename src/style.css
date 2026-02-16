@@ -166,9 +166,22 @@ button:disabled {
   text-align: left;
 }
 
+.gauge-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .gauge-state {
   color: #b8ad95;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.gauge-time {
+  color: #8d8679;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -230,6 +243,10 @@ li {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   gap: 4px;
+}
+
+#weapon-stat-text {
+  margin-top: 12px;
 }
 
 .slot {
