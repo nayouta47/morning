@@ -10,6 +10,7 @@ import {
 } from '../data/balance.ts'
 import type { GameState, ModuleType, Resources, TabKey, WeaponType } from './state.ts'
 import { evaluateUnlocks } from './unlocks.ts'
+import { isCraftRecipeUnlocked } from '../data/crafting.ts'
 
 type BuildingKey = keyof typeof BUILDING_BASE_COST
 type UpgradeKey = keyof typeof UPGRADE_DEFS
@@ -122,7 +123,10 @@ export function selectWeapon(state: GameState, weaponId: string | null): void {
 }
 
 export function startWeaponCraft(state: GameState, type: WeaponType): void {
-  if (state.buildings.workbench <= 0) return
+  if (!isCraftRecipeUnlocked(state, type)) {
+    pushLog(state, '제작대가 필요합니다.')
+    return
+  }
 
   if (state.craftProgress[type] > 0) {
     pushLog(state, '이미 제작 중입니다.')
@@ -141,7 +145,10 @@ export function startWeaponCraft(state: GameState, type: WeaponType): void {
 }
 
 export function startModuleCraft(state: GameState): void {
-  if (state.buildings.workbench <= 0) return
+  if (!isCraftRecipeUnlocked(state, 'module')) {
+    pushLog(state, '제작대가 필요합니다.')
+    return
+  }
 
   if (state.craftProgress.module > 0) {
     pushLog(state, '이미 제작 중입니다.')
@@ -159,7 +166,7 @@ export function startModuleCraft(state: GameState): void {
 }
 
 export function startShovelCraft(state: GameState): void {
-  if (state.buildings.workbench <= 0) return
+  if (!isCraftRecipeUnlocked(state, 'shovel')) return
 
   if (state.craftProgress.shovel > 0) {
     pushLog(state, '이미 제작 중입니다.')

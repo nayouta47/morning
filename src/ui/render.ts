@@ -9,6 +9,7 @@ import {
   getUpgradeCost,
 } from '../data/balance.ts'
 import { getBuildingCost } from '../core/actions.ts'
+import { getCraftRecipeMissingRequirement } from '../data/crafting.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
@@ -259,7 +260,17 @@ function getWeaponStats(weapon: WeaponInstance): {
   }
 }
 
-function craftView(remainingMs: number): ActionGaugeView {
+function craftView(remainingMs: number, lockedReason: string | null = null): ActionGaugeView {
+  if (lockedReason) {
+    return {
+      phase: 'locked',
+      progress: 0,
+      disabled: true,
+      label: '잠김',
+      timeText: lockedReason,
+    }
+  }
+
   if (remainingMs <= 0) {
     return {
       phase: 'ready',
@@ -280,9 +291,10 @@ function craftView(remainingMs: number): ActionGaugeView {
 }
 
 function renderCraftActions(state: GameState): string {
-  const pistolView = craftView(state.craftProgress.pistol)
-  const rifleView = craftView(state.craftProgress.rifle)
-  const moduleView = craftView(state.craftProgress.module)
+  const pistolView = craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol'))
+  const rifleView = craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle'))
+  const moduleView = craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module'))
+  const shovelView = craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel'))
 
   return `
     <div class="craft-actions" role="group" aria-label="제작 행동">
@@ -308,7 +320,7 @@ function renderCraftActions(state: GameState): string {
         'craft-shovel',
         `⛏️ 삽 제작 (30초 · ${formatCraftCost(SHOVEL_CRAFT_COST)})`,
         '⛏️ 삽 제작',
-        craftView(state.craftProgress.shovel),
+        shovelView,
       )}
     </div>
   `
@@ -469,10 +481,10 @@ function patchWeaponBoard(app: ParentNode, state: GameState): void {
 }
 
 function patchCraftButtons(app: ParentNode, state: GameState): void {
-  patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol))
-  patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle))
-  patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module))
-  patchActionGauge(app, 'craft-shovel', craftView(state.craftProgress.shovel))
+  patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol')))
+  patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle')))
+  patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module')))
+  patchActionGauge(app, 'craft-shovel', craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel')))
 }
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
@@ -528,7 +540,6 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
-  setHidden(app, '#crafting-panel', state.buildings.workbench <= 0)
 
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
     const def = UPGRADE_DEFS[key]
@@ -612,6 +623,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${RESOURCE_LABEL.shovel} 1개 이상</p>
       </section>
 
+      <section id="crafting-panel" class="panel crafting">
+        <h2>제작</h2>
+        ${renderCraftActions(state)}
+      </section>
+
       <section class="panel buildings">
         <h2>건설</h2>
         <button id="buy-lumber" aria-label="벌목기 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}>
@@ -661,11 +677,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             `
           })
           .join('')}
-      </section>
-
-      <section id="crafting-panel" class="panel crafting" ${state.buildings.workbench > 0 ? '' : 'hidden'}>
-        <h2>제작</h2>
-        ${renderCraftActions(state)}
       </section>
       </section>
 
