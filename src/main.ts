@@ -3,7 +3,7 @@ import { buyBuilding, buyUpgrade, gatherMetal, gatherWood } from './core/actions
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { runTick, startTicker } from './core/tick.ts'
-import { renderApp } from './ui/render.ts'
+import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
@@ -29,7 +29,7 @@ function hasActiveActionAnimation(now = Date.now()): boolean {
 function ensureUiAnimationLoop(): void {
   if (uiTimer || !hasActiveActionAnimation()) return
   uiTimer = setInterval(() => {
-    redraw()
+    redraw(Date.now(), true)
     if (!hasActiveActionAnimation()) {
       clearInterval(uiTimer!)
       uiTimer = null
@@ -76,8 +76,18 @@ function triggerActionFeedback(key: ActionKey): number {
   return now
 }
 
-function redraw(nowOverride?: number): void {
+function redraw(nowOverride?: number, animationOnly = false): void {
   const now = nowOverride ?? Date.now()
+
+  const actionUI = {
+    gatherWood: toActionView('gatherWood', false, now),
+    gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction, now),
+  }
+
+  if (animationOnly) {
+    patchAnimatedUI(state, actionUI)
+    return
+  }
 
   renderApp(
     state,
@@ -109,10 +119,7 @@ function redraw(nowOverride?: number): void {
         redraw()
       },
     },
-    {
-      gatherWood: toActionView('gatherWood', false, now),
-      gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction, now),
-    },
+    actionUI,
   )
 }
 
