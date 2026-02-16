@@ -151,7 +151,11 @@ button:disabled {
 }
 
 .building-gauge {
-  cursor: default;
+  cursor: pointer;
+}
+
+.building-gauge:disabled {
+  cursor: not-allowed;
 }
 
 .gauge-fill {
@@ -203,8 +207,15 @@ button:disabled {
 
 .gauge-casting .gauge-state,
 .gauge-cooldown .gauge-state,
-.gauge-locked .gauge-state {
+.gauge-locked .gauge-state,
+.gauge-paused .gauge-state,
+.gauge-idle .gauge-state {
   color: #9a9385;
+}
+
+.gauge-paused .gauge-fill,
+.gauge-idle .gauge-fill {
+  background: linear-gradient(90deg, rgba(122, 122, 122, 0.26), rgba(122, 122, 122, 0.06));
 }
 
 .hint {

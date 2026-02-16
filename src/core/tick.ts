@@ -19,6 +19,8 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
     return
   }
 
+  if (!state.productionRunning[key]) return
+
   const { nextProgressMs, cycles } = advanceCycleProgress(state.productionProgress[key], elapsedMs, BUILDING_CYCLE_MS)
   state.productionProgress[key] = nextProgressMs
   if (cycles <= 0) return
@@ -103,6 +105,30 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key)
 }
 
+function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap'): void {
+  if (key === 'gatherWood') {
+    const amount = 6 + (state.upgrades.betterAxe ? 1 : 0)
+    state.resources.wood += amount
+    appendLog(state, `🪵 나무 +${amount}`)
+    return
+  }
+
+  const amount = 7 + (state.upgrades.sortingWork ? 1 : 0)
+  state.resources.scrap += amount
+  appendLog(state, `🗑️ 고물 +${amount}`)
+}
+
+function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap', elapsedMs: number): void {
+  const current = state.actionProgress[key]
+  if (current <= 0) return
+
+  const { nextRemainingMs, completed } = advanceCountdownProcess(current, elapsedMs)
+  state.actionProgress[key] = nextRemainingMs
+  if (!completed) return
+
+  resolveGatherCompletion(state, key)
+}
+
 export function advanceState(state: GameState, now = Date.now()): void {
   const prev = Number.isFinite(state.lastUpdate) ? state.lastUpdate : now
   const elapsed = Math.max(0, Math.min(MAX_ELAPSED_MS, now - prev))
@@ -114,6 +140,9 @@ export function advanceState(state: GameState, now = Date.now()): void {
   processBuildingElapsed(state, 'miner', elapsed)
 
   ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed))
+
+  processActionElapsed(state, 'gatherWood', elapsed)
+  processActionElapsed(state, 'gatherScrap', elapsed)
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))

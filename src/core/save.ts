@@ -28,6 +28,8 @@ function normalizeState(raw: unknown): GameState | null {
   const base = structuredClone(initialState)
   const loaded = raw as Partial<GameState> & {
     productionProgress?: Partial<GameState['productionProgress']>
+    productionRunning?: Partial<GameState['productionRunning']>
+    actionProgress?: Partial<GameState['actionProgress']>
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
   }
@@ -60,6 +62,16 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
   base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
+
+  base.productionRunning.lumberMill =
+    typeof loaded.productionRunning?.lumberMill === 'boolean'
+      ? loaded.productionRunning.lumberMill
+      : base.productionRunning.lumberMill
+  base.productionRunning.miner =
+    typeof loaded.productionRunning?.miner === 'boolean' ? loaded.productionRunning.miner : base.productionRunning.miner
+
+  base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
+  base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
 
   base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)

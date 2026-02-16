@@ -10,6 +10,7 @@ import {
   selectWeapon,
   setActiveTab,
   startCraft,
+  toggleBuildingRun,
   unequipModuleFromSlot,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
@@ -23,17 +24,7 @@ let state: GameState = loadGame() ?? structuredClone(initialState)
 const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 
-type ActionTiming = {
-  cooldownStartedAt: number
-  cooldownUntil: number
-}
-
 type ActionKey = 'gatherWood' | 'gatherScrap'
-
-const actionTiming: Record<ActionKey, ActionTiming> = {
-  gatherWood: { cooldownStartedAt: 0, cooldownUntil: 0 },
-  gatherScrap: { cooldownStartedAt: 0, cooldownUntil: 0 },
-}
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -54,14 +45,15 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
     }
   }
 
-  const timing = actionTiming[key]
-  if (now < timing.cooldownUntil) {
-    const elapsed = (now - timing.cooldownStartedAt) / duration
-    const clampedElapsed = Math.min(1, Math.max(0, elapsed))
-    const remainingSec = (1 - clampedElapsed) * (duration / 1000)
+  const remaining = state.actionProgress[key]
+  if (remaining > 0) {
+    const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
+    const smoothedRemaining = Math.max(0, remaining - elapsedSinceUpdate)
+    const progress = (duration - smoothedRemaining) / duration
+    const remainingSec = smoothedRemaining / 1000
     return {
       phase: 'cooldown' as const,
-      progress: elapsed,
+      progress,
       disabled: true,
       label: '진행 중',
       timeText: `${remainingSec.toFixed(1)}s / ${totalSecText}`,
@@ -75,14 +67,6 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
     label: '준비됨',
     timeText: `- / ${totalSecText}`,
   }
-}
-
-function triggerActionFeedback(key: ActionKey): number {
-  const now = Date.now()
-  const duration = ACTION_DURATION_MS[key]
-  actionTiming[key].cooldownStartedAt = now
-  actionTiming[key].cooldownUntil = now + duration
-  return now
 }
 
 function syncState(now = Date.now()): void {
@@ -112,16 +96,14 @@ function redraw(nowOverride?: number): void {
           const view = toActionView('gatherWood', false)
           if (view.disabled) return
           gatherWood(state)
-          const actionStartAt = triggerActionFeedback('gatherWood')
-          redraw(actionStartAt)
+          redraw()
         },
         onGatherScrap: () => {
           syncState()
           const view = toActionView('gatherScrap', !state.unlocks.scrapAction)
           if (view.disabled) return
           gatherScrap(state)
-          const actionStartAt = triggerActionFeedback('gatherScrap')
-          redraw(actionStartAt)
+          redraw()
         },
         onBuyLumberMill: () => {
           syncState()
@@ -141,6 +123,16 @@ function redraw(nowOverride?: number): void {
         onBuyLab: () => {
           syncState()
           buyBuilding(state, 'lab')
+          redraw()
+        },
+        onToggleLumberMillRun: () => {
+          syncState()
+          toggleBuildingRun(state, 'lumberMill')
+          redraw()
+        },
+        onToggleMinerRun: () => {
+          syncState()
+          toggleBuildingRun(state, 'miner')
           redraw()
         },
         onBuyUpgrade: (key) => {
