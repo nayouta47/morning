@@ -19,7 +19,7 @@ type Handlers = {
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
 }
 
-type ActionUI = {
+export type ActionUI = {
   gatherWood: ActionGaugeView
   gatherMetal: ActionGaugeView
 }
@@ -61,6 +61,61 @@ function renderBuildingGauge(id: string, title: string, progress: number, stateT
       </span>
     </div>
   `
+}
+
+function patchActionGauge(app: ParentNode, id: string, action: ActionGaugeView): void {
+  const button = app.querySelector<HTMLButtonElement>(`#${id}`)
+  if (!button) return
+
+  const progress = Math.round(clamp01(action.progress) * 100)
+  button.classList.remove('gauge-ready', 'gauge-cooldown', 'gauge-locked')
+  button.classList.add(`gauge-${action.phase}`)
+  button.disabled = action.disabled
+
+  const fill = button.querySelector<HTMLElement>('.gauge-fill')
+  if (fill) {
+    fill.style.width = `${progress}%`
+  }
+
+  const state = button.querySelector<HTMLElement>('.gauge-state')
+  if (state) {
+    state.textContent = action.label
+  }
+}
+
+function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string): void {
+  const gauge = app.querySelector<HTMLElement>(`#${id}`)
+  if (!gauge) return
+
+  const width = Math.round(clamp01(progress) * 100)
+  const fill = gauge.querySelector<HTMLElement>('.gauge-fill')
+  if (fill) {
+    fill.style.width = `${width}%`
+  }
+
+  const state = gauge.querySelector<HTMLElement>('.gauge-state')
+  if (state) {
+    state.textContent = stateText
+  }
+}
+
+export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
+  const app = document.querySelector<HTMLDivElement>('#app')
+  if (!app) return
+
+  patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
+  patchActionGauge(app, 'gather-metal', actionUI.gatherMetal)
+
+  const lumberProgress = state.buildings.lumberMill > 0 ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
+  const minerProgress = state.buildings.miner > 0 ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
+
+  patchBuildingGauge(
+    app,
+    'lumber-progress',
+    lumberProgress,
+    state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기',
+  )
+  patchBuildingGauge(app, 'miner-progress', minerProgress, state.buildings.miner > 0 ? `${Math.round(minerProgress * 100)}%` : '대기')
 }
 
 export function renderApp(state: GameState, handlers: Handlers, actionUI: ActionUI): void {
