@@ -1,24 +1,46 @@
 import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { buyBuilding, buyUpgrade, gatherMetal, gatherWood } from './core/actions.ts'
+import { loadGame, saveGame, startAutosave } from './core/save.ts'
+import { initialState, type GameState } from './core/state.ts'
+import { runTick, startTicker } from './core/tick.ts'
+import { renderApp } from './ui/render.ts'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+let state: GameState = loadGame() ?? structuredClone(initialState)
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+function redraw(): void {
+  renderApp(state, {
+    onGatherWood: () => {
+      gatherWood(state)
+      redraw()
+    },
+    onGatherMetal: () => {
+      gatherMetal(state)
+      redraw()
+    },
+    onBuyLumberMill: () => {
+      buyBuilding(state, 'lumberMill')
+      redraw()
+    },
+    onBuyMiner: () => {
+      buyBuilding(state, 'miner')
+      redraw()
+    },
+    onBuyUpgrade: (key) => {
+      buyUpgrade(state, key)
+      redraw()
+    },
+  })
+}
+
+redraw()
+
+startTicker(() => {
+  runTick(state)
+  redraw()
+})
+
+startAutosave(() => state)
+
+window.addEventListener('beforeunload', () => {
+  saveGame(state)
+})
