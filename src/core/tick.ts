@@ -4,6 +4,8 @@ import { appendLog } from './actions.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
+const CHROMIUM_CHANCE_PER_SCRAP = 0.008
+const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
 type BuildingKey = 'lumberMill' | 'miner'
 
@@ -21,15 +23,36 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
   if (cycles <= 0) return
 
   state.productionProgress[key] -= cycles * BUILDING_CYCLE_MS
-  const amount = cycles * count
+  const capacity = cycles * count
 
   if (key === 'lumberMill') {
-    state.resources.wood += amount
-    appendLog(state, `벌목소 생산: 나무 +${amount}`)
-  } else {
-    state.resources.metal += amount
-    appendLog(state, `채굴기 생산: 금속 +${amount}`)
+    state.resources.wood += capacity
+    appendLog(state, `벌목소 생산: 나무 +${capacity}`)
+    return
   }
+
+  const processed = Math.min(capacity, Math.floor(state.resources.scrap))
+  if (processed <= 0) return
+
+  state.resources.scrap -= processed
+  state.resources.iron += processed
+
+  let chromium = 0
+  let molybdenum = 0
+  for (let i = 0; i < processed; i += 1) {
+    if (Math.random() < CHROMIUM_CHANCE_PER_SCRAP) chromium += 1
+    if (Math.random() < MOLYBDENUM_CHANCE_PER_SCRAP) molybdenum += 1
+  }
+
+  if (chromium > 0) state.resources.chromium += chromium
+  if (molybdenum > 0) state.resources.molybdenum += molybdenum
+
+  const bonusParts: string[] = []
+  if (chromium > 0) bonusParts.push(`크롬 +${chromium}`)
+  if (molybdenum > 0) bonusParts.push(`몰리브덴 +${molybdenum}`)
+
+  const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
+  appendLog(state, `분쇄기 처리: 고물 -${processed}, 철 +${processed}${bonusText}`)
 }
 
 function makeWeapon(state: GameState, type: WeaponType): void {

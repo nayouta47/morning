@@ -12,6 +12,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 
 type BuildingKey = keyof typeof BUILDING_BASE_COST
 type UpgradeKey = keyof typeof UPGRADE_DEFS
+type CostLike = { wood: number; iron: number }
 
 function pushLog(state: GameState, text: string): void {
   state.log.push(text)
@@ -20,25 +21,25 @@ function pushLog(state: GameState, text: string): void {
   }
 }
 
-function canAfford(resources: Resources, cost: Resources): boolean {
-  return resources.wood >= cost.wood && resources.metal >= cost.metal
+function canAfford(resources: Resources, cost: CostLike): boolean {
+  return resources.wood >= cost.wood && resources.iron >= cost.iron
 }
 
-function payCost(resources: Resources, cost: Resources): void {
+function payCost(resources: Resources, cost: CostLike): void {
   resources.wood -= cost.wood
-  resources.metal -= cost.metal
+  resources.iron -= cost.iron
 }
 
 function moduleName(type: ModuleType): string {
   return type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'
 }
 
-export function getBuildingCost(state: GameState, key: BuildingKey): Resources {
+export function getBuildingCost(state: GameState, key: BuildingKey): CostLike {
   const count = state.buildings[key]
   const base = BUILDING_BASE_COST[key]
   return {
     wood: Math.ceil(base.wood * COST_SCALE ** count),
-    metal: Math.ceil(base.metal * COST_SCALE ** count),
+    iron: Math.ceil(base.iron * COST_SCALE ** count),
   }
 }
 
@@ -54,15 +55,15 @@ export function gatherWood(state: GameState): void {
   applyUnlocks(state)
 }
 
-export function gatherMetal(state: GameState): void {
-  if (!state.unlocks.metalAction) {
-    pushLog(state, '아직 금속을 찾을 방법이 없다.')
+export function gatherScrap(state: GameState): void {
+  if (!state.unlocks.scrapAction) {
+    pushLog(state, '아직 고물을 주울 방법이 없다.')
     return
   }
 
   const amount = 1 + (state.upgrades.sortingWork ? 1 : 0)
-  state.resources.metal += amount
-  pushLog(state, `금속 +${amount}`)
+  state.resources.scrap += amount
+  pushLog(state, `고물 +${amount}`)
   applyUnlocks(state)
 }
 
@@ -78,7 +79,7 @@ export function buyBuilding(state: GameState, key: BuildingKey): void {
 
   payCost(state.resources, cost)
   state.buildings[key] += 1
-  const name = key === 'lumberMill' ? '벌목소' : '채굴기'
+  const name = key === 'lumberMill' ? '벌목소' : '분쇄기'
   pushLog(state, `${name} 건설 (${state.buildings[key]})`)
   applyUnlocks(state)
 }

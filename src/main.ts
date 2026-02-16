@@ -3,7 +3,7 @@ import {
   buyBuilding,
   buyUpgrade,
   equipModuleToSlot,
-  gatherMetal,
+  gatherScrap,
   gatherWood,
   moveEquippedModuleBetweenSlots,
   reorderWeapons,
@@ -29,11 +29,11 @@ type ActionTiming = {
   cooldownUntil: number
 }
 
-type ActionKey = 'gatherWood' | 'gatherMetal'
+type ActionKey = 'gatherWood' | 'gatherScrap'
 
 const actionTiming: Record<ActionKey, ActionTiming> = {
   gatherWood: { cooldownStartedAt: 0, cooldownUntil: 0 },
-  gatherMetal: { cooldownStartedAt: 0, cooldownUntil: 0 },
+  gatherScrap: { cooldownStartedAt: 0, cooldownUntil: 0 },
 }
 
 let animationFrameId: number | null = null
@@ -101,7 +101,7 @@ function redraw(nowOverride?: number): void {
 
   const actionUI = {
     gatherWood: toActionView('gatherWood', false, now),
-    gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction, now),
+    gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
   }
 
   if (!appMounted) {
@@ -116,12 +116,12 @@ function redraw(nowOverride?: number): void {
           const actionStartAt = triggerActionFeedback('gatherWood')
           redraw(actionStartAt)
         },
-        onGatherMetal: () => {
+        onGatherScrap: () => {
           syncState()
-          const view = toActionView('gatherMetal', !state.unlocks.metalAction)
+          const view = toActionView('gatherScrap', !state.unlocks.scrapAction)
           if (view.disabled) return
-          gatherMetal(state)
-          const actionStartAt = triggerActionFeedback('gatherMetal')
+          gatherScrap(state)
+          const actionStartAt = triggerActionFeedback('gatherScrap')
           redraw(actionStartAt)
         },
         onBuyLumberMill: () => {
