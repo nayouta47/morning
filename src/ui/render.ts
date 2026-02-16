@@ -57,6 +57,13 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value))
 }
 
+function formatBuildingTime(progress: number, isActive: boolean): string {
+  const totalSec = BUILDING_CYCLE_MS / 1000
+  if (!isActive) return `- / ${totalSec.toFixed(1)}s`
+  const remainingSec = (1 - clamp01(progress)) * totalSec
+  return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
+}
+
 function setText(app: ParentNode, selector: string, text: string): void {
   const node = app.querySelector<HTMLElement>(selector)
   if (node && node.textContent !== text) node.textContent = text
@@ -83,14 +90,17 @@ function renderGaugeButton(id: string, text: string, ariaLabel: string, action: 
   `
 }
 
-function renderBuildingGauge(id: string, title: string, progress: number, stateText: string): string {
+function renderBuildingGauge(id: string, title: string, progress: number, stateText: string, timeText: string): string {
   const width = Math.round(clamp01(progress) * 100)
   return `
     <div class="building-gauge" role="group" aria-label="${title} 진행 상태" tabindex="0" id="${id}">
       <span class="gauge-fill" style="width:${width}%"></span>
       <span class="gauge-content">
         <span class="gauge-title">${title}</span>
-        <span class="gauge-state">${stateText}</span>
+        <span class="gauge-meta">
+          <span class="gauge-state">${stateText}</span>
+          <span class="gauge-time">${timeText}</span>
+        </span>
       </span>
     </div>
   `
@@ -112,7 +122,7 @@ function patchActionGauge(app: ParentNode, id: string, action: ActionGaugeView):
   if (state) state.textContent = action.label
 }
 
-function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string): void {
+function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string, timeText: string): void {
   const gauge = app.querySelector<HTMLElement>(`#${id}`)
   if (!gauge) return
 
@@ -122,6 +132,9 @@ function patchBuildingGauge(app: ParentNode, id: string, progress: number, state
 
   const state = gauge.querySelector<HTMLElement>('.gauge-state')
   if (state) state.textContent = stateText
+
+  const time = gauge.querySelector<HTMLElement>('.gauge-time')
+  if (time) time.textContent = timeText
 }
 
 function patchLogs(app: ParentNode, state: GameState): void {
@@ -374,11 +387,25 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI): void {
   setText(app, '#miner-count', `${state.buildings.miner}`)
   setText(app, '#miner-output', `${state.buildings.miner}`)
 
-  const lumberProgress = state.buildings.lumberMill > 0 ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
-  const minerProgress = state.buildings.miner > 0 ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
+  const lumberActive = state.buildings.lumberMill > 0
+  const minerActive = state.buildings.miner > 0
+  const lumberProgress = lumberActive ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
+  const minerProgress = minerActive ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
 
-  patchBuildingGauge(app, 'lumber-progress', lumberProgress, state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기')
-  patchBuildingGauge(app, 'miner-progress', minerProgress, state.buildings.miner > 0 ? `${Math.round(minerProgress * 100)}%` : '대기')
+  patchBuildingGauge(
+    app,
+    'lumber-progress',
+    lumberProgress,
+    lumberActive ? `${Math.round(lumberProgress * 100)}%` : '대기',
+    formatBuildingTime(lumberProgress, lumberActive),
+  )
+  patchBuildingGauge(
+    app,
+    'miner-progress',
+    minerProgress,
+    minerActive ? `${Math.round(minerProgress * 100)}%` : '대기',
+    formatBuildingTime(minerProgress, minerActive),
+  )
 
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
     const def = UPGRADE_DEFS[key]
@@ -411,8 +438,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const lumberCost = getBuildingCost(state, 'lumberMill')
   const minerCost = getBuildingCost(state, 'miner')
 
-  const lumberProgress = state.buildings.lumberMill > 0 ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
-  const minerProgress = state.buildings.miner > 0 ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
+  const lumberActive = state.buildings.lumberMill > 0
+  const minerActive = state.buildings.miner > 0
+  const lumberProgress = lumberActive ? state.productionProgress.lumberMill / BUILDING_CYCLE_MS : 0
+  const minerProgress = minerActive ? state.productionProgress.miner / BUILDING_CYCLE_MS : 0
 
   app.innerHTML = `
     <main class="layout">
@@ -461,10 +490,22 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         <p class="hint" id="miner-hint" ${state.unlocks.miner ? 'hidden' : ''}>해금 조건: 나무 60 + 금속 15</p>
 
         <p>벌목소: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
-        ${renderBuildingGauge('lumber-progress', '벌목소 가동', lumberProgress, state.buildings.lumberMill > 0 ? `${Math.round(lumberProgress * 100)}%` : '대기')}
+        ${renderBuildingGauge(
+          'lumber-progress',
+          '벌목소 가동',
+          lumberProgress,
+          lumberActive ? `${Math.round(lumberProgress * 100)}%` : '대기',
+          formatBuildingTime(lumberProgress, lumberActive),
+        )}
 
         <p>채굴기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 +<span id="miner-output">${state.buildings.miner}</span> 금속)</p>
-        ${renderBuildingGauge('miner-progress', '채굴기 가동', minerProgress, state.buildings.miner > 0 ? `${Math.round(minerProgress * 100)}%` : '대기')}
+        ${renderBuildingGauge(
+          'miner-progress',
+          '채굴기 가동',
+          minerProgress,
+          minerActive ? `${Math.round(minerProgress * 100)}%` : '대기',
+          formatBuildingTime(minerProgress, minerActive),
+        )}
       </section>
 
       <section class="panel upgrades">
