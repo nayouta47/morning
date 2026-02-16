@@ -22,14 +22,14 @@ export const BUILDING_DEFS = {
     id: 'workbench',
     label: '제작대',
     unlockRequirements: [] as Requirement[],
-    baseCost: { wood: 220, scrap: 50, iron: 30 } as ResourceCost,
+    baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
     effectsText: '권총/소총/모듈 제작 가능',
   },
   lab: {
     id: 'lab',
     label: '연구대',
     unlockRequirements: [] as Requirement[],
-    baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
+    baseCost: { wood: 220, scrap: 50, iron: 30 } as ResourceCost,
     effectsText: '업그레이드 연구 가능',
   },
 } as const
