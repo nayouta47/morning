@@ -248,6 +248,12 @@ li {
   background: #121212;
 }
 
+#weapon-list-items {
+  min-height: 200px;
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
 .weapon-item.selected {
   border-color: #d7b168;
 }

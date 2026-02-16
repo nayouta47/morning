@@ -199,6 +199,30 @@ export function moveEquippedModuleBetweenSlots(
   return true
 }
 
+export function reorderWeapons(state: GameState, sourceWeaponId: string, targetWeaponId: string | null): boolean {
+  const sourceIndex = state.weapons.findIndex((weapon) => weapon.id === sourceWeaponId)
+  if (sourceIndex < 0) return false
+
+  if (targetWeaponId === sourceWeaponId) return false
+
+  const [sourceWeapon] = state.weapons.splice(sourceIndex, 1)
+  if (!sourceWeapon) return false
+
+  if (targetWeaponId == null) {
+    state.weapons.push(sourceWeapon)
+    return true
+  }
+
+  const targetIndex = state.weapons.findIndex((weapon) => weapon.id === targetWeaponId)
+  if (targetIndex < 0) {
+    state.weapons.splice(sourceIndex, 0, sourceWeapon)
+    return false
+  }
+
+  state.weapons.splice(targetIndex, 0, sourceWeapon)
+  return true
+}
+
 export function appendLog(state: GameState, text: string): void {
   pushLog(state, text)
 }
