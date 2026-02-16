@@ -9,7 +9,7 @@ import { ACTION_DURATION_MS } from './data/balance.ts'
 let state: GameState = loadGame() ?? structuredClone(initialState)
 
 const SIMULATION_INTERVAL_MS = 250
-const RENDER_INTERVAL_MS = 250
+const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 
 type ActionTiming = {
   cooldownStartedAt: number
@@ -23,22 +23,10 @@ const actionTiming: Record<ActionKey, ActionTiming> = {
   gatherMetal: { cooldownStartedAt: 0, cooldownUntil: 0 },
 }
 
-let uiTimer: ReturnType<typeof setInterval> | null = null
-
-function hasActiveActionAnimation(now = Date.now()): boolean {
-  return Object.values(actionTiming).some((timing) => now < timing.cooldownUntil)
-}
-
-function ensureUiAnimationLoop(): void {
-  if (uiTimer || !hasActiveActionAnimation()) return
-  uiTimer = setInterval(() => {
-    redraw(Date.now(), true)
-    if (!hasActiveActionAnimation()) {
-      clearInterval(uiTimer!)
-      uiTimer = null
-    }
-  }, 60)
-}
+let animationFrameId: number | null = null
+let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
+let simulationLastTickAt = Date.now()
+let appMounted = false
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
   if (locked) {
@@ -75,7 +63,6 @@ function triggerActionFeedback(key: ActionKey): number {
   const duration = ACTION_DURATION_MS[key]
   actionTiming[key].cooldownStartedAt = now
   actionTiming[key].cooldownUntil = now + duration
-  ensureUiAnimationLoop()
   return now
 }
 
@@ -83,7 +70,13 @@ function syncState(now = Date.now()): void {
   advanceState(state, now)
 }
 
-function redraw(nowOverride?: number, animationOnly = false): void {
+function runSimulation(now = Date.now()): void {
+  if (now - simulationLastTickAt < SIMULATION_INTERVAL_MS) return
+  syncState(now)
+  simulationLastTickAt = now
+}
+
+function redraw(nowOverride?: number): void {
   const now = nowOverride ?? Date.now()
 
   const actionUI = {
@@ -91,62 +84,109 @@ function redraw(nowOverride?: number, animationOnly = false): void {
     gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction, now),
   }
 
-  if (animationOnly) {
-    patchAnimatedUI(state, actionUI)
+  if (!appMounted) {
+    renderApp(
+      state,
+      {
+        onGatherWood: () => {
+          syncState()
+          const view = toActionView('gatherWood', false)
+          if (view.disabled) return
+          gatherWood(state)
+          const actionStartAt = triggerActionFeedback('gatherWood')
+          redraw(actionStartAt)
+        },
+        onGatherMetal: () => {
+          syncState()
+          const view = toActionView('gatherMetal', !state.unlocks.metalAction)
+          if (view.disabled) return
+          gatherMetal(state)
+          const actionStartAt = triggerActionFeedback('gatherMetal')
+          redraw(actionStartAt)
+        },
+        onBuyLumberMill: () => {
+          syncState()
+          buyBuilding(state, 'lumberMill')
+          redraw()
+        },
+        onBuyMiner: () => {
+          syncState()
+          buyBuilding(state, 'miner')
+          redraw()
+        },
+        onBuyUpgrade: (key) => {
+          syncState()
+          buyUpgrade(state, key)
+          redraw()
+        },
+      },
+      actionUI,
+    )
+    appMounted = true
     return
   }
 
-  renderApp(
-    state,
-    {
-      onGatherWood: () => {
-        syncState()
-        const view = toActionView('gatherWood', false)
-        if (view.disabled) return
-        gatherWood(state)
-        const actionStartAt = triggerActionFeedback('gatherWood')
-        redraw(actionStartAt)
-      },
-      onGatherMetal: () => {
-        syncState()
-        const view = toActionView('gatherMetal', !state.unlocks.metalAction)
-        if (view.disabled) return
-        gatherMetal(state)
-        const actionStartAt = triggerActionFeedback('gatherMetal')
-        redraw(actionStartAt)
-      },
-      onBuyLumberMill: () => {
-        syncState()
-        buyBuilding(state, 'lumberMill')
-        redraw()
-      },
-      onBuyMiner: () => {
-        syncState()
-        buyBuilding(state, 'miner')
-        redraw()
-      },
-      onBuyUpgrade: (key) => {
-        syncState()
-        buyUpgrade(state, key)
-        redraw()
-      },
-    },
-    actionUI,
-  )
+  patchAnimatedUI(state, actionUI)
+}
+
+function frameLoop(): void {
+  if (document.hidden) {
+    animationFrameId = null
+    return
+  }
+
+  const now = Date.now()
+  runSimulation(now)
+  redraw(now)
+  animationFrameId = requestAnimationFrame(frameLoop)
+}
+
+function startFrameLoop(): void {
+  if (animationFrameId !== null) return
+  animationFrameId = requestAnimationFrame(frameLoop)
+}
+
+function stopFrameLoop(): void {
+  if (animationFrameId === null) return
+  cancelAnimationFrame(animationFrameId)
+  animationFrameId = null
+}
+
+function startHiddenSimulation(): void {
+  if (hiddenSimulationTimer) return
+  hiddenSimulationTimer = setInterval(() => {
+    syncState()
+    simulationLastTickAt = Date.now()
+  }, HIDDEN_SIMULATION_INTERVAL_MS)
+}
+
+function stopHiddenSimulation(): void {
+  if (!hiddenSimulationTimer) return
+  clearInterval(hiddenSimulationTimer)
+  hiddenSimulationTimer = null
 }
 
 syncState()
+simulationLastTickAt = Date.now()
 redraw()
-
-setInterval(() => {
-  syncState()
-}, SIMULATION_INTERVAL_MS)
-
-setInterval(() => {
-  redraw()
-}, RENDER_INTERVAL_MS)
+startFrameLoop()
 
 startAutosave(() => state)
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopFrameLoop()
+    startHiddenSimulation()
+    return
+  }
+
+  stopHiddenSimulation()
+  const now = Date.now()
+  syncState(now)
+  simulationLastTickAt = now
+  redraw(now)
+  startFrameLoop()
+})
 
 window.addEventListener('beforeunload', () => {
   syncState()
