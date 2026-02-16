@@ -64,12 +64,12 @@ function fmt(n: number): string {
 }
 
 const RESOURCE_LABEL: Record<'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel', string> = {
-  wood: '🌲나무',
+  wood: '🪵나무',
   scrap: '🧰고물',
   iron: '⛓️철',
   chromium: '🧪크롬',
   molybdenum: '⚙️몰리브덴',
-  shovel: '⛏️삽',
+  shovel: '🪏삽',
 }
 
 function formatResourceAmount(
@@ -325,8 +325,8 @@ function renderCraftActions(state: GameState): string {
       )}
       ${renderGaugeButton(
         'craft-shovel',
-        `⛏️ 삽 제작 (30초 · ${formatCraftCost(SHOVEL_CRAFT_COST)})`,
-        '⛏️ 삽 제작',
+        `🪏 삽 제작 (30초 · ${formatCraftCost(SHOVEL_CRAFT_COST)})`,
+        '🪏 삽 제작',
         shovelView,
       )}
     </div>
@@ -510,7 +510,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-molybdenum', fmt(state.resources.molybdenum))
   setText(app, '#res-shovel', `${state.resources.shovel}`)
 
-  setText(app, '#gather-wood-title', `🌲 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`)
+  setText(app, '#gather-wood-title', `🪵 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`)
   setText(app, '#gather-scrap-title', `🧰 고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`)
 
   const gatherScrapButton = app.querySelector<HTMLButtonElement>('#gather-scrap')
@@ -620,7 +620,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel actions">
         <h2>행동</h2>
-        ${renderGaugeButton('gather-wood', `🌲 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`, '🌲 나무 줍기 행동', actionUI.gatherWood)}
+        ${renderGaugeButton('gather-wood', `🪵 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`, '🪵 나무 줍기 행동', actionUI.gatherWood)}
         ${renderGaugeButton(
           'gather-scrap',
           `🧰 고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`,
