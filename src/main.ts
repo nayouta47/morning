@@ -9,9 +9,7 @@ import {
   reorderWeapons,
   selectWeapon,
   setActiveTab,
-  startModuleCraft,
-  startShovelCraft,
-  startWeaponCraft,
+  startCraft,
   unequipModuleFromSlot,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
@@ -156,22 +154,22 @@ function redraw(nowOverride?: number): void {
         },
         onCraftPistol: () => {
           syncState()
-          startWeaponCraft(state, 'pistol')
+          startCraft(state, 'pistol')
           redraw()
         },
         onCraftRifle: () => {
           syncState()
-          startWeaponCraft(state, 'rifle')
+          startCraft(state, 'rifle')
           redraw()
         },
         onCraftModule: () => {
           syncState()
-          startModuleCraft(state)
+          startCraft(state, 'module')
           redraw()
         },
         onCraftShovel: () => {
           syncState()
-          startShovelCraft(state)
+          startCraft(state, 'shovel')
           redraw()
         },
         onSelectWeapon: (weaponId) => {

@@ -2,27 +2,27 @@ import { BUILDING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, WeaponType } from './state.ts'
 import { appendLog } from './actions.ts'
 import { evaluateUnlocks } from './unlocks.ts'
+import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
+import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
+import { getResourceDisplay } from '../data/resources.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
 const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
-type BuildingKey = 'lumberMill' | 'miner'
+type ProductionBuildingKey = 'lumberMill' | 'miner'
 
-type CraftKey = 'pistol' | 'rifle' | 'module' | 'shovel'
-
-function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: number): void {
+function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number): void {
   const count = state.buildings[key]
   if (count <= 0) {
     state.productionProgress[key] = 0
     return
   }
 
-  state.productionProgress[key] += elapsedMs
-  const cycles = Math.floor(state.productionProgress[key] / BUILDING_CYCLE_MS)
+  const { nextProgressMs, cycles } = advanceCycleProgress(state.productionProgress[key], elapsedMs, BUILDING_CYCLE_MS)
+  state.productionProgress[key] = nextProgressMs
   if (cycles <= 0) return
 
-  state.productionProgress[key] -= cycles * BUILDING_CYCLE_MS
   const capacity = cycles * count
 
   if (key === 'lumberMill') {
@@ -69,30 +69,38 @@ function makeModule(state: GameState, type: ModuleType): void {
   appendLog(state, `모듈 제작 완료: ${type === 'damage' ? '💥 공격력(+1)' : '⏱️ 쿨다운(-1초)'}`)
 }
 
-function makeShovel(state: GameState): void {
-  state.resources.shovel += 1
-  appendLog(state, '🪏 삽 제작 완료: 🪏 삽 +1')
+function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
+  const recipe = CRAFT_RECIPE_DEFS[key]
+
+  recipe.outputs.forEach((output) => {
+    if (output.kind === 'weapon') {
+      for (let i = 0; i < output.count; i += 1) makeWeapon(state, output.weaponType)
+      return
+    }
+
+    if (output.kind === 'resource') {
+      state.resources[output.resource] += output.amount
+      appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${output.amount}`)
+      return
+    }
+
+    for (let i = 0; i < output.count; i += 1) {
+      const index = Math.floor(Math.random() * output.pool.length)
+      const picked = output.pool[index] ?? output.pool[0]
+      if (picked) makeModule(state, picked)
+    }
+  })
 }
 
-function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number): void {
+function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: number): void {
   const current = state.craftProgress[key]
   if (current <= 0) return
 
-  state.craftProgress[key] = Math.max(0, current - elapsedMs)
-  if (state.craftProgress[key] > 0) return
+  const { nextRemainingMs, completed } = advanceCountdownProcess(current, elapsedMs)
+  state.craftProgress[key] = nextRemainingMs
+  if (!completed) return
 
-  if (key === 'module') {
-    const type: ModuleType = Math.random() < 0.5 ? 'damage' : 'cooldown'
-    makeModule(state, type)
-    return
-  }
-
-  if (key === 'shovel') {
-    makeShovel(state)
-    return
-  }
-
-  makeWeapon(state, key)
+  resolveCraftCompletion(state, key)
 }
 
 export function advanceState(state: GameState, now = Date.now()): void {
@@ -105,10 +113,7 @@ export function advanceState(state: GameState, now = Date.now()): void {
   processBuildingElapsed(state, 'lumberMill', elapsed)
   processBuildingElapsed(state, 'miner', elapsed)
 
-  processCraftElapsed(state, 'pistol', elapsed)
-  processCraftElapsed(state, 'rifle', elapsed)
-  processCraftElapsed(state, 'module', elapsed)
-  processCraftElapsed(state, 'shovel', elapsed)
+  ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed))
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))

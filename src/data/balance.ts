@@ -1,5 +1,3 @@
-export type ResourceKey = 'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel'
-
 export const COST_SCALE = 1.15
 
 export const ACTION_DURATION_MS = {
@@ -8,13 +6,6 @@ export const ACTION_DURATION_MS = {
 } as const
 
 export const BUILDING_CYCLE_MS = 10000
-
-export const BUILDING_BASE_COST = {
-  lumberMill: { wood: 0, scrap: 10, iron: 0 },
-  miner: { wood: 200, scrap: 15, iron: 0 },
-  workbench: { wood: 120, scrap: 20, iron: 0 },
-  lab: { wood: 220, scrap: 50, iron: 30 },
-} as const
 
 const UPGRADE_COST_DIVISOR = 4
 
@@ -47,20 +38,6 @@ export const UPGRADE_DEFS = {
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
-export const WEAPON_CRAFT_COST = {
-  pistol: { iron: 50, chromium: 1 },
-  rifle: { iron: 200, chromium: 5, molybdenum: 1 },
-} as const
-
-export const SHOVEL_CRAFT_COST = {
-  wood: 10,
-} as const
-
-export const MODULE_CRAFT_COST = {
-  wood: 18,
-  iron: 10,
-} as const
-
 export const WEAPON_BASE_STATS = {
   pistol: { damage: 3, cooldown: 5 },
   rifle: { damage: 8, cooldown: 10 },
@@ -73,8 +50,3 @@ export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): { wood: number; 
     iron: discountCost(base.iron),
   }
 }
-
-export const UNLOCK_CONDITIONS = {
-  lumberMill: { wood: 0, scrap: 0, iron: 0 },
-  miner: { wood: 0, scrap: 0, iron: 0 },
-} as const

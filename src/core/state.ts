@@ -1,18 +1,9 @@
-export type Resources = {
-  wood: number
-  scrap: number
-  iron: number
-  chromium: number
-  molybdenum: number
-  shovel: number
-}
+import type { ResourceId } from '../data/resources.ts'
+import type { BuildingId } from '../data/buildings.ts'
 
-export type Buildings = {
-  lumberMill: number
-  miner: number
-  workbench: number
-  lab: number
-}
+export type Resources = Record<ResourceId, number>
+
+export type Buildings = Record<BuildingId, number>
 
 export type Upgrades = {
   betterAxe: boolean
