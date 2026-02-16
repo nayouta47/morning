@@ -64,19 +64,26 @@ function fmt(n: number): string {
 }
 
 const RESOURCE_LABEL: Record<'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel', string> = {
-  wood: '🌲 나무',
-  scrap: '🧰 고물',
-  iron: '⛓️ 철',
-  chromium: '🧪 크롬',
-  molybdenum: '⚙️ 몰리브덴',
-  shovel: '⛏️ 삽',
+  wood: '🌲나무',
+  scrap: '🧰고물',
+  iron: '⛓️철',
+  chromium: '🧪크롬',
+  molybdenum: '⚙️몰리브덴',
+  shovel: '⛏️삽',
+}
+
+function formatResourceAmount(
+  key: 'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum' | 'shovel',
+  value: number | string,
+): string {
+  return `${RESOURCE_LABEL[key]} ${value}`
 }
 
 function formatCraftCost(cost: Partial<Record<'wood' | 'iron' | 'chromium' | 'molybdenum' | 'scrap', number>>): string {
   const keys: Array<'wood' | 'scrap' | 'iron' | 'chromium' | 'molybdenum'> = ['wood', 'scrap', 'iron', 'chromium', 'molybdenum']
   return keys
     .filter((key) => (cost[key] ?? 0) > 0)
-    .map((key) => `${cost[key]} ${RESOURCE_LABEL[key]}`)
+    .map((key) => formatResourceAmount(key, cost[key] ?? 0))
     .join(', ')
 }
 
@@ -312,7 +319,7 @@ function renderCraftActions(state: GameState): string {
       )}
       ${renderGaugeButton(
         'craft-module',
-        `모듈 제작 (30초 · ${MODULE_CRAFT_COST.wood} ${RESOURCE_LABEL.wood}, ${MODULE_CRAFT_COST.iron} ${RESOURCE_LABEL.iron})`,
+        `모듈 제작 (30초 · ${formatResourceAmount('wood', MODULE_CRAFT_COST.wood)}, ${formatResourceAmount('iron', MODULE_CRAFT_COST.iron)})`,
         '모듈 제작',
         moduleView,
       )}
@@ -517,14 +524,14 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
   if (buyLumber) buyLumber.disabled = !state.unlocks.lumberMill
-  setText(app, '#buy-lumber-label', `벌목기 설치 (${lumberCost.scrap} ${RESOURCE_LABEL.scrap})`)
+  setText(app, '#buy-lumber-label', `벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})`)
 
   const buyMiner = app.querySelector<HTMLButtonElement>('#buy-miner')
   if (buyMiner) buyMiner.disabled = !state.unlocks.miner
-  setText(app, '#buy-miner-label', `분쇄기 설치 (${minerCost.wood} ${RESOURCE_LABEL.wood}, ${minerCost.scrap} ${RESOURCE_LABEL.scrap})`)
+  setText(app, '#buy-miner-label', `분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})`)
 
-  setText(app, '#buy-workbench-label', `제작대 설치 (${workbenchCost.wood} ${RESOURCE_LABEL.wood}, ${workbenchCost.scrap} ${RESOURCE_LABEL.scrap})`)
-  setText(app, '#buy-lab-label', `실험실 설치 (${labCost.wood} ${RESOURCE_LABEL.wood}, ${labCost.scrap} ${RESOURCE_LABEL.scrap}, ${labCost.iron} ${RESOURCE_LABEL.iron})`)
+  setText(app, '#buy-workbench-label', `제작대 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})`)
+  setText(app, '#buy-lab-label', `실험실 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})`)
 
   setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
   setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
@@ -549,7 +556,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
     const upgradeButton = app.querySelector<HTMLButtonElement>(`button[data-upgrade="${key}"]`)
     if (upgradeButton) {
       upgradeButton.disabled = done
-      const label = `${def.name} (${cost.wood} ${RESOURCE_LABEL.wood}, ${cost.iron} ${RESOURCE_LABEL.iron})`
+      const label = `${def.name} (${formatResourceAmount('wood', cost.wood)}, ${formatResourceAmount('iron', cost.iron)})`
       if (upgradeButton.textContent !== label) upgradeButton.textContent = label
     }
 
@@ -595,16 +602,16 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         <h2>자원</h2>
         <div class="resources-split">
           <section class="resources-owned" aria-label="보유 자원">
-            <p>${RESOURCE_LABEL.wood}: <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
-            <p>${RESOURCE_LABEL.scrap}: <strong id="res-scrap">${fmt(state.resources.scrap)}</strong></p>
-            <p>${RESOURCE_LABEL.iron}: <strong id="res-iron">${fmt(state.resources.iron)}</strong></p>
-            <p>${RESOURCE_LABEL.chromium}: <strong id="res-chromium">${fmt(state.resources.chromium)}</strong></p>
-            <p>${RESOURCE_LABEL.molybdenum}: <strong id="res-molybdenum">${fmt(state.resources.molybdenum)}</strong></p>
-            <p>${RESOURCE_LABEL.shovel}: <strong id="res-shovel">${state.resources.shovel}</strong></p>
+            <p>${RESOURCE_LABEL.wood} <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
+            <p>${RESOURCE_LABEL.scrap} <strong id="res-scrap">${fmt(state.resources.scrap)}</strong></p>
+            <p>${RESOURCE_LABEL.iron} <strong id="res-iron">${fmt(state.resources.iron)}</strong></p>
+            <p>${RESOURCE_LABEL.chromium} <strong id="res-chromium">${fmt(state.resources.chromium)}</strong></p>
+            <p>${RESOURCE_LABEL.molybdenum} <strong id="res-molybdenum">${fmt(state.resources.molybdenum)}</strong></p>
+            <p>${RESOURCE_LABEL.shovel} <strong id="res-shovel">${state.resources.shovel}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
-            <p>벌목기: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> ${RESOURCE_LABEL.wood})</p>
-            <p>분쇄기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 <span id="miner-output">${state.buildings.miner}</span> ${RESOURCE_LABEL.scrap} 처리)</p>
+            <p>벌목기: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${RESOURCE_LABEL.wood} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
+            <p>분쇄기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 ${RESOURCE_LABEL.scrap} <span id="miner-output">${state.buildings.miner}</span> 처리)</p>
             <p>제작대: <span id="workbench-count">${state.buildings.workbench}</span></p>
             <p>실험실: <span id="lab-count">${state.buildings.lab}</span></p>
           </section>
@@ -631,19 +638,19 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       <section class="panel buildings">
         <h2>건설</h2>
         <button id="buy-lumber" aria-label="벌목기 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}>
-          <span id="buy-lumber-label">벌목기 설치 (${lumberCost.scrap} ${RESOURCE_LABEL.scrap})</span>
+          <span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span>
         </button>
 
         <button id="buy-miner" aria-label="분쇄기 설치" ${state.unlocks.miner ? '' : 'disabled'}>
-          <span id="buy-miner-label">분쇄기 설치 (${minerCost.wood} ${RESOURCE_LABEL.wood}, ${minerCost.scrap} ${RESOURCE_LABEL.scrap})</span>
+          <span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span>
         </button>
 
         <button id="buy-workbench" aria-label="제작대 설치">
-          <span id="buy-workbench-label">제작대 설치 (${workbenchCost.wood} ${RESOURCE_LABEL.wood}, ${workbenchCost.scrap} ${RESOURCE_LABEL.scrap})</span>
+          <span id="buy-workbench-label">제작대 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})</span>
         </button>
 
         <button id="buy-lab" aria-label="실험실 설치">
-          <span id="buy-lab-label">실험실 설치 (${labCost.wood} ${RESOURCE_LABEL.wood}, ${labCost.scrap} ${RESOURCE_LABEL.scrap}, ${labCost.iron} ${RESOURCE_LABEL.iron})</span>
+          <span id="buy-lab-label">실험실 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})</span>
         </button>
 
         ${renderBuildingGauge(
@@ -671,7 +678,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             const cost = getUpgradeCost(key as keyof typeof UPGRADE_DEFS)
             return `
               <button data-upgrade="${key}" aria-label="업그레이드 ${def.name}" ${done ? 'disabled' : ''}>
-                ${def.name} (${cost.wood} ${RESOURCE_LABEL.wood}, ${cost.iron} ${RESOURCE_LABEL.iron})
+                ${def.name} (${formatResourceAmount('wood', cost.wood)}, ${formatResourceAmount('iron', cost.iron)})
               </button>
               <p class="hint" id="upgrade-hint-${key}">${def.effectText}${done ? ' (완료)' : ''}</p>
             `
