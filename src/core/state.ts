@@ -1,6 +1,9 @@
 export type Resources = {
   wood: number
-  metal: number
+  scrap: number
+  iron: number
+  chromium: number
+  molybdenum: number
 }
 
 export type Buildings = {
@@ -16,7 +19,7 @@ export type Upgrades = {
 }
 
 export type Unlocks = {
-  metalAction: boolean
+  scrapAction: boolean
   lumberMill: boolean
   miner: boolean
 }
@@ -64,7 +67,10 @@ export type GameState = {
 export const initialState: GameState = {
   resources: {
     wood: 0,
-    metal: 0,
+    scrap: 0,
+    iron: 0,
+    chromium: 0,
+    molybdenum: 0,
   },
   buildings: {
     lumberMill: 0,
@@ -77,7 +83,7 @@ export const initialState: GameState = {
     drillBoost: false,
   },
   unlocks: {
-    metalAction: false,
+    scrapAction: false,
     lumberMill: false,
     miner: false,
   },

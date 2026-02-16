@@ -1,7 +1,7 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 
-const SAVE_KEY = 'morning-save-v1'
+const SAVE_KEY = 'morning-save-v2'
 const AUTOSAVE_MS = 5000
 
 function clampProgress(value: unknown): number {
@@ -34,7 +34,10 @@ function normalizeState(raw: unknown): GameState | null {
 
   if (loaded.resources) {
     base.resources.wood = Number(loaded.resources.wood ?? base.resources.wood)
-    base.resources.metal = Number(loaded.resources.metal ?? base.resources.metal)
+    base.resources.scrap = Number(loaded.resources.scrap ?? base.resources.scrap)
+    base.resources.iron = Number(loaded.resources.iron ?? base.resources.iron)
+    base.resources.chromium = Number(loaded.resources.chromium ?? base.resources.chromium)
+    base.resources.molybdenum = Number(loaded.resources.molybdenum ?? base.resources.molybdenum)
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
@@ -47,7 +50,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.upgrades.drillBoost = Boolean(loaded.upgrades.drillBoost)
   }
   if (loaded.unlocks) {
-    base.unlocks.metalAction = Boolean(loaded.unlocks.metalAction)
+    base.unlocks.scrapAction = Boolean(loaded.unlocks.scrapAction)
     base.unlocks.lumberMill = Boolean(loaded.unlocks.lumberMill)
     base.unlocks.miner = Boolean(loaded.unlocks.miner)
   }
