@@ -27,7 +27,7 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
 
   if (key === 'lumberMill') {
     state.resources.wood += capacity
-    appendLog(state, `벌목기 생산: 나무 +${capacity}`)
+    appendLog(state, `벌목기 생산: 🌲 나무 +${capacity}`)
     return
   }
 
@@ -48,11 +48,11 @@ function processBuildingElapsed(state: GameState, key: BuildingKey, elapsedMs: n
   if (molybdenum > 0) state.resources.molybdenum += molybdenum
 
   const bonusParts: string[] = []
-  if (chromium > 0) bonusParts.push(`크롬 +${chromium}`)
-  if (molybdenum > 0) bonusParts.push(`몰리브덴 +${molybdenum}`)
+  if (chromium > 0) bonusParts.push(`🧪 크롬 +${chromium}`)
+  if (molybdenum > 0) bonusParts.push(`⚙️ 몰리브덴 +${molybdenum}`)
 
   const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
-  appendLog(state, `분쇄기 처리: 고물 -${processed}, 철 +${processed}${bonusText}`)
+  appendLog(state, `분쇄기 처리: 🧰 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
 }
 
 function makeWeapon(state: GameState, type: WeaponType): void {
@@ -71,7 +71,7 @@ function makeModule(state: GameState, type: ModuleType): void {
 
 function makeShovel(state: GameState): void {
   state.resources.shovel += 1
-  appendLog(state, '삽 제작 완료: 삽 +1')
+  appendLog(state, '⛏️ 삽 제작 완료: ⛏️ 삽 +1')
 }
 
 function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number): void {
