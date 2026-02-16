@@ -166,24 +166,43 @@ function craftView(remainingMs: number): ActionGaugeView {
   return { phase: 'cooldown', progress, disabled: true, label: `${Math.ceil(remainingMs / 1000)}초` }
 }
 
-function renderAssemblyPanel(state: GameState): string {
-  const selected = getSelectedWeapon(state)
-  const stats = selected ? getWeaponStats(selected) : null
-  const active = selected ? getActiveSlots(selected) : new Set<number>()
-
+function renderCraftActions(state: GameState): string {
   const pistolView = craftView(state.craftProgress.pistol)
   const rifleView = craftView(state.craftProgress.rifle)
   const moduleView = craftView(state.craftProgress.module)
 
   return `
+    <div class="craft-actions" role="group" aria-label="제작 행동">
+      ${renderGaugeButton(
+        'craft-pistol',
+        `권총 제작 (30초 · 나무 ${WEAPON_CRAFT_COST.pistol.wood}, 금속 ${WEAPON_CRAFT_COST.pistol.metal})`,
+        '권총 제작',
+        pistolView,
+      )}
+      ${renderGaugeButton(
+        'craft-rifle',
+        `소총 제작 (30초 · 나무 ${WEAPON_CRAFT_COST.rifle.wood}, 금속 ${WEAPON_CRAFT_COST.rifle.metal})`,
+        '소총 제작',
+        rifleView,
+      )}
+      ${renderGaugeButton(
+        'craft-module',
+        `모듈 제작 (30초 · 나무 ${MODULE_CRAFT_COST.wood}, 금속 ${MODULE_CRAFT_COST.metal})`,
+        '모듈 제작',
+        moduleView,
+      )}
+    </div>
+  `
+}
+
+function renderAssemblyPanel(state: GameState): string {
+  const selected = getSelectedWeapon(state)
+  const stats = selected ? getWeaponStats(selected) : null
+  const active = selected ? getActiveSlots(selected) : new Set<number>()
+
+  return `
     <section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
       <h2>무기 조립</h2>
-      <div class="assembly-actions">
-        ${renderGaugeButton('craft-pistol', '권총 제작 (30초)', '권총 제작', pistolView)}
-        ${renderGaugeButton('craft-rifle', '소총 제작 (30초)', '소총 제작', rifleView)}
-        ${renderGaugeButton('craft-module', '모듈 제작 (30초)', '모듈 제작', moduleView)}
-        <p class="hint">권총: 나무 ${WEAPON_CRAFT_COST.pistol.wood}, 금속 ${WEAPON_CRAFT_COST.pistol.metal} / 소총: 나무 ${WEAPON_CRAFT_COST.rifle.wood}, 금속 ${WEAPON_CRAFT_COST.rifle.metal} / 모듈: 나무 ${MODULE_CRAFT_COST.wood}, 금속 ${MODULE_CRAFT_COST.metal}</p>
-      </div>
       <div class="assembly-grid">
         <aside class="weapon-list" aria-label="무기 인벤토리">
           <h3>무기 인벤토리</h3>
@@ -410,6 +429,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           actionUI.gatherMetal,
         )}
         <p class="hint" id="metal-hint" ${state.unlocks.metalAction ? 'hidden' : ''}>해금 조건: 나무 20</p>
+
+        <h3 class="subheading">제작</h3>
+        ${renderCraftActions(state)}
       </section>
 
       <section class="panel buildings">
