@@ -26,6 +26,28 @@ export type ProductionProgress = {
   miner: number
 }
 
+export type TabKey = 'base' | 'assembly'
+
+export type WeaponType = 'pistol' | 'rifle'
+export type ModuleType = 'damage' | 'cooldown'
+
+export type WeaponInstance = {
+  id: string
+  type: WeaponType
+  slots: Array<string | null>
+}
+
+export type ModuleInstance = {
+  id: string
+  type: ModuleType
+}
+
+export type CraftProgress = {
+  pistol: number
+  rifle: number
+  module: number
+}
+
 export type GameState = {
   resources: Resources
   buildings: Buildings
@@ -34,6 +56,13 @@ export type GameState = {
   productionProgress: ProductionProgress
   lastUpdate: number
   log: string[]
+  activeTab: TabKey
+  selectedWeaponId: string | null
+  weapons: WeaponInstance[]
+  modules: ModuleInstance[]
+  craftProgress: CraftProgress
+  nextWeaponId: number
+  nextModuleId: number
 }
 
 export const initialState: GameState = {
@@ -62,4 +91,15 @@ export const initialState: GameState = {
   },
   lastUpdate: Date.now(),
   log: ['게임 시작. 나무를 모아보자.'],
+  activeTab: 'base',
+  selectedWeaponId: null,
+  weapons: [],
+  modules: [],
+  craftProgress: {
+    pistol: 0,
+    rifle: 0,
+    module: 0,
+  },
+  nextWeaponId: 1,
+  nextModuleId: 1,
 }

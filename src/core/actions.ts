@@ -1,5 +1,13 @@
-import { BUILDING_BASE_COST, COST_SCALE, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
-import type { GameState, Resources } from './state.ts'
+import {
+  BUILDING_BASE_COST,
+  COST_SCALE,
+  MODULE_CRAFT_COST,
+  UPGRADE_DEFS,
+  WEAPON_CRAFT_COST,
+  WEAPON_CRAFT_DURATION_MS,
+  getUpgradeCost,
+} from '../data/balance.ts'
+import type { GameState, ModuleType, Resources, TabKey, WeaponType } from './state.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 
 type BuildingKey = keyof typeof BUILDING_BASE_COST
@@ -84,6 +92,76 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
   payCost(state.resources, cost)
   state.upgrades[key] = true
   pushLog(state, `업그레이드 완료: ${def.name}`)
+}
+
+export function setActiveTab(state: GameState, tab: TabKey): void {
+  state.activeTab = tab
+}
+
+export function selectWeapon(state: GameState, weaponId: string | null): void {
+  state.selectedWeaponId = weaponId
+}
+
+export function startWeaponCraft(state: GameState, type: WeaponType): void {
+  if (state.craftProgress[type] > 0) {
+    pushLog(state, '이미 제작 중입니다.')
+    return
+  }
+
+  const cost = WEAPON_CRAFT_COST[type]
+  if (!canAfford(state.resources, cost)) {
+    pushLog(state, '자원이 부족합니다.')
+    return
+  }
+
+  payCost(state.resources, cost)
+  state.craftProgress[type] = WEAPON_CRAFT_DURATION_MS
+  pushLog(state, `${type === 'pistol' ? '권총' : '소총'} 제작 시작 (30초)`)
+}
+
+export function startModuleCraft(state: GameState): void {
+  if (state.craftProgress.module > 0) {
+    pushLog(state, '이미 제작 중입니다.')
+    return
+  }
+
+  if (!canAfford(state.resources, MODULE_CRAFT_COST)) {
+    pushLog(state, '자원이 부족합니다.')
+    return
+  }
+
+  payCost(state.resources, MODULE_CRAFT_COST)
+  state.craftProgress.module = WEAPON_CRAFT_DURATION_MS
+  pushLog(state, '모듈 제작 시작 (30초)')
+}
+
+export function equipModuleToSlot(state: GameState, weaponId: string, moduleId: string, slotIndex: number): boolean {
+  const weapon = state.weapons.find((w) => w.id === weaponId)
+  if (!weapon) return false
+  const moduleIndex = state.modules.findIndex((m) => m.id === moduleId)
+  if (moduleIndex < 0) return false
+  if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
+  if (weapon.slots[slotIndex]) return false
+
+  weapon.slots[slotIndex] = moduleId
+  const [mod] = state.modules.splice(moduleIndex, 1)
+  pushLog(state, `장착: ${mod.type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'} -> ${weapon.id} [${slotIndex + 1}]`)
+  return true
+}
+
+export function unequipModuleFromSlot(state: GameState, weaponId: string, slotIndex: number): boolean {
+  const weapon = state.weapons.find((w) => w.id === weaponId)
+  if (!weapon) return false
+  if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
+
+  const moduleId = weapon.slots[slotIndex]
+  if (!moduleId) return false
+
+  weapon.slots[slotIndex] = null
+  const type: ModuleType = moduleId.startsWith('DMG-') ? 'damage' : 'cooldown'
+  state.modules.push({ id: moduleId, type })
+  pushLog(state, `해제: ${weapon.id} [${slotIndex + 1}] -> 모듈 인벤토리`)
+  return true
 }
 
 export function appendLog(state: GameState, text: string): void {

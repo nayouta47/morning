@@ -1,4 +1,4 @@
-import type { GameState } from './state.ts'
+import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 
 const SAVE_KEY = 'morning-save-v1'
@@ -9,12 +9,21 @@ function clampProgress(value: unknown): number {
   return Math.min(999_999, Math.max(0, value))
 }
 
+function toWeaponType(value: unknown): WeaponType {
+  return value === 'rifle' ? 'rifle' : 'pistol'
+}
+
+function inferModuleType(id: string): ModuleType {
+  return id.startsWith('DMG-') ? 'damage' : 'cooldown'
+}
+
 function normalizeState(raw: unknown): GameState | null {
   if (!raw || typeof raw !== 'object') return null
 
   const base = structuredClone(initialState)
   const loaded = raw as Partial<GameState> & {
     productionProgress?: Partial<GameState['productionProgress']>
+    craftProgress?: Partial<GameState['craftProgress']>
   }
 
   if (loaded.resources) {
@@ -40,6 +49,10 @@ function normalizeState(raw: unknown): GameState | null {
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
   base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
 
+  base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
+  base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)
+  base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
+
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
@@ -47,6 +60,47 @@ function normalizeState(raw: unknown): GameState | null {
     base.log = loaded.log.filter((line): line is string => typeof line === 'string').slice(-30)
     if (base.log.length === 0) base.log = [...initialState.log]
   }
+
+  const activeTab = loaded.activeTab as TabKey
+  base.activeTab = activeTab === 'assembly' ? 'assembly' : 'base'
+
+  if (Array.isArray(loaded.weapons)) {
+    base.weapons = loaded.weapons
+      .filter((w): w is GameState['weapons'][number] => Boolean(w && typeof w.id === 'string'))
+      .map((w) => ({
+        id: w.id,
+        type: toWeaponType(w.type),
+        slots: Array.from({ length: 50 }, (_, index) => {
+          const value = Array.isArray(w.slots) ? w.slots[index] : null
+          return typeof value === 'string' ? value : null
+        }),
+      }))
+  }
+
+  if (Array.isArray(loaded.modules)) {
+    base.modules = loaded.modules
+      .filter((m): m is GameState['modules'][number] => Boolean(m && typeof m.id === 'string'))
+      .map((m) => ({
+        id: m.id,
+        type: m.type === 'damage' || m.type === 'cooldown' ? m.type : inferModuleType(m.id),
+      }))
+  }
+
+  base.selectedWeaponId =
+    typeof loaded.selectedWeaponId === 'string' && base.weapons.some((w) => w.id === loaded.selectedWeaponId)
+      ? loaded.selectedWeaponId
+      : base.weapons[0]?.id ?? null
+
+  base.nextWeaponId = Math.max(
+    Number(loaded.nextWeaponId) || 1,
+    ...base.weapons.map((w) => Number(w.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
+    1,
+  )
+  base.nextModuleId = Math.max(
+    Number(loaded.nextModuleId) || 1,
+    ...base.modules.map((m) => Number(m.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
+    1,
+  )
 
   return base
 }
