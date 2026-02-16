@@ -5,6 +5,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
+import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from './rewards.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -81,6 +82,18 @@ function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
     }
 
     if (output.kind === 'resource') {
+      if (output.resource === 'shovel') {
+        const current = getShovelCount(state)
+        const addAmount = Math.max(0, Math.min(output.amount, SHOVEL_MAX_STACK - current))
+        if (addAmount > 0) {
+          state.resources.shovel += addAmount
+          appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${addAmount}`)
+        } else {
+          appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} 최대치`)
+        }
+        return
+      }
+
       state.resources[output.resource] += output.amount
       appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${output.amount}`)
       return
@@ -107,13 +120,13 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
 
 function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap'): void {
   if (key === 'gatherWood') {
-    const amount = 6 + (state.upgrades.betterAxe ? 1 : 0)
+    const amount = getGatherWoodReward(state)
     state.resources.wood += amount
     appendLog(state, `🪵 나무 +${amount}`)
     return
   }
 
-  const amount = 7 + (state.upgrades.sortingWork ? 1 : 0)
+  const amount = getGatherScrapReward(state)
   state.resources.scrap += amount
   appendLog(state, `🗑️ 고물 +${amount}`)
 }

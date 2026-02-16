@@ -1,5 +1,6 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
+import { SHOVEL_MAX_STACK } from './rewards.ts'
 
 const SAVE_KEY = 'morning-save-v3'
 const AUTOSAVE_MS = 5000
@@ -40,7 +41,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.iron = Number(loaded.resources.iron ?? base.resources.iron)
     base.resources.chromium = Number(loaded.resources.chromium ?? base.resources.chromium)
     base.resources.molybdenum = Number(loaded.resources.molybdenum ?? base.resources.molybdenum)
-    base.resources.shovel = Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0)
+    base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)

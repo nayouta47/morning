@@ -4,6 +4,7 @@ import { CRAFT_RECIPE_DEFS, getCraftRecipeMissingRequirement } from '../data/cra
 import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../data/resources.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
+import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../core/rewards.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
@@ -313,11 +314,28 @@ function craftView(remainingMs: number, lockedReason: string | null = null): Act
   }
 }
 
+function shovelCraftView(state: GameState): ActionGaugeView {
+  const runningView = craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel'))
+  if (state.craftProgress.shovel > 0) return runningView
+
+  if (getShovelCount(state) >= SHOVEL_MAX_STACK) {
+    return {
+      phase: 'locked',
+      progress: 1,
+      disabled: true,
+      label: '최대치',
+      timeText: `최대 ${SHOVEL_MAX_STACK}개`,
+    }
+  }
+
+  return runningView
+}
+
 function renderCraftActions(state: GameState): string {
   const pistolView = craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol'))
   const rifleView = craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle'))
   const moduleView = craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module'))
-  const shovelView = craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel'))
+  const shovelView = shovelCraftView(state)
 
   return `
     <div class="craft-actions" role="group" aria-label="제작 행동">
@@ -507,7 +525,7 @@ function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol')))
   patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle')))
   patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module')))
-  patchActionGauge(app, 'craft-shovel', craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel')))
+  patchActionGauge(app, 'craft-shovel', shovelCraftView(state))
 }
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
@@ -526,8 +544,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}`)
 
-  setText(app, '#gather-wood-title', `🪵 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`)
-  setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`)
+  setText(app, '#gather-wood-title', `🪵 나무 줍기 (+${getGatherWoodReward(state)})`)
+  setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`)
 
   const gatherScrapButton = app.querySelector<HTMLButtonElement>('#gather-scrap')
   if (gatherScrapButton) gatherScrapButton.setAttribute('aria-label', state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동')
@@ -636,10 +654,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel actions">
         <h2>행동</h2>
-        ${renderGaugeButton('gather-wood', `🪵 나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`, '🪵 나무 줍기 행동', actionUI.gatherWood)}
+        ${renderGaugeButton('gather-wood', `🪵 나무 줍기 (+${getGatherWoodReward(state)})`, '🪵 나무 줍기 행동', actionUI.gatherWood)}
         ${renderGaugeButton(
           'gather-scrap',
-          `🗑️ 고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`,
+          `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`,
           state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동',
           actionUI.gatherScrap,
         )}

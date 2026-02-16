@@ -4,6 +4,7 @@ import { getBuildingCost, getBuildingLabel, type BuildingId } from '../data/buil
 import type { GameState, ModuleType, Resources, TabKey } from './state.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import type { ResourceCost, ResourceId } from '../data/resources.ts'
+import { SHOVEL_MAX_STACK, getShovelCount } from './rewards.ts'
 
 type UpgradeKey = keyof typeof UPGRADE_DEFS
 
@@ -117,6 +118,11 @@ export function selectWeapon(state: GameState, weaponId: string | null): void {
 
 export function startCraft(state: GameState, recipeKey: CraftRecipeKey): void {
   const recipe = CRAFT_RECIPE_DEFS[recipeKey]
+
+  if (recipeKey === 'shovel' && getShovelCount(state) >= SHOVEL_MAX_STACK) {
+    pushLog(state, '삽 보유량이 최대치입니다.')
+    return
+  }
 
   if (!isCraftRecipeUnlocked(state, recipeKey)) {
     pushLog(state, '요구 조건이 부족합니다.')
