@@ -8,7 +8,7 @@ import {
   getUpgradeCost,
 } from '../data/balance.ts'
 import { getBuildingCost } from '../core/actions.ts'
-import type { GameState, WeaponInstance } from '../core/state.ts'
+import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
@@ -30,13 +30,23 @@ type Handlers = {
   onCraftRifle: () => void
   onCraftModule: () => void
   onSelectWeapon: (weaponId: string) => void
-  onEquipModule: (moduleId: string, slotIndex: number) => void
+  onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
   onUnequipModule: (slotIndex: number) => void
 }
 
 export type ActionUI = {
   gatherWood: ActionGaugeView
   gatherMetal: ActionGaugeView
+}
+
+const MODULE_EMOJI: Record<ModuleType, string> = {
+  damage: '💥',
+  cooldown: '⏱️',
+}
+
+const MODULE_LABEL: Record<ModuleType, string> = {
+  damage: '공격력 +1',
+  cooldown: '쿨다운 -1s',
 }
 
 function fmt(n: number): string {
@@ -146,10 +156,10 @@ function getWeaponStats(weapon: WeaponInstance): {
   const base = WEAPON_BASE_STATS[weapon.type]
   let damageBonus = 0
   let cooldownBonus = 0
-  weapon.slots.forEach((moduleId) => {
-    if (!moduleId) return
-    if (moduleId.startsWith('DMG-')) damageBonus += 1
-    if (moduleId.startsWith('CDN-')) cooldownBonus += 1
+  weapon.slots.forEach((moduleType) => {
+    if (!moduleType) return
+    if (moduleType === 'damage') damageBonus += 1
+    if (moduleType === 'cooldown') cooldownBonus += 1
   })
 
   return {
@@ -265,17 +275,20 @@ function patchWeaponInventory(app: ParentNode, state: GameState): void {
 function patchModuleInventory(app: ParentNode, state: GameState): void {
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.length}:${state.modules.map((m) => m.id).join('|')}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}`
   if (root.dataset.signature === sig) return
 
-  root.innerHTML = state.modules
+  const entries = (Object.keys(state.modules) as ModuleType[])
+    .filter((type) => state.modules[type] > 0)
     .map(
-      (m) => `<div class="module-item" draggable="true" data-module-id="${m.id}" aria-label="모듈 ${m.id}">${
-        m.type === 'damage' ? '공격력 +1' : '쿨다운 -1s'
-      } · ${m.id}</div>`,
+      (type) => `<div class="module-item" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개">
+        <span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span>
+        <span class="module-count">x${state.modules[type]}</span>
+      </div>`,
     )
-    .join('')
-  if (state.modules.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'
+
+  root.innerHTML = entries.join('')
+  if (entries.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'
   root.dataset.signature = sig
 }
 
@@ -293,17 +306,18 @@ function patchWeaponBoard(app: ParentNode, state: GameState): void {
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
-    const moduleId = selected.slots[index]
+    const moduleType = selected.slots[index]
     const isActive = active.has(index)
-    const isFilled = Boolean(moduleId)
+    const isFilled = Boolean(moduleType)
+    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨` : '비어 있음'
     return `<div
       class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''}"
       role="gridcell"
       data-slot-index="${index}"
       data-accepts="${isActive ? 'true' : 'false'}"
-      aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${moduleId ? moduleId : '비어 있음'}"
+      aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}"
       tabindex="0"
-    >${moduleId ? moduleId : ''}</div>`
+    >${moduleType ? MODULE_EMOJI[moduleType] : ''}</div>`
   }).join('')
 
   board.dataset.signature = sig
@@ -513,12 +527,12 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   app.addEventListener('dragstart', (event) => {
     const target = event.target as HTMLElement
-    const moduleItem = target.closest<HTMLElement>('[data-module-id]')
+    const moduleItem = target.closest<HTMLElement>('[data-module-type]')
     if (!moduleItem || !event.dataTransfer) return
-    const moduleId = moduleItem.getAttribute('data-module-id')
-    if (!moduleId) return
+    const moduleType = moduleItem.getAttribute('data-module-type') as ModuleType | null
+    if (!moduleType) return
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/module-id', moduleId)
+    event.dataTransfer.setData('text/module-type', moduleType)
   })
 
   app.addEventListener('dragover', (event) => {
@@ -534,13 +548,13 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const target = event.target as HTMLElement
     const slot = target.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !event.dataTransfer) return
-    const moduleId = event.dataTransfer.getData('text/module-id')
-    if (!moduleId) return
+    const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
+    if (moduleType !== 'damage' && moduleType !== 'cooldown') return
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (!Number.isFinite(slotIndex)) return
     if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
     event.preventDefault()
-    handlers.onEquipModule(moduleId, slotIndex)
+    handlers.onEquipModule(moduleType, slotIndex)
   })
 
   app.addEventListener('contextmenu', (event) => {

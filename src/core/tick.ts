@@ -42,11 +42,8 @@ function makeWeapon(state: GameState, type: WeaponType): void {
 }
 
 function makeModule(state: GameState, type: ModuleType): void {
-  const prefix = type === 'damage' ? 'DMG' : 'CDN'
-  const id = `${prefix}-${String(state.nextModuleId).padStart(4, '0')}`
-  state.nextModuleId += 1
-  state.modules.push({ id, type })
-  appendLog(state, `모듈 제작 완료: ${type === 'damage' ? '공격력(+1)' : '쿨다운(-1초)'} ${id}`)
+  state.modules[type] += 1
+  appendLog(state, `모듈 제작 완료: ${type === 'damage' ? '💥 공격력(+1)' : '⏱️ 쿨다운(-1초)'}`)
 }
 
 function processCraftElapsed(state: GameState, key: CraftKey, elapsedMs: number): void {

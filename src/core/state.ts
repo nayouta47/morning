@@ -34,13 +34,10 @@ export type ModuleType = 'damage' | 'cooldown'
 export type WeaponInstance = {
   id: string
   type: WeaponType
-  slots: Array<string | null>
+  slots: Array<ModuleType | null>
 }
 
-export type ModuleInstance = {
-  id: string
-  type: ModuleType
-}
+export type ModuleStacks = Record<ModuleType, number>
 
 export type CraftProgress = {
   pistol: number
@@ -59,10 +56,9 @@ export type GameState = {
   activeTab: TabKey
   selectedWeaponId: string | null
   weapons: WeaponInstance[]
-  modules: ModuleInstance[]
+  modules: ModuleStacks
   craftProgress: CraftProgress
   nextWeaponId: number
-  nextModuleId: number
 }
 
 export const initialState: GameState = {
@@ -94,12 +90,14 @@ export const initialState: GameState = {
   activeTab: 'base',
   selectedWeaponId: null,
   weapons: [],
-  modules: [],
+  modules: {
+    damage: 0,
+    cooldown: 0,
+  },
   craftProgress: {
     pistol: 0,
     rifle: 0,
     module: 0,
   },
   nextWeaponId: 1,
-  nextModuleId: 1,
 }

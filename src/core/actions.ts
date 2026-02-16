@@ -29,6 +29,10 @@ function payCost(resources: Resources, cost: Resources): void {
   resources.metal -= cost.metal
 }
 
+function moduleName(type: ModuleType): string {
+  return type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'
+}
+
 export function getBuildingCost(state: GameState, key: BuildingKey): Resources {
   const count = state.buildings[key]
   const base = BUILDING_BASE_COST[key]
@@ -135,17 +139,16 @@ export function startModuleCraft(state: GameState): void {
   pushLog(state, '모듈 제작 시작 (30초)')
 }
 
-export function equipModuleToSlot(state: GameState, weaponId: string, moduleId: string, slotIndex: number): boolean {
+export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {
   const weapon = state.weapons.find((w) => w.id === weaponId)
   if (!weapon) return false
-  const moduleIndex = state.modules.findIndex((m) => m.id === moduleId)
-  if (moduleIndex < 0) return false
   if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
   if (weapon.slots[slotIndex]) return false
+  if (state.modules[moduleType] <= 0) return false
 
-  weapon.slots[slotIndex] = moduleId
-  const [mod] = state.modules.splice(moduleIndex, 1)
-  pushLog(state, `장착: ${mod.type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'} -> ${weapon.id} [${slotIndex + 1}]`)
+  weapon.slots[slotIndex] = moduleType
+  state.modules[moduleType] -= 1
+  pushLog(state, `장착: ${moduleName(moduleType)} -> ${weapon.id} [${slotIndex + 1}]`)
   return true
 }
 
@@ -154,13 +157,12 @@ export function unequipModuleFromSlot(state: GameState, weaponId: string, slotIn
   if (!weapon) return false
   if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
 
-  const moduleId = weapon.slots[slotIndex]
-  if (!moduleId) return false
+  const moduleType = weapon.slots[slotIndex]
+  if (!moduleType) return false
 
   weapon.slots[slotIndex] = null
-  const type: ModuleType = moduleId.startsWith('DMG-') ? 'damage' : 'cooldown'
-  state.modules.push({ id: moduleId, type })
-  pushLog(state, `해제: ${weapon.id} [${slotIndex + 1}] -> 모듈 인벤토리`)
+  state.modules[moduleType] += 1
+  pushLog(state, `해제: ${weapon.id} [${slotIndex + 1}] -> ${moduleName(moduleType)}`)
   return true
 }
 

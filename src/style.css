@@ -236,7 +236,8 @@ li {
   min-height: 28px;
   border: 1px solid #333;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 18px;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,6 +271,20 @@ li {
   background: #1a1a1a;
   font-size: 12px;
   cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.module-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.module-count {
+  color: #d8be82;
+  font-weight: 600;
 }
 
 .base-stat {

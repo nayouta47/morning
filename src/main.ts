@@ -153,10 +153,10 @@ function redraw(nowOverride?: number): void {
           selectWeapon(state, weaponId)
           redraw()
         },
-        onEquipModule: (moduleId, slotIndex) => {
+        onEquipModule: (moduleType, slotIndex) => {
           if (!state.selectedWeaponId) return
           syncState()
-          equipModuleToSlot(state, state.selectedWeaponId, moduleId, slotIndex)
+          equipModuleToSlot(state, state.selectedWeaponId, moduleType, slotIndex)
           redraw()
         },
         onUnequipModule: (slotIndex) => {
