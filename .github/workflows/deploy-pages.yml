@@ -58,38 +58,52 @@ jobs:
     needs: [build, deploy]
     if: always()
     steps:
-      - name: Send success notification
-        if: needs.deploy.result == 'success' && secrets.DISCORD_WEBHOOK_URL != ''
+      - name: Send deployment result to Discord webhook
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          REF_NAME: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-          ACTOR: ${{ github.actor }}
-          RUN_ID: ${{ github.run_id }}
-          SERVER_URL: ${{ github.server_url }}
-        run: |
-          curl -sS -X POST "$DISCORD_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            -d "{\"content\":\"✅ GitHub Pages deploy succeeded for **$REPOSITORY** on branch **$REF_NAME** (commit \\`$SHA\\`). Triggered by **$ACTOR**. Run: $SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID\"}"
-
-      - name: Send failure notification
-        if: (needs.build.result == 'failure' || needs.deploy.result == 'failure' || needs.deploy.result == 'cancelled') && secrets.DISCORD_WEBHOOK_URL != ''
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          REF_NAME: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-          ACTOR: ${{ github.actor }}
-          RUN_ID: ${{ github.run_id }}
-          SERVER_URL: ${{ github.server_url }}
           BUILD_RESULT: ${{ needs.build.result }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
         run: |
-          curl -sS -X POST "$DISCORD_WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
-            -d "{\"content\":\"❌ GitHub Pages deploy failed for **$REPOSITORY** on branch **$REF_NAME** (commit \\`$SHA\\`). Build: **$BUILD_RESULT**, Deploy: **$DEPLOY_RESULT**. Triggered by **$ACTOR**. Run: $SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID\"}"
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret is not set. Skip Discord notification."
+            exit 0
+          fi
 
-      - name: Webhook not configured
-        if: secrets.DISCORD_WEBHOOK_URL == ''
-        run: echo "DISCORD_WEBHOOK_URL secret is not set. Skipping Discord notification."
+          if [ "$BUILD_RESULT" = "success" ] && [ "$DEPLOY_RESULT" = "success" ]; then
+            STATUS_TEXT="✅ 배포 성공"
+            COLOR=5763719
+          else
+            STATUS_TEXT="❌ 배포 실패"
+            COLOR=15548997
+          fi
+
+          RUN_URL="$SERVER_URL/$REPOSITORY/actions/runs/$RUN_ID"
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [
+              {
+                "title": "$STATUS_TEXT",
+                "color": $COLOR,
+                "fields": [
+                  { "name": "Repository", "value": "$REPOSITORY", "inline": true },
+                  { "name": "Branch", "value": "$BRANCH", "inline": true },
+                  { "name": "Actor", "value": "$ACTOR", "inline": true },
+                  { "name": "Build", "value": "$BUILD_RESULT", "inline": true },
+                  { "name": "Deploy", "value": "$DEPLOY_RESULT", "inline": true },
+                  { "name": "Run", "value": "$RUN_URL", "inline": false }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -f -sS -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
