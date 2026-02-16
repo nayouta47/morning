@@ -166,6 +166,39 @@ export function unequipModuleFromSlot(state: GameState, weaponId: string, slotIn
   return true
 }
 
+export function moveEquippedModuleBetweenSlots(
+  state: GameState,
+  weaponId: string,
+  fromSlotIndex: number,
+  toSlotIndex: number,
+): boolean {
+  const weapon = state.weapons.find((w) => w.id === weaponId)
+  if (!weapon) return false
+  if (fromSlotIndex < 0 || fromSlotIndex >= weapon.slots.length) return false
+  if (toSlotIndex < 0 || toSlotIndex >= weapon.slots.length) return false
+  if (fromSlotIndex === toSlotIndex) return false
+
+  const sourceModuleType = weapon.slots[fromSlotIndex]
+  if (!sourceModuleType) return false
+
+  const targetModuleType = weapon.slots[toSlotIndex]
+
+  weapon.slots[fromSlotIndex] = null
+  weapon.slots[toSlotIndex] = sourceModuleType
+
+  if (targetModuleType) {
+    state.modules[targetModuleType] += 1
+    pushLog(
+      state,
+      `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}] (${moduleName(targetModuleType)} 자동 해제)`,
+    )
+    return true
+  }
+
+  pushLog(state, `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}]`)
+  return true
+}
+
 export function appendLog(state: GameState, text: string): void {
   pushLog(state, text)
 }

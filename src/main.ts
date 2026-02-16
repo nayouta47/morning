@@ -5,6 +5,7 @@ import {
   equipModuleToSlot,
   gatherMetal,
   gatherWood,
+  moveEquippedModuleBetweenSlots,
   selectWeapon,
   setActiveTab,
   startModuleCraft,
@@ -157,6 +158,12 @@ function redraw(nowOverride?: number): void {
           if (!state.selectedWeaponId) return
           syncState()
           equipModuleToSlot(state, state.selectedWeaponId, moduleType, slotIndex)
+          redraw()
+        },
+        onMoveEquippedModule: (fromSlotIndex, toSlotIndex) => {
+          if (!state.selectedWeaponId) return
+          syncState()
+          moveEquippedModuleBetweenSlots(state, state.selectedWeaponId, fromSlotIndex, toSlotIndex)
           redraw()
         },
         onUnequipModule: (slotIndex) => {

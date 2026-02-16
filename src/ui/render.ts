@@ -31,6 +31,7 @@ type Handlers = {
   onCraftModule: () => void
   onSelectWeapon: (weaponId: string) => void
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
+  onMoveEquippedModule: (fromSlotIndex: number, toSlotIndex: number) => void
   onUnequipModule: (slotIndex: number) => void
 }
 
@@ -390,6 +391,7 @@ function patchWeaponBoard(app: ParentNode, state: GameState): void {
       role="gridcell"
       data-slot-index="${index}"
       data-accepts="${isActive ? 'true' : 'false'}"
+      ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''}
       aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}"
       tabindex="0"
     >${moduleType ? MODULE_EMOJI[moduleType] : ''}</div>`
@@ -631,34 +633,96 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     selectModuleForDetail(event.target)
 
     const target = getEventTargetElement(event.target)
-    const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
-    if (!moduleItem || !event.dataTransfer) return
-    const moduleType = moduleItem.getAttribute('data-module-type') as ModuleType | null
+    if (!target || !event.dataTransfer) return
+
+    const moduleItem = target.closest<HTMLElement>('#module-list-items [data-module-type]')
+    if (moduleItem) {
+      const moduleType = moduleItem.getAttribute('data-module-type') as ModuleType | null
+      if (!moduleType) return
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData('text/module-drag-kind', 'inventory')
+      event.dataTransfer.setData('text/module-type', moduleType)
+      return
+    }
+
+    const slot = target.closest<HTMLElement>('[data-slot-index].filled')
+    if (!slot || !state.selectedWeaponId) return
+    const moduleType = slot.getAttribute('data-module-type') as ModuleType | null
     if (!moduleType) return
+    const slotIndex = Number(slot.getAttribute('data-slot-index'))
+    if (!Number.isFinite(slotIndex)) return
+
     event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/module-drag-kind', 'slot')
     event.dataTransfer.setData('text/module-type', moduleType)
+    event.dataTransfer.setData('text/module-slot-index', String(slotIndex))
+    event.dataTransfer.setData('text/module-weapon-id', state.selectedWeaponId)
   })
 
   app.addEventListener('dragover', (event) => {
+    if (!event.dataTransfer) return
     const target = getEventTargetElement(event.target)
-    const slot = target?.closest<HTMLElement>('[data-slot-index]')
-    if (!slot) return
-    if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
-    event.preventDefault()
-    event.dataTransfer!.dropEffect = 'move'
+    if (!target) return
+
+    const dragKind = event.dataTransfer.getData('text/module-drag-kind')
+
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (slot) {
+      if (slot.getAttribute('data-accepts') !== 'true') return
+      if (dragKind === 'inventory' && slot.classList.contains('filled')) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+      return
+    }
+
+    const inventoryPanel = target.closest<HTMLElement>('.module-inventory')
+    if (inventoryPanel && dragKind === 'slot') {
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+    }
   })
 
   app.addEventListener('drop', (event) => {
+    if (!event.dataTransfer) return
+
     const target = getEventTargetElement(event.target)
-    const slot = target?.closest<HTMLElement>('[data-slot-index]')
-    if (!slot || !event.dataTransfer) return
+    if (!target) return
+
+    const dragKind = event.dataTransfer.getData('text/module-drag-kind')
     const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
     if (moduleType !== 'damage' && moduleType !== 'cooldown') return
+
+    const inventoryPanel = target.closest<HTMLElement>('.module-inventory')
+    if (inventoryPanel && dragKind === 'slot') {
+      const sourceSlotIndex = Number(event.dataTransfer.getData('text/module-slot-index'))
+      const sourceWeaponId = event.dataTransfer.getData('text/module-weapon-id')
+      if (!Number.isFinite(sourceSlotIndex) || !state.selectedWeaponId || sourceWeaponId !== state.selectedWeaponId) return
+      event.preventDefault()
+      handlers.onUnequipModule(sourceSlotIndex)
+      return
+    }
+
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    if (!slot) return
+
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (!Number.isFinite(slotIndex)) return
-    if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
-    event.preventDefault()
-    handlers.onEquipModule(moduleType, slotIndex)
+    if (slot.getAttribute('data-accepts') !== 'true') return
+
+    if (dragKind === 'inventory') {
+      if (slot.classList.contains('filled')) return
+      event.preventDefault()
+      handlers.onEquipModule(moduleType, slotIndex)
+      return
+    }
+
+    if (dragKind === 'slot') {
+      const sourceSlotIndex = Number(event.dataTransfer.getData('text/module-slot-index'))
+      const sourceWeaponId = event.dataTransfer.getData('text/module-weapon-id')
+      if (!Number.isFinite(sourceSlotIndex) || !state.selectedWeaponId || sourceWeaponId !== state.selectedWeaponId) return
+      event.preventDefault()
+      handlers.onMoveEquippedModule(sourceSlotIndex, slotIndex)
+    }
   })
 
   app.addEventListener('contextmenu', (event) => {
