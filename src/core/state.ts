@@ -4,6 +4,7 @@ export type Resources = {
   iron: number
   chromium: number
   molybdenum: number
+  shovel: number
 }
 
 export type Buildings = {
@@ -46,6 +47,7 @@ export type CraftProgress = {
   pistol: number
   rifle: number
   module: number
+  shovel: number
 }
 
 export type GameState = {
@@ -71,6 +73,7 @@ export const initialState: GameState = {
     iron: 0,
     chromium: 0,
     molybdenum: 0,
+    shovel: 0,
   },
   buildings: {
     lumberMill: 0,
@@ -104,6 +107,7 @@ export const initialState: GameState = {
     pistol: 0,
     rifle: 0,
     module: 0,
+    shovel: 0,
   },
   nextWeaponId: 1,
 }

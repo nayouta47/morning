@@ -1,6 +1,7 @@
 import {
   BUILDING_CYCLE_MS,
   MODULE_CRAFT_COST,
+  SHOVEL_CRAFT_COST,
   UPGRADE_DEFS,
   WEAPON_BASE_STATS,
   WEAPON_CRAFT_COST,
@@ -30,6 +31,7 @@ type Handlers = {
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
+  onCraftShovel: () => void
   onSelectWeapon: (weaponId: string) => void
   onReorderWeapons: (sourceWeaponId: string, targetWeaponId: string | null) => void
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
@@ -56,6 +58,19 @@ let selectedModuleType: ModuleType | null = null
 
 function fmt(n: number): string {
   return n.toFixed(1)
+}
+
+function formatCraftCost(cost: Partial<Record<'wood' | 'iron' | 'chromium' | 'molybdenum', number>>): string {
+  const labels: Record<'wood' | 'iron' | 'chromium' | 'molybdenum', string> = {
+    wood: '나무',
+    iron: '철',
+    chromium: '크롬',
+    molybdenum: '몰리브덴',
+  }
+  return (Object.keys(labels) as Array<keyof typeof labels>)
+    .filter((key) => (cost[key] ?? 0) > 0)
+    .map((key) => `${cost[key]} ${labels[key]}`)
+    .join(', ')
 }
 
 function clamp01(value: number): number {
@@ -267,13 +282,13 @@ function renderCraftActions(state: GameState): string {
     <div class="craft-actions" role="group" aria-label="제작 행동">
       ${renderGaugeButton(
         'craft-pistol',
-        `권총 제작 (30초 · 나무 ${WEAPON_CRAFT_COST.pistol.wood}, 철 ${WEAPON_CRAFT_COST.pistol.iron})`,
+        `권총 제작 (30초 · ${formatCraftCost(WEAPON_CRAFT_COST.pistol)})`,
         '권총 제작',
         pistolView,
       )}
       ${renderGaugeButton(
         'craft-rifle',
-        `소총 제작 (30초 · 나무 ${WEAPON_CRAFT_COST.rifle.wood}, 철 ${WEAPON_CRAFT_COST.rifle.iron})`,
+        `소총 제작 (30초 · ${formatCraftCost(WEAPON_CRAFT_COST.rifle)})`,
         '소총 제작',
         rifleView,
       )}
@@ -282,6 +297,12 @@ function renderCraftActions(state: GameState): string {
         `모듈 제작 (30초 · 나무 ${MODULE_CRAFT_COST.wood}, 철 ${MODULE_CRAFT_COST.iron})`,
         '모듈 제작',
         moduleView,
+      )}
+      ${renderGaugeButton(
+        'craft-shovel',
+        `삽 제작 (30초 · ${formatCraftCost(SHOVEL_CRAFT_COST)})`,
+        '삽 제작',
+        craftView(state.craftProgress.shovel),
       )}
     </div>
   `
@@ -349,14 +370,18 @@ function patchTabs(app: ParentNode, state: GameState): void {
 function patchWeaponInventory(app: ParentNode, state: GameState): void {
   const root = app.querySelector<HTMLDivElement>('#weapon-list-items')
   if (!root) return
-  const sig = `${state.weapons.length}:${state.selectedWeaponId}:${state.weapons.map((w) => w.id).join('|')}`
+  const sig = `${state.selectedWeaponId}:${state.weapons
+    .map((w) => `${w.id}:${w.slots.filter((slot) => slot !== null).length}`)
+    .join('|')}`
   if (root.dataset.signature === sig) return
   root.innerHTML = state.weapons
-    .map(
-      (w) => `<button class="weapon-item ${w.id === state.selectedWeaponId ? 'selected' : ''}" data-weapon-id="${w.id}" draggable="true" aria-label="${
-        w.type === 'pistol' ? '권총' : '소총'
-      } ${w.id}">${w.type === 'pistol' ? '권총' : '소총'} · ${w.id}</button>`,
-    )
+    .map((w) => {
+      const emoji = w.type === 'pistol' ? '🔫' : '🪖'
+      const name = w.type === 'pistol' ? '권총' : '소총'
+      const displayId = `#${w.id.split('-')[1] ?? w.id}`
+      const equippedCount = w.slots.filter((slot) => slot !== null).length
+      return `<button class="weapon-item ${w.id === state.selectedWeaponId ? 'selected' : ''}" data-weapon-id="${w.id}" draggable="true" aria-label="${name} ${displayId}">${emoji} ${name} · ${displayId} · 🧮x${equippedCount}</button>`
+    })
     .join('')
   if (state.weapons.length === 0) root.innerHTML = '<p class="hint">제작된 무기가 없습니다.</p>'
   root.dataset.signature = sig
@@ -441,6 +466,7 @@ function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol))
   patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle))
   patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module))
+  patchActionGauge(app, 'craft-shovel', craftView(state.craftProgress.shovel))
 }
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
@@ -457,9 +483,10 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-iron', fmt(state.resources.iron))
   setText(app, '#res-chromium', fmt(state.resources.chromium))
   setText(app, '#res-molybdenum', fmt(state.resources.molybdenum))
+  setText(app, '#res-shovel', `${state.resources.shovel}`)
 
-  setText(app, '#gather-wood-title', `나무 줍기 (+${1 + (state.upgrades.betterAxe ? 1 : 0)})`)
-  setText(app, '#gather-scrap-title', `고물 줍기 (+${1 + (state.upgrades.sortingWork ? 1 : 0)})`)
+  setText(app, '#gather-wood-title', `나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`)
+  setText(app, '#gather-scrap-title', `고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`)
 
   const gatherScrapButton = app.querySelector<HTMLButtonElement>('#gather-scrap')
   if (gatherScrapButton) gatherScrapButton.setAttribute('aria-label', state.unlocks.scrapAction ? '고물 줍기 행동' : '잠긴 고물 줍기 행동')
@@ -546,6 +573,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             <p>철: <strong id="res-iron">${fmt(state.resources.iron)}</strong></p>
             <p>크롬: <strong id="res-chromium">${fmt(state.resources.chromium)}</strong></p>
             <p>몰리브덴: <strong id="res-molybdenum">${fmt(state.resources.molybdenum)}</strong></p>
+            <p>삽: <strong id="res-shovel">${state.resources.shovel}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
             <p>벌목소: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
@@ -556,14 +584,14 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel actions">
         <h2>행동</h2>
-        ${renderGaugeButton('gather-wood', `나무 줍기 (+${1 + (state.upgrades.betterAxe ? 1 : 0)})`, '나무 줍기 행동', actionUI.gatherWood)}
+        ${renderGaugeButton('gather-wood', `나무 줍기 (+${6 + (state.upgrades.betterAxe ? 1 : 0)})`, '나무 줍기 행동', actionUI.gatherWood)}
         ${renderGaugeButton(
           'gather-scrap',
-          `고물 줍기 (+${1 + (state.upgrades.sortingWork ? 1 : 0)})`,
+          `고물 줍기 (+${7 + (state.upgrades.sortingWork ? 1 : 0)})`,
           state.unlocks.scrapAction ? '고물 줍기 행동' : '잠긴 고물 줍기 행동',
           actionUI.gatherScrap,
         )}
-        <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: 나무 20</p>
+        <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: 삽 1개 이상</p>
       </section>
 
       <section class="panel buildings">
@@ -649,6 +677,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-pistol')?.addEventListener('click', handlers.onCraftPistol)
   app.querySelector<HTMLButtonElement>('#craft-rifle')?.addEventListener('click', handlers.onCraftRifle)
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
+  app.querySelector<HTMLButtonElement>('#craft-shovel')?.addEventListener('click', handlers.onCraftShovel)
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
     const target = getEventTargetElement(eventTarget)

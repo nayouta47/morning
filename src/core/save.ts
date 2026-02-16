@@ -38,6 +38,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.iron = Number(loaded.resources.iron ?? base.resources.iron)
     base.resources.chromium = Number(loaded.resources.chromium ?? base.resources.chromium)
     base.resources.molybdenum = Number(loaded.resources.molybdenum ?? base.resources.molybdenum)
+    base.resources.shovel = Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0)
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
@@ -61,6 +62,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)
   base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
+  base.craftProgress.shovel = clampProgress(loaded.craftProgress?.shovel)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
