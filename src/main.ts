@@ -6,6 +6,7 @@ import {
   gatherMetal,
   gatherWood,
   moveEquippedModuleBetweenSlots,
+  reorderWeapons,
   selectWeapon,
   setActiveTab,
   startModuleCraft,
@@ -159,6 +160,10 @@ function redraw(nowOverride?: number): void {
         },
         onSelectWeapon: (weaponId) => {
           selectWeapon(state, weaponId)
+          redraw()
+        },
+        onReorderWeapons: (sourceWeaponId, targetWeaponId) => {
+          reorderWeapons(state, sourceWeaponId, targetWeaponId)
           redraw()
         },
         onEquipModule: (moduleType, slotIndex) => {

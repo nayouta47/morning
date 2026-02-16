@@ -31,6 +31,7 @@ type Handlers = {
   onCraftRifle: () => void
   onCraftModule: () => void
   onSelectWeapon: (weaponId: string) => void
+  onReorderWeapons: (sourceWeaponId: string, targetWeaponId: string | null) => void
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
   onMoveEquippedModule: (fromSlotIndex: number, toSlotIndex: number) => void
   onUnequipModule: (slotIndex: number) => void
@@ -352,7 +353,7 @@ function patchWeaponInventory(app: ParentNode, state: GameState): void {
   if (root.dataset.signature === sig) return
   root.innerHTML = state.weapons
     .map(
-      (w) => `<button class="weapon-item ${w.id === state.selectedWeaponId ? 'selected' : ''}" data-weapon-id="${w.id}" aria-label="${
+      (w) => `<button class="weapon-item ${w.id === state.selectedWeaponId ? 'selected' : ''}" data-weapon-id="${w.id}" draggable="true" aria-label="${
         w.type === 'pistol' ? '권총' : '소총'
       } ${w.id}">${w.type === 'pistol' ? '권총' : '소총'} · ${w.id}</button>`,
     )
@@ -671,6 +672,16 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const target = getEventTargetElement(event.target)
     if (!target || !event.dataTransfer) return
 
+    const weaponItem = target.closest<HTMLElement>('#weapon-list-items [data-weapon-id]')
+    if (weaponItem) {
+      const weaponId = weaponItem.getAttribute('data-weapon-id')
+      if (!weaponId) return
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData('text/weapon-drag-kind', 'inventory')
+      event.dataTransfer.setData('text/weapon-id', weaponId)
+      return
+    }
+
     const moduleItem = target.closest<HTMLElement>('#module-list-items [data-module-type]')
     if (moduleItem) {
       const moduleType = moduleItem.getAttribute('data-module-type') as ModuleType | null
@@ -700,6 +711,13 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const target = getEventTargetElement(event.target)
     if (!target) return
 
+    const weaponDragKind = event.dataTransfer.getData('text/weapon-drag-kind')
+    if (weaponDragKind === 'inventory' && target.closest<HTMLElement>('#weapon-list-items')) {
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+      return
+    }
+
     const dragKind = event.dataTransfer.getData('text/module-drag-kind')
 
     const slot = target.closest<HTMLElement>('[data-slot-index]')
@@ -723,6 +741,22 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
     const target = getEventTargetElement(event.target)
     if (!target) return
+
+    const weaponDragKind = event.dataTransfer.getData('text/weapon-drag-kind')
+    if (weaponDragKind === 'inventory') {
+      const sourceWeaponId = event.dataTransfer.getData('text/weapon-id')
+      if (!sourceWeaponId) return
+
+      const weaponList = target.closest<HTMLElement>('#weapon-list-items')
+      if (!weaponList) return
+
+      const targetWeapon = target.closest<HTMLElement>('[data-weapon-id]')
+      const targetWeaponId = targetWeapon?.getAttribute('data-weapon-id') ?? null
+
+      event.preventDefault()
+      handlers.onReorderWeapons(sourceWeaponId, targetWeaponId)
+      return
+    }
 
     const dragKind = event.dataTransfer.getData('text/module-drag-kind')
     const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
