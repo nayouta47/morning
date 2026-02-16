@@ -228,6 +228,7 @@ li {
 
 .weapon-list,
 .weapon-board-wrap,
+.module-detail,
 .module-inventory {
   border: 1px solid #2b2b2b;
   border-radius: 6px;
@@ -275,6 +276,17 @@ li {
   color: #e7d4ab;
 }
 
+.module-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 10px;
+}
+
+.module-effect {
+  margin: 0;
+}
+
 .module-list {
   display: grid;
   gap: 6px;
@@ -292,6 +304,10 @@ li {
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+.module-item.selected {
+  border-color: #d7b168;
 }
 
 .module-emoji {
@@ -315,7 +331,8 @@ li {
 @media (max-width: 760px) {
   .layout,
   .panel-stack,
-  .assembly-grid {
+  .assembly-grid,
+  .module-grid {
     grid-template-columns: 1fr;
   }
 
