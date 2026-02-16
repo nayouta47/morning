@@ -17,6 +17,7 @@ type ActionGaugeView = {
   progress: number
   disabled: boolean
   label: string
+  timeText: string
 }
 
 type Handlers = {
@@ -62,6 +63,13 @@ function clamp01(value: number): number {
 
 function formatBuildingTime(progress: number, isActive: boolean): string {
   const totalSec = BUILDING_CYCLE_MS / 1000
+  if (!isActive) return `- / ${totalSec.toFixed(1)}s`
+  const remainingSec = (1 - clamp01(progress)) * totalSec
+  return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
+}
+
+function formatActionTime(progress: number, totalMs: number, isActive: boolean): string {
+  const totalSec = totalMs / 1000
   if (!isActive) return `- / ${totalSec.toFixed(1)}s`
   const remainingSec = (1 - clamp01(progress)) * totalSec
   return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
@@ -124,7 +132,10 @@ function renderGaugeButton(id: string, text: string, ariaLabel: string, action: 
       <span class="gauge-fill" style="width:${progress}%"></span>
       <span class="gauge-content">
         <span class="gauge-title">${text}</span>
-        <span class="gauge-state">${action.label}</span>
+        <span class="gauge-meta">
+          <span class="gauge-state">${action.label}</span>
+          <span class="gauge-time">${action.timeText}</span>
+        </span>
       </span>
     </button>
   `
@@ -160,6 +171,9 @@ function patchActionGauge(app: ParentNode, id: string, action: ActionGaugeView):
 
   const state = button.querySelector<HTMLElement>('.gauge-state')
   if (state) state.textContent = action.label
+
+  const time = button.querySelector<HTMLElement>('.gauge-time')
+  if (time) time.textContent = action.timeText
 }
 
 function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string, timeText: string): void {
@@ -224,9 +238,23 @@ function getWeaponStats(weapon: WeaponInstance): {
 }
 
 function craftView(remainingMs: number): ActionGaugeView {
-  if (remainingMs <= 0) return { phase: 'ready', progress: 1, disabled: false, label: '준비됨' }
+  if (remainingMs <= 0) {
+    return {
+      phase: 'ready',
+      progress: 1,
+      disabled: false,
+      label: '준비됨',
+      timeText: formatActionTime(0, WEAPON_CRAFT_DURATION_MS, false),
+    }
+  }
   const progress = (WEAPON_CRAFT_DURATION_MS - remainingMs) / WEAPON_CRAFT_DURATION_MS
-  return { phase: 'cooldown', progress, disabled: true, label: `${Math.ceil(remainingMs / 1000)}초` }
+  return {
+    phase: 'cooldown',
+    progress,
+    disabled: true,
+    label: '진행 중',
+    timeText: formatActionTime(progress, WEAPON_CRAFT_DURATION_MS, true),
+  }
 }
 
 function renderCraftActions(state: GameState): string {
@@ -507,8 +535,16 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       <section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
       <section class="panel resources">
         <h2>자원</h2>
-        <p>나무: <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
-        <p>금속: <strong id="res-metal">${fmt(state.resources.metal)}</strong></p>
+        <div class="resources-split">
+          <section class="resources-owned" aria-label="보유 자원">
+            <p>나무: <strong id="res-wood">${fmt(state.resources.wood)}</strong></p>
+            <p>금속: <strong id="res-metal">${fmt(state.resources.metal)}</strong></p>
+          </section>
+          <section class="resources-buildings" aria-label="설치된 건물">
+            <p>벌목소: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
+            <p>채굴기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 +<span id="miner-output">${state.buildings.miner}</span> 금속)</p>
+          </section>
+        </div>
       </section>
 
       <section class="panel actions">
@@ -521,13 +557,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           actionUI.gatherMetal,
         )}
         <p class="hint" id="metal-hint" ${state.unlocks.metalAction ? 'hidden' : ''}>해금 조건: 나무 20</p>
-
-        <h3 class="subheading">제작</h3>
-        ${renderCraftActions(state)}
       </section>
 
       <section class="panel buildings">
-        <h2>건물</h2>
+        <h2>건설</h2>
         <button id="buy-lumber" aria-label="벌목소 구매" ${state.unlocks.lumberMill ? '' : 'disabled'}>
           <span id="buy-lumber-label">벌목소 구매 (${lumberCost.wood} 나무)</span>
         </button>
@@ -538,7 +571,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         </button>
         <p class="hint" id="miner-hint" ${state.unlocks.miner ? 'hidden' : ''}>해금 조건: 나무 60 + 금속 15</p>
 
-        <p>벌목소: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 +<span id="lumber-output">${state.buildings.lumberMill}</span> 나무)</p>
         ${renderBuildingGauge(
           'lumber-progress',
           '벌목소 가동',
@@ -547,7 +579,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           lumberGauge.timeText,
         )}
 
-        <p>채굴기: <span id="miner-count">${state.buildings.miner}</span> (10초마다 +<span id="miner-output">${state.buildings.miner}</span> 금속)</p>
         ${renderBuildingGauge(
           'miner-progress',
           '채굴기 가동',
@@ -571,6 +602,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             `
           })
           .join('')}
+      </section>
+
+      <section class="panel crafting">
+        <h2>제작</h2>
+        ${renderCraftActions(state)}
       </section>
       </section>
 
