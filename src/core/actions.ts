@@ -1,4 +1,4 @@
-import { BUILDING_BASE_COST, COST_SCALE, UPGRADE_DEFS } from '../data/balance.ts'
+import { BUILDING_BASE_COST, COST_SCALE, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import type { GameState, Resources } from './state.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 
@@ -75,7 +75,7 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
   if (state.upgrades[key]) return
 
   const def = UPGRADE_DEFS[key]
-  const cost = { wood: def.cost.wood, metal: def.cost.metal }
+  const cost = getUpgradeCost(key)
   if (!canAfford(state.resources, cost)) {
     pushLog(state, '자원이 부족합니다.')
     return

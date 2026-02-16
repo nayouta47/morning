@@ -21,11 +21,17 @@ export type Unlocks = {
   miner: boolean
 }
 
+export type ProductionProgress = {
+  lumberMill: number
+  miner: number
+}
+
 export type GameState = {
   resources: Resources
   buildings: Buildings
   upgrades: Upgrades
   unlocks: Unlocks
+  productionProgress: ProductionProgress
   log: string[]
 }
 
@@ -48,6 +54,10 @@ export const initialState: GameState = {
     metalAction: false,
     lumberMill: false,
     miner: false,
+  },
+  productionProgress: {
+    lumberMill: 0,
+    miner: 0,
   },
   log: ['게임 시작. 나무를 모아보자.'],
 }

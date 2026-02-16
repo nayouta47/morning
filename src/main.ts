@@ -4,22 +4,20 @@ import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { runTick, startTicker } from './core/tick.ts'
 import { renderApp } from './ui/render.ts'
+import { ACTION_DURATION_MS } from './data/balance.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
 
 type ActionTiming = {
-  castingUntil: number
+  cooldownStartedAt: number
   cooldownUntil: number
 }
 
 type ActionKey = 'gatherWood' | 'gatherMetal'
 
-const CAST_MS = 220
-const COOLDOWN_MS = 900
-
 const actionTiming: Record<ActionKey, ActionTiming> = {
-  gatherWood: { castingUntil: 0, cooldownUntil: 0 },
-  gatherMetal: { castingUntil: 0, cooldownUntil: 0 },
+  gatherWood: { cooldownStartedAt: 0, cooldownUntil: 0 },
+  gatherMetal: { cooldownStartedAt: 0, cooldownUntil: 0 },
 }
 
 let uiTimer: ReturnType<typeof setInterval> | null = null
@@ -39,7 +37,7 @@ function ensureUiAnimationLoop(): void {
   }, 60)
 }
 
-function toActionView(key: ActionKey, locked: boolean) {
+function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
   if (locked) {
     return {
       phase: 'locked' as const,
@@ -49,26 +47,15 @@ function toActionView(key: ActionKey, locked: boolean) {
     }
   }
 
-  const now = Date.now()
   const timing = actionTiming[key]
-
-  if (now < timing.castingUntil) {
-    const elapsed = 1 - (timing.castingUntil - now) / CAST_MS
-    return {
-      phase: 'casting' as const,
-      progress: elapsed,
-      disabled: true,
-      label: '진행 중',
-    }
-  }
-
   if (now < timing.cooldownUntil) {
-    const elapsed = 1 - (timing.cooldownUntil - now) / COOLDOWN_MS
+    const duration = ACTION_DURATION_MS[key]
+    const elapsed = (now - timing.cooldownStartedAt) / duration
     return {
       phase: 'cooldown' as const,
       progress: elapsed,
       disabled: true,
-      label: '재정비',
+      label: '진행 중',
     }
   }
 
@@ -80,14 +67,18 @@ function toActionView(key: ActionKey, locked: boolean) {
   }
 }
 
-function triggerActionFeedback(key: ActionKey): void {
+function triggerActionFeedback(key: ActionKey): number {
   const now = Date.now()
-  actionTiming[key].castingUntil = now + CAST_MS
-  actionTiming[key].cooldownUntil = now + CAST_MS + COOLDOWN_MS
+  const duration = ACTION_DURATION_MS[key]
+  actionTiming[key].cooldownStartedAt = now
+  actionTiming[key].cooldownUntil = now + duration
   ensureUiAnimationLoop()
+  return now
 }
 
-function redraw(): void {
+function redraw(nowOverride?: number): void {
+  const now = nowOverride ?? Date.now()
+
   renderApp(
     state,
     {
@@ -95,15 +86,15 @@ function redraw(): void {
         const view = toActionView('gatherWood', false)
         if (view.disabled) return
         gatherWood(state)
-        triggerActionFeedback('gatherWood')
-        redraw()
+        const actionStartAt = triggerActionFeedback('gatherWood')
+        redraw(actionStartAt)
       },
       onGatherMetal: () => {
         const view = toActionView('gatherMetal', !state.unlocks.metalAction)
         if (view.disabled) return
         gatherMetal(state)
-        triggerActionFeedback('gatherMetal')
-        redraw()
+        const actionStartAt = triggerActionFeedback('gatherMetal')
+        redraw(actionStartAt)
       },
       onBuyLumberMill: () => {
         buyBuilding(state, 'lumberMill')
@@ -119,8 +110,8 @@ function redraw(): void {
       },
     },
     {
-      gatherWood: toActionView('gatherWood', false),
-      gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction),
+      gatherWood: toActionView('gatherWood', false, now),
+      gatherMetal: toActionView('gatherMetal', !state.unlocks.metalAction, now),
     },
   )
 }
