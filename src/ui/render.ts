@@ -109,6 +109,13 @@ function setHidden(app: ParentNode, selector: string, hidden: boolean): void {
   }
 }
 
+function getEventTargetElement(eventTarget: EventTarget | null): Element | null {
+  if (!eventTarget) return null
+  if (eventTarget instanceof Element) return eventTarget
+  if (eventTarget instanceof Node) return eventTarget.parentElement
+  return null
+}
+
 function renderGaugeButton(id: string, text: string, ariaLabel: string, action: ActionGaugeView): string {
   const progress = Math.round(clamp01(action.progress) * 100)
   return `
@@ -599,7 +606,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
-    const target = eventTarget as HTMLElement | null
+    const target = getEventTargetElement(eventTarget)
     const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
     const moduleType = moduleItem?.getAttribute('data-module-type') as ModuleType | null
     if (!moduleType) return
@@ -613,8 +620,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   })
 
   app.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement
-    const button = target.closest<HTMLElement>('[data-weapon-id]')
+    const target = getEventTargetElement(event.target)
+    const button = target?.closest<HTMLElement>('[data-weapon-id]')
     if (!button) return
     const id = button.getAttribute('data-weapon-id')
     if (id) handlers.onSelectWeapon(id)
@@ -623,8 +630,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.addEventListener('dragstart', (event) => {
     selectModuleForDetail(event.target)
 
-    const target = event.target as HTMLElement
-    const moduleItem = target.closest<HTMLElement>('[data-module-type]')
+    const target = getEventTargetElement(event.target)
+    const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
     if (!moduleItem || !event.dataTransfer) return
     const moduleType = moduleItem.getAttribute('data-module-type') as ModuleType | null
     if (!moduleType) return
@@ -633,8 +640,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   })
 
   app.addEventListener('dragover', (event) => {
-    const target = event.target as HTMLElement
-    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    const target = getEventTargetElement(event.target)
+    const slot = target?.closest<HTMLElement>('[data-slot-index]')
     if (!slot) return
     if (slot.getAttribute('data-accepts') !== 'true' || slot.classList.contains('filled')) return
     event.preventDefault()
@@ -642,8 +649,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   })
 
   app.addEventListener('drop', (event) => {
-    const target = event.target as HTMLElement
-    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    const target = getEventTargetElement(event.target)
+    const slot = target?.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !event.dataTransfer) return
     const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
     if (moduleType !== 'damage' && moduleType !== 'cooldown') return
@@ -655,8 +662,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   })
 
   app.addEventListener('contextmenu', (event) => {
-    const target = event.target as HTMLElement
-    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    const target = getEventTargetElement(event.target)
+    const slot = target?.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !slot.classList.contains('filled')) return
     event.preventDefault()
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
@@ -666,8 +673,8 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   app.addEventListener('auxclick', (event) => {
     if (event.button !== 1) return
-    const target = event.target as HTMLElement
-    const slot = target.closest<HTMLElement>('[data-slot-index]')
+    const target = getEventTargetElement(event.target)
+    const slot = target?.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !slot.classList.contains('filled')) return
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (!Number.isFinite(slotIndex)) return
