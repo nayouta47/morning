@@ -564,8 +564,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   if (buyMiner) buyMiner.disabled = !state.unlocks.miner
   setText(app, '#buy-miner-label', `${getBuildingLabel('miner')} 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})`)
 
-  setText(app, '#buy-workbench-label', `${getBuildingLabel('workbench')} 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})`)
-  setText(app, '#buy-lab-label', `${getBuildingLabel('lab')} 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})`)
+  setText(app, '#buy-lab-label', `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
+  setText(app, '#buy-workbench-label', `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
 
   setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
   setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
@@ -679,12 +679,12 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           <span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span>
         </button>
 
-        <button id="buy-workbench" aria-label="건물 설치">
-          <span id="buy-workbench-label">제작대 설치 (${formatResourceAmount('wood', workbenchCost.wood ?? 0)}, ${formatResourceAmount('scrap', workbenchCost.scrap ?? 0)})</span>
+        <button id="buy-lab" aria-label="건물 설치">
+          <span id="buy-lab-label">연구대 설치 (${formatCost(labCost)})</span>
         </button>
 
-        <button id="buy-lab" aria-label="건물 설치">
-          <span id="buy-lab-label">연구대 설치 (${formatResourceAmount('wood', labCost.wood ?? 0)}, ${formatResourceAmount('scrap', labCost.scrap ?? 0)}, ${formatResourceAmount('iron', labCost.iron ?? 0)})</span>
+        <button id="buy-workbench" aria-label="건물 설치">
+          <span id="buy-workbench-label">제작대 설치 (${formatCost(workbenchCost)})</span>
         </button>
 
         ${renderBuildingGauge(
