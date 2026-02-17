@@ -61,6 +61,9 @@ export type CombatState = {
   enemyAttackCooldownMs: number
   enemyAttackElapsedMs: number
   playerAttackElapsedMs: number
+  fleeGaugeDurationMs: number
+  fleeGaugeElapsedMs: number
+  fleeGaugeRunning: boolean
 }
 
 export type EnemyCodexEntry = {

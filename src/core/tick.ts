@@ -1,7 +1,7 @@
 import { BUILDING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, WeaponType } from './state.ts'
 import { appendLog, handleExplorationDeath } from './actions.ts'
-import { createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
+import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
@@ -181,6 +181,24 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
     combat.enemyAttackElapsedMs -= combat.enemyAttackCooldownMs
     state.exploration.hp = Math.max(0, state.exploration.hp - combat.enemyDamage)
     appendLog(state, `${combat.enemyName}의 타격. HP ${state.exploration.hp}/${state.exploration.maxHp}`)
+  }
+
+  if (combat.fleeGaugeRunning) {
+    combat.fleeGaugeElapsedMs = Math.min(combat.fleeGaugeDurationMs, combat.fleeGaugeElapsedMs + elapsedMs)
+
+    if (combat.fleeGaugeElapsedMs >= combat.fleeGaugeDurationMs) {
+      combat.fleeGaugeRunning = false
+      combat.fleeGaugeElapsedMs = 0
+
+      if (Math.random() < FLEE_SUCCESS_CHANCE) {
+        state.exploration.phase = 'moving'
+        state.exploration.combat = null
+        appendLog(state, '도주 성공! 전투에서 벗어났다.')
+        return
+      }
+
+      appendLog(state, '도주 실패... 전투를 이어간다.')
+    }
   }
 
   if (state.exploration.hp <= 0) {

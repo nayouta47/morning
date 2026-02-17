@@ -13,6 +13,7 @@ import {
   setActiveTab,
   startCraft,
   startExploration,
+  startExplorationFlee,
   takeExplorationLoot,
   toggleBuildingRun,
   unequipModuleFromSlot,
@@ -172,6 +173,11 @@ function redraw(nowOverride?: number): void {
         onMoveExploration: (dx, dy) => {
           syncState()
           moveExplorationStep(state, dx, dy)
+          redraw()
+        },
+        onFleeExplorationCombat: () => {
+          syncState()
+          startExplorationFlee(state)
           redraw()
         },
         onTakeLoot: (resourceId) => {

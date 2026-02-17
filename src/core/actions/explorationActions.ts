@@ -124,6 +124,18 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   return true
 }
 
+
+export function startExplorationFlee(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
+  const combat = state.exploration.combat
+  if (!combat || combat.fleeGaugeRunning) return false
+
+  combat.fleeGaugeElapsedMs = 0
+  combat.fleeGaugeRunning = true
+  pushLog(state, '도주를 시도한다...')
+  return true
+}
+
 export function takeExplorationLoot(state: GameState, resourceId: ResourceId): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'loot') return false
 

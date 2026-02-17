@@ -23,7 +23,7 @@ export function renderExplorationMap(state: GameState): string {
   return rows.join('\n')
 }
 
-function renderExplorationBody(state: GameState): string {
+function renderExplorationBody(state: GameState, now = Date.now()): string {
   const isActive = state.exploration.mode === 'active'
   if (!isActive) {
     return `<div class="exploration-loadout"><p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p><p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p><p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p><button id="exploration-start">탐험 출발</button></div>`
@@ -34,7 +34,7 @@ function renderExplorationBody(state: GameState): string {
   const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>`
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
-    return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 불가)</p></div>`
+    return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
   }
 
   if (state.exploration.phase === 'loot') {
@@ -47,8 +47,8 @@ function renderExplorationBody(state: GameState): string {
   return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p></div>`
 }
 
-export function renderExplorationPanel(state: GameState): string {
-  return `<section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state)}</div></section>`
+export function renderExplorationPanel(state: GameState, now = Date.now()): string {
+  return `<section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, now)}</div></section>`
 }
 
 export function patchExplorationBody(app: ParentNode, state: GameState): void {
