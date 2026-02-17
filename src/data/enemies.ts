@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'bareBonesMan'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -21,7 +21,7 @@ export type EnemyDef = {
 export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   siliconLifeform: {
     id: 'siliconLifeform',
-    name: '규소생물',
+    name: '벌벌떠는 기인',
     hp: 20,
     damage: 2,
     attackCooldownMs: 3000,
@@ -29,6 +29,28 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 1 },
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.65 },
       { resource: 'iron', minAmount: 1, maxAmount: 1, chance: 0.25 },
+    ],
+  },
+  siliconBug: {
+    id: 'siliconBug',
+    name: '규소충',
+    hp: 4,
+    damage: 1,
+    attackCooldownMs: 2000,
+    drops: [
+      { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.4 },
+      { resource: 'scrap', minAmount: 1, maxAmount: 1, chance: 0.25 },
+    ],
+  },
+  bareBonesMan: {
+    id: 'bareBonesMan',
+    name: '뼈만 남은 사내',
+    hp: 10,
+    damage: 3,
+    attackCooldownMs: 2000,
+    drops: [
+      { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.8 },
+      { resource: 'iron', minAmount: 1, maxAmount: 1, chance: 0.35 },
     ],
   },
 }

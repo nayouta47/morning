@@ -1,4 +1,4 @@
-import { createEnemyCombatState, DEFAULT_ENEMY_ID, ENCOUNTER_FIGHT_CHANCE, ENCOUNTER_FIGHT_DELAY } from '../combat.ts'
+import { createEnemyCombatState, ENCOUNTER_FIGHT_CHANCE, ENCOUNTER_FIGHT_DELAY, selectEncounterEnemyId } from '../combat.ts'
 import type { GameState } from '../state.ts'
 import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
@@ -98,7 +98,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     state.exploration.movesSinceEncounter = 0
     state.exploration.phase = 'combat'
 
-    const enemyId = DEFAULT_ENEMY_ID
+    const enemyId = selectEncounterEnemyId()
     const combatState = createEnemyCombatState(enemyId)
     state.exploration.combat = combatState
 
