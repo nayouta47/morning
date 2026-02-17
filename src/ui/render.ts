@@ -377,6 +377,10 @@ function renderAssemblyPanel(state: GameState): string {
   return `
     <section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
       <h2>무기 조립</h2>
+      <section id="crafting-panel" class="panel crafting">
+        <h3>제작</h3>
+        ${renderCraftActions(state)}
+      </section>
       <div class="assembly-grid">
         <aside class="weapon-list" aria-label="무기 인벤토리">
           <h3>무기 인벤토리</h3>
@@ -542,9 +546,9 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-iron', formatResourceValue('iron', state.resources.iron))
   setText(app, '#res-chromium', formatResourceValue('chromium', state.resources.chromium))
   setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
-  setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}`)
+  setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
 
-  setText(app, '#gather-wood-title', `🪵 나무 줍기 (+${getGatherWoodReward(state)})`)
+  setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`)
 
   const gatherScrapButton = app.querySelector<HTMLButtonElement>('#gather-scrap')
@@ -641,7 +645,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             <p>${getResourceDisplay('iron')} <strong id="res-iron">${formatResourceValue('iron', state.resources.iron)}</strong></p>
             <p>${getResourceDisplay('chromium')} <strong id="res-chromium">${formatResourceValue('chromium', state.resources.chromium)}</strong></p>
             <p>${getResourceDisplay('molybdenum')} <strong id="res-molybdenum">${formatResourceValue('molybdenum', state.resources.molybdenum)}</strong></p>
-            <p>${getResourceDisplay('shovel')} <strong id="res-shovel">${formatResourceValue('shovel', state.resources.shovel)}</strong></p>
+            <p>${getResourceDisplay('shovel')} <strong id="res-shovel">${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
             <p>${getBuildingLabel('lumberMill')}: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${getResourceDisplay('wood')} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
@@ -654,7 +658,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel actions">
         <h2>행동</h2>
-        ${renderGaugeButton('gather-wood', `🪵 나무 줍기 (+${getGatherWoodReward(state)})`, '🪵 나무 줍기 행동', actionUI.gatherWood)}
+        ${renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)}
         ${renderGaugeButton(
           'gather-scrap',
           `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`,
@@ -662,11 +666,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           actionUI.gatherScrap,
         )}
         <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p>
-      </section>
-
-      <section id="crafting-panel" class="panel crafting">
-        <h2>제작</h2>
-        ${renderCraftActions(state)}
       </section>
 
       <section class="panel buildings">
@@ -707,13 +706,13 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       </section>
 
       <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}>
-        <h2>업그레이드</h2>
+        <h2>연구</h2>
         ${Object.entries(UPGRADE_DEFS)
           .map(([key, def]) => {
             const done = state.upgrades[key as keyof typeof state.upgrades]
             const cost = getUpgradeCost(key as keyof typeof UPGRADE_DEFS)
             return `
-              <button data-upgrade="${key}" aria-label="업그레이드 ${def.name}" ${done ? 'disabled' : ''}>
+              <button data-upgrade="${key}" aria-label="연구 ${def.name}" ${done ? 'disabled' : ''}>
                 ${def.name} (${formatResourceAmount('wood', cost.wood)}, ${formatResourceAmount('iron', cost.iron)})
               </button>
               <p class="hint" id="upgrade-hint-${key}">${def.effectText}${done ? ' (완료)' : ''}</p>

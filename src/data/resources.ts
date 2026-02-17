@@ -1,5 +1,5 @@
 export const RESOURCE_DEFS = {
-  wood: { id: 'wood', label: '나무', emoji: '🪵', order: 1, precision: 1 },
+  wood: { id: 'wood', label: '뗄감', emoji: '🪵', order: 1, precision: 1 },
   scrap: { id: 'scrap', label: '고물', emoji: '🗑️', order: 2, precision: 1 },
   iron: { id: 'iron', label: '철', emoji: '⛓️', order: 3, precision: 1 },
   chromium: { id: 'chromium', label: '크롬', emoji: '🟢', order: 4, precision: 1 },
