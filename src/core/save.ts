@@ -201,7 +201,7 @@ function normalizeState(raw: unknown): GameState | null {
         enemyId: ENEMY_IDS.includes(exploration.combat.enemyId as EnemyId)
           ? (exploration.combat.enemyId as EnemyId)
           : DEFAULT_ENEMY_ID,
-        enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '규소생물',
+        enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '벌벌떠는 기인',
         enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
         enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),
         enemyDamage: Math.max(1, Number(exploration.combat.enemyDamage) || 2),

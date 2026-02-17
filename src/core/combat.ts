@@ -1,11 +1,16 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
-import { getEnemyDef, type EnemyId } from '../data/enemies.ts'
+import { ENEMY_IDS, getEnemyDef, type EnemyId } from '../data/enemies.ts'
 import type { CombatState, GameState, LootEntry, WeaponInstance } from './state.ts'
 
 export const ENCOUNTER_FIGHT_DELAY = 3
 export const ENCOUNTER_FIGHT_CHANCE = 0.2
 
 export const DEFAULT_ENEMY_ID: EnemyId = 'siliconLifeform'
+
+export function selectEncounterEnemyId(): EnemyId {
+  const index = Math.floor(Math.random() * ENEMY_IDS.length)
+  return ENEMY_IDS[index] ?? DEFAULT_ENEMY_ID
+}
 
 export function createEnemyCombatState(enemyId: EnemyId): CombatState {
   const enemy = getEnemyDef(enemyId)
