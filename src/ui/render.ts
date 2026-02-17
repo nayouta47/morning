@@ -693,14 +693,48 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
       <section class="panel actions">
         <h2>행동</h2>
-        ${renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)}
-        ${renderGaugeButton(
-          'gather-scrap',
-          `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`,
-          state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동',
-          actionUI.gatherScrap,
-        )}
-        <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p>
+
+        <section class="action-group" aria-label="줍기 행동">
+          <h3 class="subheading">줍기</h3>
+          ${renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)}
+          ${renderGaugeButton(
+            'gather-scrap',
+            `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`,
+            state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동',
+            actionUI.gatherScrap,
+          )}
+          <p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p>
+        </section>
+
+        <section class="action-group" aria-label="가동 행동">
+          <h3 class="subheading">가동</h3>
+          ${renderBuildingGauge(
+            'lumber-progress',
+            '벌목기 가동',
+            lumberGauge.progress,
+            lumberGauge.percentText,
+            lumberGauge.timeText,
+            lumberGauge.phase,
+          )}
+
+          ${renderBuildingGauge(
+            'miner-progress',
+            '분쇄기 가동',
+            minerGauge.progress,
+            minerGauge.percentText,
+            minerGauge.timeText,
+            minerGauge.phase,
+          )}
+
+          ${renderBuildingGauge(
+            'scavenger-progress',
+            '스캐빈저 가동',
+            scavengerGauge.progress,
+            scavengerGauge.percentText,
+            scavengerGauge.timeText,
+            scavengerGauge.phase,
+          )}
+        </section>
       </section>
 
       <section class="panel buildings">
@@ -724,33 +758,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         <button id="buy-drone-controller" aria-label="건물 설치">
           <span id="buy-drone-controller-label">드론 컨트롤러 설치 (${formatCost(droneControllerCost)})</span>
         </button>
+      </section>
 
-        ${renderBuildingGauge(
-          'lumber-progress',
-          '벌목기 가동',
-          lumberGauge.progress,
-          lumberGauge.percentText,
-          lumberGauge.timeText,
-          lumberGauge.phase,
-        )}
-
-        ${renderBuildingGauge(
-          'miner-progress',
-          '분쇄기 가동',
-          minerGauge.progress,
-          minerGauge.percentText,
-          minerGauge.timeText,
-          minerGauge.phase,
-        )}
-
-        ${renderBuildingGauge(
-          'scavenger-progress',
-          '스캐빈저 가동',
-          scavengerGauge.progress,
-          scavengerGauge.percentText,
-          scavengerGauge.timeText,
-          scavengerGauge.phase,
-        )}
+      <section id="crafting-panel" class="panel crafting">
+        <h2>제작</h2>
+        ${renderCraftActions(state)}
       </section>
 
       <section id="crafting-panel" class="panel crafting">
