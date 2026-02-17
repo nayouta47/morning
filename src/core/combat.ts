@@ -7,6 +7,8 @@ export const ENCOUNTER_FIGHT_DELAY = 3
 export const ENCOUNTER_FIGHT_CHANCE = 0.2
 
 export const DEFAULT_ENEMY_ID: EnemyId = 'siliconLifeform'
+export const FLEE_GAUGE_DURATION_MS = 2500
+export const FLEE_SUCCESS_CHANCE = 0.3
 
 export function selectEncounterEnemyId(biomeId?: BiomeId): EnemyId {
   const pool = biomeId ? BIOME_DEFS[biomeId]?.encounterPool ?? [] : []
@@ -36,6 +38,9 @@ export function createEnemyCombatState(enemyId: EnemyId): CombatState {
     enemyAttackCooldownMs: enemy.attackCooldownMs,
     enemyAttackElapsedMs: 0,
     playerAttackElapsedMs: 0,
+    fleeGaugeDurationMs: FLEE_GAUGE_DURATION_MS,
+    fleeGaugeElapsedMs: 0,
+    fleeGaugeRunning: false,
   }
 }
 

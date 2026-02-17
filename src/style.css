@@ -383,7 +383,14 @@ li {
 .exploration-combat-overlay-lower {
   display: grid;
   align-content: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.combat-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .combat-cooldown-label,
@@ -407,6 +414,25 @@ li {
   background: linear-gradient(90deg, rgba(191, 140, 58, 0.48), rgba(191, 140, 58, 0.2));
 }
 
+
+
+.combat-flee-fill {
+  background: linear-gradient(90deg, rgba(123, 163, 191, 0.48), rgba(123, 163, 191, 0.2));
+}
+
+.combat-flee-button {
+  min-width: 54px;
+  height: 24px;
+  border: 1px solid #4a4337;
+  border-radius: 4px;
+  background: #151515;
+  color: #d9d0bf;
+  font-size: 12px;
+}
+
+.combat-flee-button:disabled {
+  opacity: 0.5;
+}
 .assembly-grid {
   display: grid;
   grid-template-columns: 220px 1fr;

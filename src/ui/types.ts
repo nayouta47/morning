@@ -28,6 +28,7 @@ export type Handlers = {
   onSelectTab: (tab: 'base' | 'assembly' | 'exploration' | 'codex') => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
+  onFleeExplorationCombat: () => void
   onTakeLoot: (resourceId: ResourceId) => void
   onContinueAfterLoot: () => void
   onCraftPistol: () => void

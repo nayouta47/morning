@@ -98,6 +98,11 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
       return
     }
 
+    if (target.closest<HTMLElement>('#exploration-flee')) {
+      handlers.onFleeExplorationCombat()
+      return
+    }
+
     const lootButton = target.closest<HTMLElement>('[data-loot-resource]')
     if (lootButton) {
       const resourceId = lootButton.getAttribute('data-loot-resource') as ResourceId | null
