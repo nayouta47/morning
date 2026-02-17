@@ -71,6 +71,28 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     const target = getEventTargetElement(event.target)
     if (!target) return
 
+    const codexToggle = target.closest<HTMLButtonElement>('[data-codex-toggle]')
+    if (codexToggle) {
+      const codexList = app.querySelector<HTMLElement>('#codex-list')
+      if (!codexList) return
+
+      const expanded = codexToggle.getAttribute('aria-expanded') === 'true'
+      codexList.querySelectorAll<HTMLButtonElement>('[data-codex-toggle]').forEach((button) => {
+        button.setAttribute('aria-expanded', 'false')
+      })
+      codexList.querySelectorAll<HTMLElement>('.codex-card-body').forEach((body) => {
+        body.classList.add('hidden')
+      })
+
+      if (!expanded) {
+        codexToggle.setAttribute('aria-expanded', 'true')
+        const detailsId = codexToggle.getAttribute('aria-controls')
+        const details = detailsId ? codexList.querySelector<HTMLElement>(`#${detailsId}`) : null
+        details?.classList.remove('hidden')
+      }
+      return
+    }
+
     if (target.closest<HTMLElement>('#exploration-start')) {
       handlers.onStartExploration()
       return

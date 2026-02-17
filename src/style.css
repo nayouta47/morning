@@ -526,25 +526,63 @@ li {
   gap: 10px;
 }
 
-.codex-entry {
-  border: 1px solid #2b2b2b;
-  border-radius: 6px;
-  padding: 10px;
-  background: #121212;
+.codex-empty {
+  margin: 0;
+  border: 1px dashed #3a3a3a;
+  border-radius: 8px;
+  background: #141414;
+  padding: 12px;
+  color: #9f9a8c;
 }
 
-.codex-entry h3 {
-  margin: 0 0 6px;
+.codex-card {
+  border: 1px solid #2e2b26;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #161513 0%, #121211 100%);
+  overflow: hidden;
+}
+
+.codex-card-toggle {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.codex-card-toggle[aria-expanded='true'] {
+  border-bottom-color: #2e2b26;
+  background: #1a1815;
+}
+
+.codex-card-title {
   color: #e1ddd0;
   font-size: 14px;
+  font-weight: 700;
 }
 
-.codex-entry ul {
+.codex-card-summary {
+  color: #b8a26a;
+  font-size: 12px;
+}
+
+.codex-card-body {
+  padding: 10px 12px;
+}
+
+.codex-card-body ul {
   margin: 0;
   max-height: none;
 }
 
-.codex-entry li {
+.codex-card-body li {
   border-bottom: 0;
   padding: 2px 0;
 }
