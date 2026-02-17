@@ -38,14 +38,31 @@ export type ActionProgress = {
 export type TabKey = 'base' | 'assembly' | 'exploration'
 
 export type ExplorationMode = 'loadout' | 'active'
+export type ExplorationPhase = 'moving' | 'combat' | 'loot'
 
 export type Position = {
   x: number
   y: number
 }
 
+export type LootEntry = {
+  resource: ResourceId
+  amount: number
+}
+
+export type CombatState = {
+  enemyName: string
+  enemyHp: number
+  enemyMaxHp: number
+  enemyDamage: number
+  enemyAttackCooldownMs: number
+  enemyAttackElapsedMs: number
+  playerAttackElapsedMs: number
+}
+
 export type ExplorationState = {
   mode: ExplorationMode
+  phase: ExplorationPhase
   mapSize: number
   hp: number
   maxHp: number
@@ -53,6 +70,12 @@ export type ExplorationState = {
   position: Position
   steps: number
   visited: string[]
+  movesSinceEncounter: number
+  backpackCapacity: number
+  backpack: LootEntry[]
+  pendingLoot: LootEntry[]
+  carriedWeaponId: string | null
+  combat: CombatState | null
 }
 
 export type WeaponType = 'pistol' | 'rifle'
@@ -103,6 +126,7 @@ export const initialState: GameState = {
     cobalt: 0,
     shovel: 0,
     scavengerDrone: 0,
+    siliconMass: 0,
   },
   buildings: {
     lumberMill: 0,
@@ -155,6 +179,7 @@ export const initialState: GameState = {
   nextWeaponId: 1,
   exploration: {
     mode: 'loadout',
+    phase: 'moving',
     mapSize: 64,
     hp: 10,
     maxHp: 10,
@@ -162,5 +187,11 @@ export const initialState: GameState = {
     position: { x: 32, y: 32 },
     steps: 0,
     visited: ['32,32'],
+    movesSinceEncounter: 0,
+    backpackCapacity: 10,
+    backpack: [],
+    pendingLoot: [],
+    carriedWeaponId: null,
+    combat: null,
   },
 }

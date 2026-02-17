@@ -2,7 +2,7 @@ import { BUILDING_CYCLE_MS, UPGRADE_DEFS, WEAPON_BASE_STATS, WEAPON_CRAFT_DURATI
 import { getBuildingCost } from '../core/actions.ts'
 import { CRAFT_RECIPE_DEFS, getCraftRecipeMissingRequirement } from '../data/crafting.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
-import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../data/resources.ts'
+import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay, type ResourceId } from '../data/resources.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../core/rewards.ts'
 
@@ -31,6 +31,8 @@ type Handlers = {
   onSelectTab: (tab: 'base' | 'assembly' | 'exploration') => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
+  onTakeLoot: (resourceId: ResourceId) => void
+  onContinueAfterLoot: () => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
@@ -461,23 +463,54 @@ function renderExplorationMap(state: GameState): string {
 function renderExplorationBody(state: GameState): string {
   const isActive = state.exploration.mode === 'active'
 
-  return isActive
-    ? `<div class="exploration-active">
-        <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지도 ${state.exploration.mapSize}x${state.exploration.mapSize}</p>
-        <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
-        <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p>
-      </div>`
-    : `<div class="exploration-loadout">
-        <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
-        <p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p>
-        <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>
-        <button id="exploration-start">탐험 출발</button>
-      </div>`
+  if (!isActive) {
+    return `<div class="exploration-loadout">
+      <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
+      <p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p>
+      <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>
+      <button id="exploration-start">탐험 출발</button>
+    </div>`
+  }
+
+  const backpackUsed = state.exploration.backpack.reduce((sum, entry) => sum + entry.amount, 0)
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>`
+
+  if (state.exploration.phase === 'combat' && state.exploration.combat) {
+    return `<div class="exploration-active">
+      ${baseInfo}
+      <div class="exploration-combat-box">
+        <p>${state.exploration.combat.enemyName} · HP ${state.exploration.combat.enemyHp}/${state.exploration.combat.enemyMaxHp}</p>
+        <p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 불가)</p>
+      </div>
+      <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+    </div>`
+  }
+
+  if (state.exploration.phase === 'loot') {
+    const lootRows = state.exploration.pendingLoot
+      .map((entry) => `<button data-loot-resource="${entry.resource}">획득: ${getResourceDisplay(entry.resource)} +${entry.amount}</button>`)
+      .join('')
+    return `<div class="exploration-active">
+      ${baseInfo}
+      <div class="exploration-combat-box">
+        <p>전리품 선택</p>
+        ${lootRows || '<p class="hint">가져갈 수 있는 전리품이 없다.</p>'}
+        <button id="exploration-continue">계속 이동</button>
+      </div>
+      <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+    </div>`
+  }
+
+  return `<div class="exploration-active">
+    ${baseInfo}
+    <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+    <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p>
+  </div>`
 }
 
 function renderExplorationPanel(state: GameState): string {
   return `
-    <section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}">
+    <section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}">
       <h2>탐험</h2>
       <div id="exploration-body">${renderExplorationBody(state)}</div>
     </section>
@@ -574,9 +607,10 @@ function patchExplorationBody(app: ParentNode, state: GameState): void {
   const body = app.querySelector<HTMLElement>('#exploration-body')
   if (!panel || !body) return
 
-  if (panel.dataset.mode === state.exploration.mode) return
+  const signature = `${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}`
+  if (panel.dataset.mode === signature) return
 
-  panel.dataset.mode = state.exploration.mode
+  panel.dataset.mode = signature
   body.innerHTML = renderExplorationBody(state)
 }
 
@@ -649,6 +683,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
   setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
+  setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
 
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`)
@@ -766,6 +801,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             <p>${getResourceDisplay('cobalt')} <strong id="res-cobalt">${formatResourceValue('cobalt', state.resources.cobalt)}</strong></p>
             <p>${getResourceDisplay('shovel')} <strong id="res-shovel">${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}</strong></p>
             <p>${getResourceDisplay('scavengerDrone')} <strong id="res-scavenger-drone">${formatResourceValue('scavengerDrone', state.resources.scavengerDrone)}</strong></p>
+            <p>${getResourceDisplay('siliconMass')} <strong id="res-silicon-mass">${formatResourceValue('siliconMass', state.resources.siliconMass)}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
             <p>${getBuildingLabel('lumberMill')}: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${getResourceDisplay('wood')} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
@@ -943,6 +979,19 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const startButton = target.closest<HTMLElement>('#exploration-start')
     if (startButton) {
       handlers.onStartExploration()
+      return
+    }
+
+    const lootButton = target.closest<HTMLElement>('[data-loot-resource]')
+    if (lootButton) {
+      const resourceId = lootButton.getAttribute('data-loot-resource') as ResourceId | null
+      if (resourceId) handlers.onTakeLoot(resourceId)
+      return
+    }
+
+    const continueButton = target.closest<HTMLElement>('#exploration-continue')
+    if (continueButton) {
+      handlers.onContinueAfterLoot()
       return
     }
 

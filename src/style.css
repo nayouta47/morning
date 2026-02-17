@@ -277,6 +277,15 @@ li {
   gap: 10px;
 }
 
+.exploration-combat-box {
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid #4a4337;
+  border-radius: 6px;
+  background: #111;
+  padding: 10px;
+}
+
 .exploration-map {
   margin: 0;
   padding: 14px;

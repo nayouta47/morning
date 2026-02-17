@@ -45,6 +45,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.cobalt = Number(loaded.resources.cobalt ?? base.resources.cobalt)
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
     base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
+    base.resources.siliconMass = Math.max(0, Number(loaded.resources.siliconMass ?? base.resources.siliconMass) || 0)
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
@@ -139,9 +140,27 @@ function normalizeState(raw: unknown): GameState | null {
   if (loaded.exploration && typeof loaded.exploration === 'object') {
     const exploration = loaded.exploration as Partial<GameState['exploration']>
     base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
+    base.exploration.phase = exploration.phase === 'combat' || exploration.phase === 'loot' ? exploration.phase : 'moving'
     base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize)) ? Math.max(8, Number(exploration.mapSize)) : 64
     base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
     base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
+    base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
+    base.exploration.backpackCapacity = 10
+    if (Array.isArray(exploration.backpack)) {
+      base.exploration.backpack = exploration.backpack
+        .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
+          Boolean(entry && typeof entry.resource === 'string' && typeof entry.amount === 'number' && entry.amount > 0),
+        )
+        .map((entry) => ({ resource: entry.resource, amount: Math.floor(entry.amount) }))
+    }
+    if (Array.isArray(exploration.pendingLoot)) {
+      base.exploration.pendingLoot = exploration.pendingLoot
+        .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
+          Boolean(entry && typeof entry.resource === 'string' && typeof entry.amount === 'number' && entry.amount > 0),
+        )
+        .map((entry) => ({ resource: entry.resource, amount: Math.floor(entry.amount) }))
+    }
+    base.exploration.carriedWeaponId = typeof exploration.carriedWeaponId === 'string' ? exploration.carriedWeaponId : null
 
     const clampPos = (value: unknown) => Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || 0))
     base.exploration.start = {
@@ -158,6 +177,18 @@ function normalizeState(raw: unknown): GameState | null {
       base.exploration.visited = exploration.visited
         .filter((value): value is string => typeof value === 'string' && value.includes(','))
         .slice(-4096)
+    }
+
+    if (exploration.combat && typeof exploration.combat === 'object') {
+      base.exploration.combat = {
+        enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '규소생물',
+        enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
+        enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),
+        enemyDamage: Math.max(1, Number(exploration.combat.enemyDamage) || 2),
+        enemyAttackCooldownMs: Math.max(500, Number(exploration.combat.enemyAttackCooldownMs) || 3000),
+        enemyAttackElapsedMs: Math.max(0, Number(exploration.combat.enemyAttackElapsedMs) || 0),
+        playerAttackElapsedMs: Math.max(0, Number(exploration.combat.playerAttackElapsedMs) || 0),
+      }
     }
 
     const startKey = `${base.exploration.start.x},${base.exploration.start.y}`
