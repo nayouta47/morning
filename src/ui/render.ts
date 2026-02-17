@@ -93,17 +93,20 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   if (buyMiner) buyMiner.disabled = !state.unlocks.miner
   setText(app, '#buy-miner-label', `${getBuildingLabel('miner')} 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})`)
 
-  setText(app, '#buy-lab-label', `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
-  setText(app, '#buy-workbench-label', `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
-  setText(app, '#buy-drone-controller-label', `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
+  const buyLab = app.querySelector<HTMLButtonElement>('#buy-lab')
+  const labInstalled = state.buildings.lab >= 1
+  if (buyLab) buyLab.disabled = labInstalled
+  setText(app, '#buy-lab-label', labInstalled ? '설치 완료' : `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
 
-  setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
-  setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
-  setText(app, '#miner-count', `${state.buildings.miner}`)
-  setText(app, '#miner-output', `${state.buildings.miner}`)
-  setText(app, '#workbench-count', `${state.buildings.workbench}`)
-  setText(app, '#lab-count', `${state.buildings.lab}`)
-  setText(app, '#drone-controller-count', `${state.buildings.droneController}`)
+  const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
+  const workbenchInstalled = state.buildings.workbench >= 1
+  if (buyWorkbench) buyWorkbench.disabled = workbenchInstalled
+  setText(app, '#buy-workbench-label', workbenchInstalled ? '설치 완료' : `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
+
+  const buyDroneController = app.querySelector<HTMLButtonElement>('#buy-drone-controller')
+  const droneControllerInstalled = state.buildings.droneController >= 1
+  if (buyDroneController) buyDroneController.disabled = droneControllerInstalled
+  setText(app, '#buy-drone-controller-label', droneControllerInstalled ? '설치 완료' : `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
@@ -111,6 +114,10 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)
   patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText, minerGauge.phase)
   patchBuildingGauge(app, 'scavenger-progress', scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)
+
+  setText(app, '#lumber-progress .gauge-title', `벌목기 가동 x${state.buildings.lumberMill}`)
+  setText(app, '#miner-progress .gauge-title', `분쇄기 가동 x${state.buildings.miner}`)
+  setText(app, '#scavenger-progress .gauge-title', `스캐빈저 가동 x${state.resources.scavengerDrone}`)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
