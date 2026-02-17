@@ -110,6 +110,10 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {
+  if (tab === 'assembly' && state.buildings.workbench <= 0) {
+    pushLog(state, '금속 프린터를 설치해야 조립 탭을 사용할 수 있다.')
+    return
+  }
   if (tab === 'exploration' && state.buildings.vehicleRepair <= 0) {
     pushLog(state, '차량 수리를 완료해야 탐험 탭을 사용할 수 있다.')
     return

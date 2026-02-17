@@ -257,6 +257,10 @@ function normalizeState(raw: unknown): GameState | null {
     if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
   }
 
+  if (base.buildings.workbench <= 0 && base.activeTab === 'assembly') {
+    base.activeTab = 'base'
+  }
+
   if (base.buildings.vehicleRepair <= 0) {
     if (base.activeTab === 'exploration') base.activeTab = 'base'
     if (base.exploration.mode === 'active') {
