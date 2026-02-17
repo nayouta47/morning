@@ -798,6 +798,12 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     </main>
   `
 
+  // Crafting UI should only exist once in the base tab.
+  const craftingPanels = app.querySelectorAll<HTMLElement>('#crafting-panel')
+  craftingPanels.forEach((panel, index) => {
+    if (index > 0) panel.remove()
+  })
+
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')
 
