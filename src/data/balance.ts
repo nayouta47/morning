@@ -6,6 +6,7 @@ export const ACTION_DURATION_MS = {
 } as const
 
 export const BUILDING_CYCLE_MS = 10000
+export const SMELTING_CYCLE_MS = 60000
 
 const UPGRADE_COST_DIVISOR = 4
 

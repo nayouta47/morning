@@ -1,4 +1,4 @@
-import type { ModuleType } from '../core/state.ts'
+import type { ModuleType, SmeltingProcessKey } from '../core/state.ts'
 import type { ResourceId } from '../data/resources.ts'
 
 type UpgradeKey = keyof typeof import('../data/balance.ts').UPGRADE_DEFS
@@ -21,6 +21,8 @@ export type Handlers = {
   onBuyWorkbench: () => void
   onBuyLab: () => void
   onBuyDroneController: () => void
+  onBuyElectricFurnace: () => void
+  onSetSmeltingAllocation: (key: SmeltingProcessKey, value: number) => void
   onToggleLumberMillRun: () => void
   onToggleMinerRun: () => void
   onToggleScavengerRun: () => void

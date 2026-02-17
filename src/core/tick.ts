@@ -1,5 +1,5 @@
-import { BUILDING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
-import type { GameState, ModuleType, WeaponType } from './state.ts'
+import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
+import type { GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
 import { appendLog, handleExplorationDeath } from './actions.ts'
 import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
 import { evaluateUnlocks } from './unlocks.ts'
@@ -65,6 +65,77 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
 
   const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
   appendLog(state, `분쇄기 처리: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
+}
+
+function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elapsedMs: number): void {
+  const allocated = Math.max(0, Math.floor(state.smeltingAllocation[key]))
+  if (allocated <= 0) {
+    state.smeltingProgress[key] = 0
+    return
+  }
+
+  const { nextProgressMs, cycles } = advanceCycleProgress(state.smeltingProgress[key], elapsedMs, SMELTING_CYCLE_MS)
+  state.smeltingProgress[key] = nextProgressMs
+  if (cycles <= 0) return
+
+  const attempts = cycles * allocated
+  if (key === 'burnWood') {
+    const possible = Math.min(attempts, Math.floor(state.resources.wood / 1000))
+    if (possible > 0) {
+      state.resources.wood -= possible * 1000
+      state.resources.carbon += possible
+      appendLog(state, `땔감 태우기: 🪵 뗄감 -${possible * 1000}, ⚫탄소 +${possible}`)
+    }
+    return
+  }
+
+  if (key === 'meltScrap') {
+    let produced = 0
+    for (let i = 0; i < attempts; i += 1) {
+      if (state.resources.scrap < 10 || state.resources.chromium < 3 || state.resources.molybdenum < 1) continue
+      state.resources.scrap -= 10
+      state.resources.chromium -= 3
+      state.resources.molybdenum -= 1
+      state.resources.lowAlloySteel += 1
+      produced += 1
+    }
+    if (produced > 0) appendLog(state, `고물 녹이기: 🔗저합금강 +${produced}`)
+    return
+  }
+
+  if (key === 'meltIron') {
+    let produced = 0
+    for (let i = 0; i < attempts; i += 1) {
+      if (state.resources.iron < 10 || state.resources.nickel < 8) continue
+      state.resources.iron -= 10
+      state.resources.nickel -= 8
+      state.resources.highAlloySteel += 1
+      produced += 1
+    }
+    if (produced > 0) appendLog(state, `철 녹이기: 🖇️고합금강 +${produced}`)
+    return
+  }
+
+  let siliconIngot = 0
+  let nickel = 0
+  for (let i = 0; i < attempts; i += 1) {
+    if (state.resources.siliconMass < 1) continue
+    state.resources.siliconMass -= 1
+    if (Math.random() < 0.9) {
+      state.resources.siliconIngot += 1
+      siliconIngot += 1
+    } else {
+      state.resources.nickel += 1
+      nickel += 1
+    }
+  }
+
+  if (siliconIngot > 0 || nickel > 0) {
+    const parts: string[] = []
+    if (siliconIngot > 0) parts.push(`🗞️규소 주괴 +${siliconIngot}`)
+    if (nickel > 0) parts.push(`🟡니켈 +${nickel}`)
+    appendLog(state, `규소 덩어리 녹이기: ${parts.join(', ')}`)
+  }
 }
 
 function makeWeapon(state: GameState, type: WeaponType): void {
@@ -216,6 +287,11 @@ export function advanceState(state: GameState, now = Date.now()): void {
   processBuildingElapsed(state, 'lumberMill', elapsed)
   processBuildingElapsed(state, 'miner', elapsed)
   processBuildingElapsed(state, 'scavenger', elapsed)
+
+  processSmeltingElapsed(state, 'burnWood', elapsed)
+  processSmeltingElapsed(state, 'meltScrap', elapsed)
+  processSmeltingElapsed(state, 'meltIron', elapsed)
+  processSmeltingElapsed(state, 'meltSiliconMass', elapsed)
 
   ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed))
 

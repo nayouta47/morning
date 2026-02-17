@@ -32,6 +32,11 @@ export type ProductionRunning = {
   scavenger: boolean
 }
 
+export type SmeltingProcessKey = 'burnWood' | 'meltScrap' | 'meltIron' | 'meltSiliconMass'
+
+export type SmeltingAllocation = Record<SmeltingProcessKey, number>
+export type SmeltingProgress = Record<SmeltingProcessKey, number>
+
 export type ActionProgress = {
   gatherWood: number
   gatherScrap: number
@@ -116,6 +121,8 @@ export type GameState = {
   unlocks: Unlocks
   productionProgress: ProductionProgress
   productionRunning: ProductionRunning
+  smeltingAllocation: SmeltingAllocation
+  smeltingProgress: SmeltingProgress
   actionProgress: ActionProgress
   lastUpdate: number
   log: string[]
@@ -140,6 +147,11 @@ export const initialState: GameState = {
     shovel: 0,
     scavengerDrone: 0,
     siliconMass: 0,
+    carbon: 0,
+    siliconIngot: 0,
+    nickel: 0,
+    lowAlloySteel: 0,
+    highAlloySteel: 0,
   },
   buildings: {
     lumberMill: 0,
@@ -147,6 +159,7 @@ export const initialState: GameState = {
     workbench: 0,
     lab: 0,
     droneController: 0,
+    electricFurnace: 0,
   },
   upgrades: {
     betterAxe: false,
@@ -168,6 +181,18 @@ export const initialState: GameState = {
     lumberMill: true,
     miner: true,
     scavenger: true,
+  },
+  smeltingAllocation: {
+    burnWood: 0,
+    meltScrap: 0,
+    meltIron: 0,
+    meltSiliconMass: 0,
+  },
+  smeltingProgress: {
+    burnWood: 0,
+    meltScrap: 0,
+    meltIron: 0,
+    meltSiliconMass: 0,
   },
   actionProgress: {
     gatherWood: 0,

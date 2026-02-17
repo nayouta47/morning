@@ -5,7 +5,7 @@ import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 
-const SAVE_KEY = 'morning-save-v3'
+const SAVE_KEY = 'morning-save-v4'
 const AUTOSAVE_MS = 5000
 
 function clampProgress(value: unknown): number {
@@ -34,6 +34,8 @@ function normalizeState(raw: unknown): GameState | null {
     productionProgress?: Partial<GameState['productionProgress']>
     productionRunning?: Partial<GameState['productionRunning']>
     actionProgress?: Partial<GameState['actionProgress']>
+    smeltingAllocation?: Partial<GameState['smeltingAllocation']>
+    smeltingProgress?: Partial<GameState['smeltingProgress']>
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
     exploration?: unknown
@@ -50,6 +52,11 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
     base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
     base.resources.siliconMass = Math.max(0, Number(loaded.resources.siliconMass ?? base.resources.siliconMass) || 0)
+    base.resources.carbon = Math.max(0, Number(loaded.resources.carbon ?? base.resources.carbon) || 0)
+    base.resources.siliconIngot = Math.max(0, Number(loaded.resources.siliconIngot ?? base.resources.siliconIngot) || 0)
+    base.resources.nickel = Math.max(0, Number(loaded.resources.nickel ?? base.resources.nickel) || 0)
+    base.resources.lowAlloySteel = Math.max(0, Number(loaded.resources.lowAlloySteel ?? base.resources.lowAlloySteel) || 0)
+    base.resources.highAlloySteel = Math.max(0, Number(loaded.resources.highAlloySteel ?? base.resources.highAlloySteel) || 0)
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
@@ -57,6 +64,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.buildings.workbench = Number(loaded.buildings.workbench ?? base.buildings.workbench)
     base.buildings.lab = Number(loaded.buildings.lab ?? base.buildings.lab)
     base.buildings.droneController = Number(loaded.buildings.droneController ?? base.buildings.droneController)
+    base.buildings.electricFurnace = Number(loaded.buildings.electricFurnace ?? base.buildings.electricFurnace)
   }
   if (loaded.upgrades) {
     base.upgrades.betterAxe = Boolean(loaded.upgrades.betterAxe)
@@ -85,6 +93,32 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
   base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
+
+  base.smeltingAllocation.burnWood = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.burnWood) || 0))
+  base.smeltingAllocation.meltScrap = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.meltScrap) || 0))
+  base.smeltingAllocation.meltIron = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.meltIron) || 0))
+  base.smeltingAllocation.meltSiliconMass = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.meltSiliconMass) || 0))
+
+  const furnaceCount = Math.max(0, Math.floor(base.buildings.electricFurnace))
+  const totalAllocation =
+    base.smeltingAllocation.burnWood +
+    base.smeltingAllocation.meltScrap +
+    base.smeltingAllocation.meltIron +
+    base.smeltingAllocation.meltSiliconMass
+  if (totalAllocation > furnaceCount) {
+    let overflow = totalAllocation - furnaceCount
+    ;(['meltSiliconMass', 'meltIron', 'meltScrap', 'burnWood'] as const).forEach((key) => {
+      if (overflow <= 0) return
+      const cut = Math.min(base.smeltingAllocation[key], overflow)
+      base.smeltingAllocation[key] -= cut
+      overflow -= cut
+    })
+  }
+
+  base.smeltingProgress.burnWood = clampProgress(loaded.smeltingProgress?.burnWood)
+  base.smeltingProgress.meltScrap = clampProgress(loaded.smeltingProgress?.meltScrap)
+  base.smeltingProgress.meltIron = clampProgress(loaded.smeltingProgress?.meltIron)
+  base.smeltingProgress.meltSiliconMass = clampProgress(loaded.smeltingProgress?.meltSiliconMass)
 
   base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)

@@ -1,6 +1,6 @@
 import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../../data/buildings.ts'
-import type { GameState, TabKey } from '../state.ts'
+import type { GameState, SmeltingProcessKey, TabKey } from '../state.ts'
 import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
@@ -57,7 +57,7 @@ export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' 
 
 export function buyBuilding(state: GameState, key: BuildingId): void {
   if (key === 'miner' && !state.unlocks.miner) return
-  if ((key === 'lumberMill' || key === 'workbench' || key === 'lab' || key === 'droneController') && !state.unlocks.lumberMill) return
+  if ((key === 'lumberMill' || key === 'workbench' || key === 'lab' || key === 'droneController' || key === 'electricFurnace') && !state.unlocks.lumberMill) return
 
   const singletonBuildings: BuildingId[] = ['lab', 'workbench', 'droneController']
   if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return
@@ -72,6 +72,16 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
   state.buildings[key] += 1
   pushLog(state, `${getBuildingLabel(key)} 설치 (${state.buildings[key]})`)
   applyUnlocks(state)
+}
+
+export function setSmeltingAllocation(state: GameState, key: SmeltingProcessKey, requestedValue: number): void {
+  const nextValue = Math.max(0, Math.floor(requestedValue))
+  const owned = Math.max(0, Math.floor(state.buildings.electricFurnace))
+  const usedByOthers = (Object.keys(state.smeltingAllocation) as SmeltingProcessKey[])
+    .filter((processKey) => processKey !== key)
+    .reduce((sum, processKey) => sum + state.smeltingAllocation[processKey], 0)
+
+  state.smeltingAllocation[key] = Math.min(nextValue, Math.max(0, owned - usedByOthers))
 }
 
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {

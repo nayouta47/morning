@@ -1,4 +1,4 @@
-import type { GameState, ModuleType } from '../core/state.ts'
+import type { GameState, ModuleType, SmeltingProcessKey } from '../core/state.ts'
 import type { ResourceId } from '../data/resources.ts'
 import type { Handlers, InteractionIntent } from './types.ts'
 import { getEventTargetElement } from './view.ts'
@@ -36,6 +36,14 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   app.querySelector<HTMLButtonElement>('#buy-workbench')?.addEventListener('click', handlers.onBuyWorkbench)
   app.querySelector<HTMLButtonElement>('#buy-lab')?.addEventListener('click', handlers.onBuyLab)
   app.querySelector<HTMLButtonElement>('#buy-drone-controller')?.addEventListener('click', handlers.onBuyDroneController)
+  app.querySelector<HTMLButtonElement>('#buy-electric-furnace')?.addEventListener('click', handlers.onBuyElectricFurnace)
+  app.querySelectorAll<HTMLInputElement>('input[data-smelting-allocation]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.smeltingAllocation as SmeltingProcessKey | undefined
+      if (!key) return
+      handlers.onSetSmeltingAllocation(key, Number(input.value))
+    })
+  })
   app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)
   app.querySelector<HTMLButtonElement>('#miner-progress')?.addEventListener('click', handlers.onToggleMinerRun)
   app.querySelector<HTMLButtonElement>('#scavenger-progress')?.addEventListener('click', handlers.onToggleScavengerRun)

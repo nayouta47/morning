@@ -40,6 +40,13 @@ export const BUILDING_DEFS = {
     baseCost: { wood: 260, scrap: 90, iron: 45 } as ResourceCost,
     effectsText: '스캐빈저 가동 조건 충족',
   },
+  electricFurnace: {
+    id: 'electricFurnace',
+    label: '전기로',
+    unlockRequirements: [] as Requirement[],
+    baseCost: { wood: 180, scrap: 120, iron: 80 } as ResourceCost,
+    effectsText: '녹이기 공정 배정 가능',
+  },
 } as const
 
 export type BuildingId = keyof typeof BUILDING_DEFS
