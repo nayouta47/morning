@@ -20,7 +20,7 @@ export const BUILDING_DEFS = {
   },
   workbench: {
     id: 'workbench',
-    label: '제작대',
+    label: '금속 프린터',
     unlockRequirements: [] as Requirement[],
     baseCost: { wood: 220, scrap: 50, iron: 30 } as ResourceCost,
     effectsText: '권총/소총/모듈 제작 가능',
