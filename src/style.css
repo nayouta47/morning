@@ -127,6 +127,21 @@ h1 {
   background: #121212;
 }
 
+.production-group--construction {
+  position: relative;
+  margin-top: 12px;
+}
+
+.production-group--construction::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 10px;
+  right: 10px;
+  border-top: 1px solid #34312b;
+  opacity: 0.85;
+}
+
 .production-group .craft-actions {
   display: grid;
   gap: 6px;
@@ -157,6 +172,22 @@ h1 {
 .resource-group {
   display: grid;
   gap: 6px;
+}
+
+.resource-group--major + .resource-group--major {
+  position: relative;
+  padding-top: 8px;
+  margin-top: 6px;
+}
+
+.resource-group--major + .resource-group--major::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #312e29;
+  opacity: 0.7;
 }
 
 .equipment-group {
