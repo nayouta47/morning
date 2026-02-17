@@ -104,17 +104,17 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   const buyLab = app.querySelector<HTMLButtonElement>('#buy-lab')
   const labInstalled = state.buildings.lab >= 1
   if (buyLab) buyLab.disabled = labInstalled
-  setText(app, '#buy-lab-label', labInstalled ? '설치 완료' : `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
+  setText(app, '#buy-lab-label', labInstalled ? `${getBuildingLabel('lab')} (설치 완료)` : `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
 
   const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
   const workbenchInstalled = state.buildings.workbench >= 1
   if (buyWorkbench) buyWorkbench.disabled = workbenchInstalled
-  setText(app, '#buy-workbench-label', workbenchInstalled ? '설치 완료' : `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
+  setText(app, '#buy-workbench-label', workbenchInstalled ? `${getBuildingLabel('workbench')} (설치 완료)` : `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
 
   const buyDroneController = app.querySelector<HTMLButtonElement>('#buy-drone-controller')
   const droneControllerInstalled = state.buildings.droneController >= 1
   if (buyDroneController) buyDroneController.disabled = droneControllerInstalled
-  setText(app, '#buy-drone-controller-label', droneControllerInstalled ? '설치 완료' : `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
+  setText(app, '#buy-drone-controller-label', droneControllerInstalled ? `${getBuildingLabel('droneController')} (설치 완료)` : `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
