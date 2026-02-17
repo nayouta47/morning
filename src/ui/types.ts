@@ -20,6 +20,7 @@ export type Handlers = {
   onBuyMiner: () => void
   onBuyWorkbench: () => void
   onBuyLab: () => void
+  onBuyVehicleRepair: () => void
   onBuyDroneController: () => void
   onBuyElectricFurnace: () => void
   onSetSmeltingAllocation: (key: SmeltingProcessKey, value: number) => void

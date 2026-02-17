@@ -63,6 +63,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.buildings.miner = Number(loaded.buildings.miner ?? base.buildings.miner)
     base.buildings.workbench = Number(loaded.buildings.workbench ?? base.buildings.workbench)
     base.buildings.lab = Number(loaded.buildings.lab ?? base.buildings.lab)
+    base.buildings.vehicleRepair = Number(loaded.buildings.vehicleRepair ?? base.buildings.vehicleRepair)
     base.buildings.droneController = Number(loaded.buildings.droneController ?? base.buildings.droneController)
     base.buildings.electricFurnace = Number(loaded.buildings.electricFurnace ?? base.buildings.electricFurnace)
   }
@@ -256,7 +257,17 @@ function normalizeState(raw: unknown): GameState | null {
     if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
   }
 
-  if (base.exploration.mode === 'active') {
+  if (base.buildings.vehicleRepair <= 0) {
+    if (base.activeTab === 'exploration') base.activeTab = 'base'
+    if (base.exploration.mode === 'active') {
+      base.exploration.mode = 'loadout'
+      base.exploration.phase = 'moving'
+      base.exploration.pendingLoot = []
+      base.exploration.backpack = []
+      base.exploration.combat = null
+      base.exploration.carriedWeaponId = null
+    }
+  } else if (base.exploration.mode === 'active') {
     base.activeTab = 'exploration'
   }
 

@@ -57,9 +57,18 @@ export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' 
 
 export function buyBuilding(state: GameState, key: BuildingId): void {
   if (key === 'miner' && !state.unlocks.miner) return
-  if ((key === 'lumberMill' || key === 'workbench' || key === 'lab' || key === 'droneController' || key === 'electricFurnace') && !state.unlocks.lumberMill) return
+  if (
+    (key === 'lumberMill' ||
+      key === 'workbench' ||
+      key === 'lab' ||
+      key === 'vehicleRepair' ||
+      key === 'droneController' ||
+      key === 'electricFurnace') &&
+    !state.unlocks.lumberMill
+  )
+    return
 
-  const singletonBuildings: BuildingId[] = ['lab', 'workbench', 'droneController']
+  const singletonBuildings: BuildingId[] = ['lab', 'vehicleRepair', 'workbench', 'droneController']
   if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return
 
   const cost = getBuildingCost(state, key)
@@ -101,6 +110,10 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {
+  if (tab === 'exploration' && state.buildings.vehicleRepair <= 0) {
+    pushLog(state, '차량 수리를 완료해야 탐험 탭을 사용할 수 있다.')
+    return
+  }
   if (state.exploration.mode === 'active' && tab !== 'exploration') {
     pushLog(state, '탐험 중에는 다른 탭으로 이동할 수 없다.')
     return

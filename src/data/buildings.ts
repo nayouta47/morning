@@ -1,5 +1,5 @@
 import { COST_SCALE } from './balance.ts'
-import type { ResourceCost } from './resources.ts'
+import { RESOURCE_IDS, type ResourceCost } from './resources.ts'
 import type { GameState } from '../core/state.ts'
 import type { Requirement } from '../core/requirements.ts'
 
@@ -32,6 +32,13 @@ export const BUILDING_DEFS = {
     baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
     effectsText: '연구 가능',
   },
+  vehicleRepair: {
+    id: 'vehicleRepair',
+    label: '차량 수리',
+    unlockRequirements: [] as Requirement[],
+    baseCost: { wood: 500, iron: 10, molybdenum: 1 } as ResourceCost,
+    effectsText: '탐험 탭 해금',
+  },
 
   droneController: {
     id: 'droneController',
@@ -58,9 +65,8 @@ export function getBuildingLabel(buildingId: BuildingId): string {
 export function getBuildingCost(state: GameState, buildingId: BuildingId): ResourceCost {
   const count = state.buildings[buildingId]
   const base = BUILDING_DEFS[buildingId].baseCost
-  return {
-    wood: Math.ceil((base.wood ?? 0) * COST_SCALE ** count),
-    scrap: Math.ceil((base.scrap ?? 0) * COST_SCALE ** count),
-    iron: Math.ceil((base.iron ?? 0) * COST_SCALE ** count),
-  }
+
+  return Object.fromEntries(
+    RESOURCE_IDS.map((resourceId) => [resourceId, Math.ceil((base[resourceId] ?? 0) * COST_SCALE ** count)]),
+  ) as ResourceCost
 }
