@@ -1,5 +1,6 @@
 import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
+import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 
 export type Resources = Record<ResourceId, number>
 
@@ -35,7 +36,7 @@ export type ActionProgress = {
   gatherScrap: number
 }
 
-export type TabKey = 'base' | 'assembly' | 'exploration'
+export type TabKey = 'base' | 'assembly' | 'exploration' | 'codex'
 
 export type ExplorationMode = 'loadout' | 'active'
 export type ExplorationPhase = 'moving' | 'combat' | 'loot'
@@ -51,6 +52,7 @@ export type LootEntry = {
 }
 
 export type CombatState = {
+  enemyId: EnemyId
   enemyName: string
   enemyHp: number
   enemyMaxHp: number
@@ -58,6 +60,12 @@ export type CombatState = {
   enemyAttackCooldownMs: number
   enemyAttackElapsedMs: number
   playerAttackElapsedMs: number
+}
+
+export type EnemyCodexEntry = {
+  encountered: boolean
+  firstEncounteredAt: number | null
+  defeatCount: number
 }
 
 export type ExplorationState = {
@@ -114,6 +122,7 @@ export type GameState = {
   craftProgress: CraftProgress
   nextWeaponId: number
   exploration: ExplorationState
+  enemyCodex: Record<EnemyId, EnemyCodexEntry>
 }
 
 export const initialState: GameState = {
@@ -194,4 +203,7 @@ export const initialState: GameState = {
     carriedWeaponId: null,
     combat: null,
   },
+  enemyCodex: Object.fromEntries(
+    ENEMY_IDS.map((enemyId) => [enemyId, { encountered: false, firstEncounteredAt: null, defeatCount: 0 }]),
+  ) as Record<EnemyId, EnemyCodexEntry>,
 }

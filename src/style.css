@@ -252,7 +252,8 @@ li {
 }
 
 .assembly,
-.exploration {
+.exploration,
+.codex {
   grid-column: 1 / -1;
 }
 
@@ -518,6 +519,34 @@ li {
 
 .final-stat {
   color: #d8be82;
+}
+
+.codex-list {
+  display: grid;
+  gap: 10px;
+}
+
+.codex-entry {
+  border: 1px solid #2b2b2b;
+  border-radius: 6px;
+  padding: 10px;
+  background: #121212;
+}
+
+.codex-entry h3 {
+  margin: 0 0 6px;
+  color: #e1ddd0;
+  font-size: 14px;
+}
+
+.codex-entry ul {
+  margin: 0;
+  max-height: none;
+}
+
+.codex-entry li {
+  border-bottom: 0;
+  padding: 2px 0;
 }
 
 @media (max-width: 760px) {

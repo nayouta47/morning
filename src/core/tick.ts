@@ -168,7 +168,9 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
   if (combat.enemyHp <= 0) {
     state.exploration.phase = 'loot'
     state.exploration.combat = null
-    state.exploration.pendingLoot = createEnemyLootTable()
+    state.exploration.pendingLoot = createEnemyLootTable(combat.enemyId)
+    const codex = state.enemyCodex[combat.enemyId]
+    if (codex) codex.defeatCount += 1
     appendLog(state, `${combat.enemyName} 처치.`)
     appendLog(state, '전리품을 고른다.')
     return
