@@ -20,13 +20,22 @@ function renderDropCandidates(enemyId: (typeof ENEMY_IDS)[number]): string {
     .join('')
 }
 
+function getEncounteredEnemyIds(state: GameState): (typeof ENEMY_IDS)[number][] {
+  return ENEMY_IDS.filter((enemyId) => state.enemyCodex[enemyId]?.encountered)
+}
+
 function renderCodexRows(state: GameState): string {
-  return ENEMY_IDS.map((enemyId) => {
+  const encounteredEnemyIds = getEncounteredEnemyIds(state)
+  if (encounteredEnemyIds.length === 0) {
+    return '<p class="codex-empty">아직 조우한 적이 없습니다. 탐험에서 적을 만나면 도감에 기록됩니다.</p>'
+  }
+
+  return encounteredEnemyIds.map((enemyId) => {
     const enemy = getEnemyDef(enemyId)
     const codex = state.enemyCodex[enemyId]
-    const encountered = codex?.encountered ? '예' : '아니오'
     const defeated = codex && codex.defeatCount > 0 ? '예' : '아니오'
-    return `<article class="codex-entry" aria-label="${enemy.name} 도감 항목"><h3>${enemy.name}</h3><ul><li>조우 여부: ${encountered}</li><li>처치 여부: ${defeated}</li><li>HP: ${enemy.hp}</li><li>피해량: ${enemy.damage}</li><li>공격 쿨다운: ${(enemy.attackCooldownMs / 1000).toFixed(1)}초</li><li>첫 조우 시각: ${formatEncounterText(codex?.firstEncounteredAt ?? null)}</li><li>처치 수: ${codex?.defeatCount ?? 0}</li><li>드롭 후보:<ul>${renderDropCandidates(enemyId)}</ul></li></ul></article>`
+    const detailsId = `codex-card-body-${enemyId}`
+    return `<article class="codex-card" aria-label="${enemy.name} 도감 항목"><button class="codex-card-toggle" type="button" data-codex-toggle="${enemyId}" aria-expanded="false" aria-controls="${detailsId}"><span class="codex-card-title">${enemy.name}</span><span class="codex-card-summary">처치 ${codex?.defeatCount ?? 0}회</span></button><div class="codex-card-body hidden" id="${detailsId}"><ul><li>조우 여부: 예</li><li>처치 여부: ${defeated}</li><li>HP: ${enemy.hp}</li><li>피해량: ${enemy.damage}</li><li>공격 쿨다운: ${(enemy.attackCooldownMs / 1000).toFixed(1)}초</li><li>첫 조우 시각: ${formatEncounterText(codex?.firstEncounteredAt ?? null)}</li><li>처치 수: ${codex?.defeatCount ?? 0}</li><li>드롭 후보:<ul>${renderDropCandidates(enemyId)}</ul></li></ul></div></article>`
   }).join('')
 }
 
@@ -38,7 +47,7 @@ function codexSignature(state: GameState): string {
 }
 
 export function renderCodexPanel(state: GameState): string {
-  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2><p class="hint">현재 데이터에 존재하는 적만 표시됩니다.</p><div class="codex-list" id="codex-list" data-signature="${codexSignature(state)}">${renderCodexRows(state)}</div></section>`
+  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2><p class="hint">조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.</p><div class="codex-list" id="codex-list" data-signature="${codexSignature(state)}">${renderCodexRows(state)}</div></section>`
 }
 
 export function patchCodexPanel(app: ParentNode, state: GameState): void {
