@@ -28,7 +28,10 @@ type Handlers = {
   onToggleMinerRun: () => void
   onToggleScavengerRun: () => void
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
-  onSelectTab: (tab: 'base' | 'assembly') => void
+  onSelectTab: (tab: 'base' | 'assembly' | 'exploration') => void
+  onStartExploration: () => void
+  onMoveExploration: (dx: number, dy: number) => void
+  onReturnExploration: () => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
@@ -432,20 +435,90 @@ function renderAssemblyPanel(state: GameState): string {
   `
 }
 
+function renderExplorationMap(state: GameState): string {
+  const size = state.exploration.mapSize
+  const radius = 4
+  const { x, y } = state.exploration.position
+
+  const rows: string[] = []
+  for (let yy = y - radius; yy <= y + radius; yy += 1) {
+    let row = ''
+    for (let xx = x - radius; xx <= x + radius; xx += 1) {
+      if (xx < 0 || yy < 0 || xx >= size || yy >= size) {
+        row += ' '
+        continue
+      }
+      const key = `${xx},${yy}`
+      if (xx === x && yy === y) row += '@'
+      else if (xx === state.exploration.start.x && yy === state.exploration.start.y) row += 'S'
+      else if (state.exploration.visited.includes(key)) row += '·'
+      else row += '□'
+    }
+    rows.push(row)
+  }
+  return rows.join('\n')
+}
+
+function renderExplorationPanel(state: GameState): string {
+  const isActive = state.exploration.mode === 'active'
+  const atStart =
+    state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
+
+  return `
+    <section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration">
+      <h2>탐험</h2>
+      ${
+        isActive
+          ? `<div class="exploration-active">
+              <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지도 ${state.exploration.mapSize}x${state.exploration.mapSize}</p>
+              <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+              <div class="exploration-controls" role="group" aria-label="탐험 이동">
+                <button data-move="-1,-1">↖</button><button data-move="0,-1">↑</button><button data-move="1,-1">↗</button>
+                <button data-move="-1,0">←</button><button data-move="0,0" disabled>●</button><button data-move="1,0">→</button>
+                <button data-move="-1,1">↙</button><button data-move="0,1">↓</button><button data-move="1,1">↘</button>
+              </div>
+              <button id="exploration-return" ${atStart ? '' : 'disabled'}>거점 귀환</button>
+              <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C 또는 대각 버튼</p>
+            </div>`
+          : `<div class="exploration-loadout">
+              <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
+              <p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p>
+              <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>
+              <button id="exploration-start">탐험 출발</button>
+            </div>`
+      }
+    </section>
+  `
+}
+
 function patchTabs(app: ParentNode, state: GameState): void {
   const baseTab = app.querySelector<HTMLButtonElement>('#tab-base')
   const assTab = app.querySelector<HTMLButtonElement>('#tab-assembly')
+  const explorationTab = app.querySelector<HTMLButtonElement>('#tab-exploration')
   const panelBase = app.querySelector<HTMLElement>('#panel-base')
   const panelAssembly = app.querySelector<HTMLElement>('#panel-assembly')
-  if (!baseTab || !assTab || !panelBase || !panelAssembly) return
+  const panelExploration = app.querySelector<HTMLElement>('#panel-exploration')
+  if (!baseTab || !assTab || !explorationTab || !panelBase || !panelAssembly || !panelExploration) return
 
   const isBase = state.activeTab === 'base'
+  const isAssembly = state.activeTab === 'assembly'
+  const isExploration = state.activeTab === 'exploration'
+  const explorationActive = state.exploration.mode === 'active'
+
   baseTab.classList.toggle('active', isBase)
-  assTab.classList.toggle('active', !isBase)
+  assTab.classList.toggle('active', isAssembly)
+  explorationTab.classList.toggle('active', isExploration)
+
   baseTab.setAttribute('aria-selected', String(isBase))
-  assTab.setAttribute('aria-selected', String(!isBase))
+  assTab.setAttribute('aria-selected', String(isAssembly))
+  explorationTab.setAttribute('aria-selected', String(isExploration))
+
+  baseTab.disabled = explorationActive
+  assTab.disabled = explorationActive
+
   panelBase.classList.toggle('hidden', !isBase)
-  panelAssembly.classList.toggle('hidden', isBase)
+  panelAssembly.classList.toggle('hidden', !isAssembly)
+  panelExploration.classList.toggle('hidden', !isExploration)
 }
 
 function patchWeaponInventory(app: ParentNode, state: GameState): void {
@@ -636,6 +709,19 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchWeaponBoard(app, state)
   patchModuleInventory(app, state)
   patchModuleDetail(app, state)
+
+  setText(app, '#exploration-hp', `${state.exploration.hp}/${state.exploration.maxHp}`)
+  setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
+  setText(app, '#exploration-map', renderExplorationMap(state))
+  const returnButton = app.querySelector<HTMLButtonElement>('#exploration-return')
+  if (returnButton) {
+    const canReturn =
+      state.exploration.mode === 'active' &&
+      state.exploration.position.x === state.exploration.start.x &&
+      state.exploration.position.y === state.exploration.start.y
+    returnButton.disabled = !canReturn
+  }
+
   patchLogs(app, state)
 }
 
@@ -661,10 +747,13 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       <section class="tabs" role="tablist" aria-label="메인 탭">
         <button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${
           state.activeTab === 'base'
-        }" aria-controls="panel-base">거점</button>
+        }" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button>
         <button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${
           state.activeTab === 'assembly'
-        }" aria-controls="panel-assembly">무기 조립</button>
+        }" aria-controls="panel-assembly" ${state.exploration.mode === 'active' ? 'disabled' : ''}>무기 조립</button>
+        <button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${
+          state.activeTab === 'exploration'
+        }" aria-controls="panel-exploration">탐험</button>
       </section>
 
       <section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
@@ -788,6 +877,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
       </section>
 
       ${renderAssemblyPanel(state)}
+      ${renderExplorationPanel(state)}
 
       <section class="panel logs">
         <h2>로그</h2>
@@ -809,6 +899,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   app.querySelector<HTMLButtonElement>('#tab-base')?.addEventListener('click', () => handlers.onSelectTab('base'))
   app.querySelector<HTMLButtonElement>('#tab-assembly')?.addEventListener('click', () => handlers.onSelectTab('assembly'))
+  app.querySelector<HTMLButtonElement>('#tab-exploration')?.addEventListener('click', () => handlers.onSelectTab('exploration'))
 
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)
   app.querySelector<HTMLButtonElement>('#gather-scrap')?.addEventListener('click', handlers.onGatherScrap)
@@ -833,6 +924,20 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
   app.querySelector<HTMLButtonElement>('#craft-shovel')?.addEventListener('click', handlers.onCraftShovel)
   app.querySelector<HTMLButtonElement>('#craft-scavenger-drone')?.addEventListener('click', handlers.onCraftScavengerDrone)
+
+  app.querySelector<HTMLButtonElement>('#exploration-start')?.addEventListener('click', handlers.onStartExploration)
+  app.querySelector<HTMLButtonElement>('#exploration-return')?.addEventListener('click', handlers.onReturnExploration)
+  app.querySelectorAll<HTMLButtonElement>('[data-move]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.dataset.move
+      if (!value || value === '0,0') return
+      const [dxRaw, dyRaw] = value.split(',')
+      const dx = Number(dxRaw)
+      const dy = Number(dyRaw)
+      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return
+      handlers.onMoveExploration(dx, dy)
+    })
+  })
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
     const target = getEventTargetElement(eventTarget)

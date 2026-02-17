@@ -6,11 +6,14 @@ import {
   gatherScrap,
   gatherWood,
   moveEquippedModuleBetweenSlots,
+  moveExplorationStep,
   reorderWeapons,
   selectWeapon,
   setActiveTab,
   startCraft,
+  startExploration,
   toggleBuildingRun,
+  tryReturnFromExploration,
   unequipModuleFromSlot,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
@@ -154,6 +157,27 @@ function redraw(nowOverride?: number): void {
           setActiveTab(state, tab)
           redraw()
         },
+        onStartExploration: () => {
+          syncState()
+          if (!state.selectedWeaponId) {
+            const proceed = window.confirm('무기를 선택하지 않았습니다. 그대로 출발할까요?')
+            if (!proceed) return
+            startExploration(state, true)
+          } else {
+            startExploration(state, false)
+          }
+          redraw()
+        },
+        onMoveExploration: (dx, dy) => {
+          syncState()
+          moveExplorationStep(state, dx, dy)
+          redraw()
+        },
+        onReturnExploration: () => {
+          syncState()
+          tryReturnFromExploration(state)
+          redraw()
+        },
         onCraftPistol: () => {
           syncState()
           startCraft(state, 'pistol')
@@ -259,6 +283,35 @@ redraw()
 startFrameLoop()
 
 startAutosave(() => state)
+
+const moveByKey: Record<string, { dx: number; dy: number }> = {
+  w: { dx: 0, dy: -1 },
+  a: { dx: -1, dy: 0 },
+  s: { dx: 0, dy: 1 },
+  d: { dx: 1, dy: 0 },
+  arrowup: { dx: 0, dy: -1 },
+  arrowleft: { dx: -1, dy: 0 },
+  arrowdown: { dx: 0, dy: 1 },
+  arrowright: { dx: 1, dy: 0 },
+  q: { dx: -1, dy: -1 },
+  e: { dx: 1, dy: -1 },
+  z: { dx: -1, dy: 1 },
+  c: { dx: 1, dy: 1 },
+  home: { dx: -1, dy: -1 },
+  pageup: { dx: 1, dy: -1 },
+  end: { dx: -1, dy: 1 },
+  pagedown: { dx: 1, dy: 1 },
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.repeat || state.exploration.mode !== 'active') return
+  const move = moveByKey[event.key.toLowerCase()]
+  if (!move) return
+  event.preventDefault()
+  syncState()
+  moveExplorationStep(state, move.dx, move.dy)
+  redraw()
+})
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
