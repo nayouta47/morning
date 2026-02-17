@@ -54,3 +54,35 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## 탐험 데이터 편집 가이드
+
+### 1) 맵 파일
+- 경로: `src/data/maps/default-map.json`
+- 구조:
+  - `size`: 정사각형 맵 한 변 길이
+  - `start`: 시작 좌표 `{ x, y }`
+  - `tiles`: 2차원 배열, 각 타일은 `{ "biome": "biomeId" }`
+
+예시:
+```json
+{
+  "size": 33,
+  "start": { "x": 16, "y": 16 },
+  "tiles": [[{ "biome": "sanctuary" }]]
+}
+```
+
+### 2) 바이옴 스키마
+- 경로: `src/data/biomes.json`
+- 각 바이옴 필드:
+  - `id`: 바이옴 식별자
+  - `name`: UI 표시명
+  - `emoji`: 탐험 맵 배경 이모지
+  - `encounterPool`: 해당 바이옴 조우 풀 (`enemyId`, `weight`)
+
+### 3) 적 티어/풀
+- 경로: `src/data/enemies.ts`
+- 각 적은 `tier: 1 | 2 | 3` 개념 티어를 가짐
+- 실제 조우 후보는 글로벌 랜덤이 아니라 **현재 타일의 바이옴 encounterPool**에서 가중치로 선택됨
+- 바이옴 풀이 비면 기존 글로벌 랜덤 폴백을 사용함

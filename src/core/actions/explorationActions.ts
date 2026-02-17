@@ -1,7 +1,13 @@
-import { createEnemyCombatState, ENCOUNTER_FIGHT_CHANCE, ENCOUNTER_FIGHT_DELAY, selectEncounterEnemyId } from '../combat.ts'
+import {
+  createEnemyCombatState,
+  ENCOUNTER_FIGHT_CHANCE,
+  ENCOUNTER_FIGHT_DELAY,
+  selectEncounterEnemyId,
+} from '../combat.ts'
 import type { GameState } from '../state.ts'
 import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
+import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 
 function positionKey(x: number, y: number): string {
   return `${x},${y}`
@@ -43,14 +49,15 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
     return false
   }
 
-  const center = Math.floor(state.exploration.mapSize / 2)
+  const start = EXPLORATION_MAP.start
+  state.exploration.mapSize = EXPLORATION_MAP.size
   state.exploration.mode = 'active'
   state.exploration.phase = 'moving'
   state.exploration.hp = state.exploration.maxHp
-  state.exploration.start = { x: center, y: center }
-  state.exploration.position = { x: center, y: center }
+  state.exploration.start = { x: start.x, y: start.y }
+  state.exploration.position = { x: start.x, y: start.y }
   state.exploration.steps = 0
-  state.exploration.visited = [positionKey(center, center)]
+  state.exploration.visited = [positionKey(start.x, start.y)]
   state.exploration.movesSinceEncounter = 0
   state.exploration.backpack = []
   state.exploration.pendingLoot = []
@@ -98,7 +105,8 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     state.exploration.movesSinceEncounter = 0
     state.exploration.phase = 'combat'
 
-    const enemyId = selectEncounterEnemyId()
+    const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
+    const enemyId = selectEncounterEnemyId(biome.id)
     const combatState = createEnemyCombatState(enemyId)
     state.exploration.combat = combatState
 

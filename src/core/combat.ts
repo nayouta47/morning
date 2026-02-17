@@ -1,5 +1,6 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
 import { ENEMY_IDS, getEnemyDef, type EnemyId } from '../data/enemies.ts'
+import { BIOME_DEFS, type BiomeId } from '../data/maps/index.ts'
 import type { CombatState, GameState, LootEntry, WeaponInstance } from './state.ts'
 
 export const ENCOUNTER_FIGHT_DELAY = 3
@@ -7,7 +8,19 @@ export const ENCOUNTER_FIGHT_CHANCE = 0.2
 
 export const DEFAULT_ENEMY_ID: EnemyId = 'siliconLifeform'
 
-export function selectEncounterEnemyId(): EnemyId {
+export function selectEncounterEnemyId(biomeId?: BiomeId): EnemyId {
+  const pool = biomeId ? BIOME_DEFS[biomeId]?.encounterPool ?? [] : []
+  const totalWeight = pool.reduce((sum, row) => sum + row.weight, 0)
+
+  if (totalWeight > 0) {
+    let roll = Math.random() * totalWeight
+    for (const row of pool) {
+      roll -= row.weight
+      if (roll <= 0) return row.enemyId
+    }
+    return pool[pool.length - 1]?.enemyId ?? DEFAULT_ENEMY_ID
+  }
+
   const index = Math.floor(Math.random() * ENEMY_IDS.length)
   return ENEMY_IDS[index] ?? DEFAULT_ENEMY_ID
 }

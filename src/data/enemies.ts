@@ -9,9 +9,12 @@ export type EnemyDropCandidate = {
   chance: number
 }
 
+export type EnemyTier = 1 | 2 | 3
+
 export type EnemyDef = {
   id: EnemyId
   name: string
+  tier: EnemyTier
   hp: number
   damage: number
   attackCooldownMs: number
@@ -22,6 +25,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   siliconLifeform: {
     id: 'siliconLifeform',
     name: '벌벌떠는 기인',
+    tier: 2,
     hp: 20,
     damage: 2,
     attackCooldownMs: 3000,
@@ -34,6 +38,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   siliconBug: {
     id: 'siliconBug',
     name: '규소충',
+    tier: 1,
     hp: 4,
     damage: 1,
     attackCooldownMs: 2000,
@@ -45,6 +50,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   bareBonesMan: {
     id: 'bareBonesMan',
     name: '뼈만 남은 사내',
+    tier: 3,
     hp: 10,
     damage: 3,
     attackCooldownMs: 2000,
