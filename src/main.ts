@@ -6,12 +6,14 @@ import {
   gatherScrap,
   gatherWood,
   moveEquippedModuleBetweenSlots,
+  continueExplorationAfterLoot,
   moveExplorationStep,
   reorderWeapons,
   selectWeapon,
   setActiveTab,
   startCraft,
   startExploration,
+  takeExplorationLoot,
   toggleBuildingRun,
   unequipModuleFromSlot,
 } from './core/actions.ts'
@@ -170,6 +172,16 @@ function redraw(nowOverride?: number): void {
         onMoveExploration: (dx, dy) => {
           syncState()
           moveExplorationStep(state, dx, dy)
+          redraw()
+        },
+        onTakeLoot: (resourceId) => {
+          syncState()
+          takeExplorationLoot(state, resourceId)
+          redraw()
+        },
+        onContinueAfterLoot: () => {
+          syncState()
+          continueExplorationAfterLoot(state)
           redraw()
         },
         onCraftPistol: () => {

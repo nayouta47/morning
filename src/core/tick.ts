@@ -1,6 +1,7 @@
 import { BUILDING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, WeaponType } from './state.ts'
-import { appendLog } from './actions.ts'
+import { appendLog, handleExplorationDeath } from './actions.ts'
+import { createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
@@ -150,6 +151,41 @@ function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap
   resolveGatherCompletion(state, key)
 }
 
+function processExplorationCombat(state: GameState, elapsedMs: number): void {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return
+  const combat = state.exploration.combat
+  if (!combat) return
+
+  const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
+
+  combat.playerAttackElapsedMs += elapsedMs
+  while (combat.playerAttackElapsedMs >= weaponStats.cooldownMs && combat.enemyHp > 0) {
+    combat.playerAttackElapsedMs -= weaponStats.cooldownMs
+    combat.enemyHp = Math.max(0, combat.enemyHp - weaponStats.damage)
+    appendLog(state, `당신이 공격했다. ${combat.enemyName} HP ${combat.enemyHp}/${combat.enemyMaxHp}`)
+  }
+
+  if (combat.enemyHp <= 0) {
+    state.exploration.phase = 'loot'
+    state.exploration.combat = null
+    state.exploration.pendingLoot = createEnemyLootTable()
+    appendLog(state, `${combat.enemyName} 처치.`)
+    appendLog(state, '전리품을 고른다.')
+    return
+  }
+
+  combat.enemyAttackElapsedMs += elapsedMs
+  while (combat.enemyAttackElapsedMs >= combat.enemyAttackCooldownMs && state.exploration.hp > 0) {
+    combat.enemyAttackElapsedMs -= combat.enemyAttackCooldownMs
+    state.exploration.hp = Math.max(0, state.exploration.hp - combat.enemyDamage)
+    appendLog(state, `${combat.enemyName}의 타격. HP ${state.exploration.hp}/${state.exploration.maxHp}`)
+  }
+
+  if (state.exploration.hp <= 0) {
+    handleExplorationDeath(state)
+  }
+}
+
 export function advanceState(state: GameState, now = Date.now()): void {
   const prev = Number.isFinite(state.lastUpdate) ? state.lastUpdate : now
   const elapsed = Math.max(0, Math.min(MAX_ELAPSED_MS, now - prev))
@@ -165,6 +201,7 @@ export function advanceState(state: GameState, now = Date.now()): void {
 
   processActionElapsed(state, 'gatherWood', elapsed)
   processActionElapsed(state, 'gatherScrap', elapsed)
+  processExplorationCombat(state, elapsed)
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))
