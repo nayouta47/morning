@@ -11,6 +11,7 @@ import {
   reorderWeapons,
   selectWeapon,
   setActiveTab,
+  setSmeltingAllocation,
   startCraft,
   startExploration,
   startExplorationFlee,
@@ -133,6 +134,16 @@ function redraw(nowOverride?: number): void {
         onBuyDroneController: () => {
           syncState()
           buyBuilding(state, 'droneController')
+          redraw()
+        },
+        onBuyElectricFurnace: () => {
+          syncState()
+          buyBuilding(state, 'electricFurnace')
+          redraw()
+        },
+        onSetSmeltingAllocation: (key, value) => {
+          syncState()
+          setSmeltingAllocation(state, key, value)
           redraw()
         },
         onToggleLumberMillRun: () => {
