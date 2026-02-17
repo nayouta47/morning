@@ -256,21 +256,40 @@ li {
   grid-column: 1 / -1;
 }
 
-.exploration-map {
-  margin: 8px 0;
-  padding: 10px;
-  background: #101010;
-  border: 1px solid #2b2b2b;
-  border-radius: 6px;
-  color: #d9cfb7;
-  line-height: 1.2;
-  min-height: 180px;
+.exploration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.exploration-controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+.exploration h2,
+.exploration .hint {
+  text-align: center;
+}
+
+.exploration-active,
+.exploration-loadout {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.exploration-map {
+  margin: 0;
+  padding: 14px;
+  background: #101010;
+  border: 1px solid #2b2b2b;
+  border-radius: 8px;
+  color: #d9cfb7;
+  line-height: 1.45;
+  min-height: 360px;
+  width: fit-content;
+  max-width: 100%;
+  overflow: auto;
+  font-size: clamp(20px, 2.8vw, 28px);
 }
 
 .assembly-grid {
