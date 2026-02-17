@@ -27,7 +27,7 @@ export const BUILDING_DEFS = {
   },
   lab: {
     id: 'lab',
-    label: '연구대',
+    label: '지자 컴퓨터',
     unlockRequirements: [] as Requirement[],
     baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
     effectsText: '연구 가능',

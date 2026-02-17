@@ -718,7 +718,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
         </button>
 
         <button id="buy-lab" aria-label="건물 설치">
-          <span id="buy-lab-label">연구대 설치 (${formatCost(labCost)})</span>
+          <span id="buy-lab-label">지자 컴퓨터 설치 (${formatCost(labCost)})</span>
         </button>
 
         <button id="buy-workbench" aria-label="건물 설치">
