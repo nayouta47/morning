@@ -1,6 +1,7 @@
 import type { GameState } from '../../core/state.ts'
 import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { renderExplorationCombatOverlay } from './combatOverlay.ts'
+import { getBiomeAt } from '../../data/maps/index.ts'
 
 export function renderExplorationMap(state: GameState): string {
   const size = state.exploration.mapSize
@@ -14,7 +15,7 @@ export function renderExplorationMap(state: GameState): string {
       if (xx < 0 || yy < 0 || xx >= size || yy >= size) tokens.push('⬛')
       else if (xx === x && yy === y) tokens.push('🧍')
       else if (xx === state.exploration.start.x && yy === state.exploration.start.y) tokens.push('🏠')
-      else if (state.exploration.visited.includes(`${xx},${yy}`)) tokens.push('▫️')
+      else if (state.exploration.visited.includes(`${xx},${yy}`)) tokens.push(getBiomeAt(xx, yy).emoji)
       else tokens.push('⬛')
     }
     rows.push(tokens.join(' '))
@@ -29,7 +30,8 @@ function renderExplorationBody(state: GameState): string {
   }
 
   const backpackUsed = state.exploration.backpack.reduce((sum, entry) => sum + entry.amount, 0)
-  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>`
+  const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>`
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 불가)</p></div>`

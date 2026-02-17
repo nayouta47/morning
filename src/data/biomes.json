@@ -1,0 +1,40 @@
+{
+  "biomes": [
+    {
+      "id": "sanctuary",
+      "name": "안식지",
+      "emoji": "🟫",
+      "encounterPool": [
+        { "enemyId": "siliconBug", "weight": 5 },
+        { "enemyId": "siliconLifeform", "weight": 1 }
+      ]
+    },
+    {
+      "id": "scrapfield",
+      "name": "고철지대",
+      "emoji": "🪨",
+      "encounterPool": [
+        { "enemyId": "siliconBug", "weight": 4 },
+        { "enemyId": "siliconLifeform", "weight": 3 }
+      ]
+    },
+    {
+      "id": "glasswastes",
+      "name": "유리 황무지",
+      "emoji": "🟦",
+      "encounterPool": [
+        { "enemyId": "siliconLifeform", "weight": 4 },
+        { "enemyId": "bareBonesMan", "weight": 2 }
+      ]
+    },
+    {
+      "id": "boneyard",
+      "name": "백골 분지",
+      "emoji": "⬜",
+      "encounterPool": [
+        { "enemyId": "bareBonesMan", "weight": 5 },
+        { "enemyId": "siliconLifeform", "weight": 1 }
+      ]
+    }
+  ]
+}

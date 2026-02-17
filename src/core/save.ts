@@ -3,6 +3,7 @@ import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
 import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
+import { EXPLORATION_MAP } from '../data/maps/index.ts'
 
 const SAVE_KEY = 'morning-save-v3'
 const AUTOSAVE_MS = 5000
@@ -158,7 +159,9 @@ function normalizeState(raw: unknown): GameState | null {
     const exploration = loaded.exploration as Partial<GameState['exploration']>
     base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
     base.exploration.phase = exploration.phase === 'combat' || exploration.phase === 'loot' ? exploration.phase : 'moving'
-    base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize)) ? Math.max(8, Number(exploration.mapSize)) : 64
+    base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize))
+      ? Math.max(8, Number(exploration.mapSize))
+      : EXPLORATION_MAP.size
     base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
     base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
     base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
@@ -179,14 +182,15 @@ function normalizeState(raw: unknown): GameState | null {
     }
     base.exploration.carriedWeaponId = typeof exploration.carriedWeaponId === 'string' ? exploration.carriedWeaponId : null
 
-    const clampPos = (value: unknown) => Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || 0))
+    const clampPos = (value: unknown, fallback: number) =>
+      Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || fallback))
     base.exploration.start = {
-      x: clampPos(exploration.start?.x),
-      y: clampPos(exploration.start?.y),
+      x: clampPos(exploration.start?.x, EXPLORATION_MAP.start.x),
+      y: clampPos(exploration.start?.y, EXPLORATION_MAP.start.y),
     }
     base.exploration.position = {
-      x: clampPos(exploration.position?.x),
-      y: clampPos(exploration.position?.y),
+      x: clampPos(exploration.position?.x, base.exploration.start.x),
+      y: clampPos(exploration.position?.y, base.exploration.start.y),
     }
     base.exploration.steps = Math.max(0, Math.floor(Number(exploration.steps) || 0))
 

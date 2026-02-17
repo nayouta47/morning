@@ -1,6 +1,7 @@
 import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
+import { EXPLORATION_MAP } from '../data/maps/index.ts'
 
 export type Resources = Record<ResourceId, number>
 
@@ -189,13 +190,13 @@ export const initialState: GameState = {
   exploration: {
     mode: 'loadout',
     phase: 'moving',
-    mapSize: 64,
+    mapSize: EXPLORATION_MAP.size,
     hp: 10,
     maxHp: 10,
-    start: { x: 32, y: 32 },
-    position: { x: 32, y: 32 },
+    start: { x: EXPLORATION_MAP.start.x, y: EXPLORATION_MAP.start.y },
+    position: { x: EXPLORATION_MAP.start.x, y: EXPLORATION_MAP.start.y },
     steps: 0,
-    visited: ['32,32'],
+    visited: [`${EXPLORATION_MAP.start.x},${EXPLORATION_MAP.start.y}`],
     movesSinceEncounter: 0,
     backpackCapacity: 10,
     backpack: [],
