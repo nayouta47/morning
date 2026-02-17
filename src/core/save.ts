@@ -261,6 +261,10 @@ function normalizeState(raw: unknown): GameState | null {
     base.activeTab = 'base'
   }
 
+  if (base.buildings.lab <= 0 && base.activeTab === 'codex') {
+    base.activeTab = 'base'
+  }
+
   if (base.buildings.vehicleRepair <= 0) {
     if (base.activeTab === 'exploration') base.activeTab = 'base'
     if (base.exploration.mode === 'active') {

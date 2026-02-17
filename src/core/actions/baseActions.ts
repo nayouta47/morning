@@ -118,6 +118,10 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     pushLog(state, '차량 수리를 완료해야 탐험 탭을 사용할 수 있다.')
     return
   }
+  if (tab === 'codex' && state.buildings.lab <= 0) {
+    pushLog(state, '지자 컴퓨터를 설치해야 도감 탭을 사용할 수 있다.')
+    return
+  }
   if (state.exploration.mode === 'active' && tab !== 'exploration') {
     pushLog(state, '탐험 중에는 다른 탭으로 이동할 수 없다.')
     return

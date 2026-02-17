@@ -33,6 +33,7 @@ function patchTabs(app: ParentNode, state: GameState): void {
   const explorationActive = state.exploration.mode === 'active'
   const assemblyUnlocked = state.buildings.workbench >= 1
   const explorationUnlocked = state.buildings.vehicleRepair >= 1
+  const codexUnlocked = state.buildings.lab >= 1
 
   baseTab.classList.toggle('active', isBase)
   assTab.classList.toggle('active', isAssembly)
@@ -45,11 +46,12 @@ function patchTabs(app: ParentNode, state: GameState): void {
   explorationTab.setAttribute('aria-selected', String(isExploration))
   explorationTab.textContent = explorationUnlocked ? '탐험' : '탐험(잠김)'
   codexTab.setAttribute('aria-selected', String(isCodex))
+  codexTab.textContent = codexUnlocked ? '도감' : '도감(잠김)'
 
   baseTab.disabled = explorationActive
   assTab.disabled = explorationActive || !assemblyUnlocked
   explorationTab.disabled = !explorationUnlocked
-  codexTab.disabled = explorationActive
+  codexTab.disabled = explorationActive || !codexUnlocked
 
   panelBase.classList.toggle('hidden', !isBase)
   panelAssembly.classList.toggle('hidden', !isAssembly)
@@ -181,8 +183,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const focusedId = (document.activeElement as HTMLElement | null)?.id ?? null
   const assemblyUnlocked = state.buildings.workbench >= 1
   const explorationUnlocked = state.buildings.vehicleRepair >= 1
+  const codexUnlocked = state.buildings.lab >= 1
 
-  app.innerHTML = `<main class="layout"><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' ? 'disabled' : ''}>도감</button></section>${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}<section class="panel logs"><h2>로그</h2><ul id="log-list" data-signature="${state.log.length}:${state.log[state.log.length - 1] ?? ''}">${[...state.log].reverse().map((line) => `<li>${line}</li>`).join('')}</ul></section></main>`
+  app.innerHTML = `<main class="layout"><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section>${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}<section class="panel logs"><h2>로그</h2><ul id="log-list" data-signature="${state.log.length}:${state.log[state.log.length - 1] ?? ''}">${[...state.log].reverse().map((line) => `<li>${line}</li>`).join('')}</ul></section></main>`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')
