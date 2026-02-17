@@ -357,31 +357,31 @@ function renderCraftActions(state: GameState): string {
     <div class="craft-actions" role="group" aria-label="제작 행동">
       ${renderGaugeButton(
         'craft-pistol',
-        `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.pistol.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.pistol.costs)})`,
+        `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.pistol.costs)})`,
         '권총 제작',
         pistolView,
       )}
       ${renderGaugeButton(
         'craft-rifle',
-        `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.rifle.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.rifle.costs)})`,
+        `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.rifle.costs)})`,
         '소총 제작',
         rifleView,
       )}
       ${renderGaugeButton(
         'craft-module',
-        `${CRAFT_RECIPE_DEFS.module.label} 제작 (${Math.round(CRAFT_RECIPE_DEFS.module.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.module.costs)})`,
+        `${CRAFT_RECIPE_DEFS.module.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.module.costs)})`,
         '모듈 제작',
         moduleView,
       )}
       ${renderGaugeButton(
         'craft-shovel',
-        `${getResourceDisplay('shovel')} 제작 (${Math.round(CRAFT_RECIPE_DEFS.shovel.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.shovel.costs)})`,
+        `${getResourceDisplay('shovel')} 제작 (${formatCost(CRAFT_RECIPE_DEFS.shovel.costs)})`,
         '🪏 삽 제작',
         shovelView,
       )}
       ${renderGaugeButton(
         'craft-scavenger-drone',
-        `${getResourceDisplay('scavengerDrone')} 제작 (${Math.round(CRAFT_RECIPE_DEFS.scavengerDrone.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.scavengerDrone.costs)})`,
+        `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(CRAFT_RECIPE_DEFS.scavengerDrone.costs)})`,
         '🛸 스캐빈저 드론 제작',
         scavengerDroneView,
       )}
