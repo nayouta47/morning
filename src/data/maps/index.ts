@@ -111,3 +111,7 @@ export function getBiomeAt(x: number, y: number): BiomeDef {
     encounterPool: [],
   }
 }
+
+export function getBiomesForEnemy(enemyId: EnemyId): BiomeDef[] {
+  return Object.values(BIOME_DEFS).filter((biome) => biome.encounterPool.some((entry) => entry.enemyId === enemyId))
+}
