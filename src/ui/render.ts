@@ -31,7 +31,6 @@ type Handlers = {
   onSelectTab: (tab: 'base' | 'assembly' | 'exploration') => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
-  onReturnExploration: () => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
@@ -442,39 +441,31 @@ function renderExplorationMap(state: GameState): string {
 
   const rows: string[] = []
   for (let yy = y - radius; yy <= y + radius; yy += 1) {
-    let row = ''
+    const tokens: string[] = []
     for (let xx = x - radius; xx <= x + radius; xx += 1) {
       if (xx < 0 || yy < 0 || xx >= size || yy >= size) {
-        row += ' '
+        tokens.push('⬛')
         continue
       }
       const key = `${xx},${yy}`
-      if (xx === x && yy === y) row += '@'
-      else if (xx === state.exploration.start.x && yy === state.exploration.start.y) row += 'S'
-      else if (state.exploration.visited.includes(key)) row += '·'
-      else row += '□'
+      if (xx === x && yy === y) tokens.push('🧍')
+      else if (xx === state.exploration.start.x && yy === state.exploration.start.y) tokens.push('🏠')
+      else if (state.exploration.visited.includes(key)) tokens.push('▫️')
+      else tokens.push('⬛')
     }
-    rows.push(row)
+    rows.push(tokens.join(' '))
   }
   return rows.join('\n')
 }
 
 function renderExplorationBody(state: GameState): string {
   const isActive = state.exploration.mode === 'active'
-  const atStart =
-    state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
 
   return isActive
     ? `<div class="exploration-active">
         <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지도 ${state.exploration.mapSize}x${state.exploration.mapSize}</p>
         <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
-        <div class="exploration-controls" role="group" aria-label="탐험 이동">
-          <button data-move="-1,-1">↖</button><button data-move="0,-1">↑</button><button data-move="1,-1">↗</button>
-          <button data-move="-1,0">←</button><button data-move="0,0" disabled>●</button><button data-move="1,0">→</button>
-          <button data-move="-1,1">↙</button><button data-move="0,1">↓</button><button data-move="1,1">↘</button>
-        </div>
-        <button id="exploration-return" ${atStart ? '' : 'disabled'}>거점 귀환</button>
-        <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C 또는 대각 버튼</p>
+        <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p>
       </div>`
     : `<div class="exploration-loadout">
         <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
@@ -727,14 +718,6 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#exploration-hp', `${state.exploration.hp}/${state.exploration.maxHp}`)
   setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
   setText(app, '#exploration-map', renderExplorationMap(state))
-  const returnButton = app.querySelector<HTMLButtonElement>('#exploration-return')
-  if (returnButton) {
-    const canReturn =
-      state.exploration.mode === 'active' &&
-      state.exploration.position.x === state.exploration.start.x &&
-      state.exploration.position.y === state.exploration.start.y
-    returnButton.disabled = !canReturn
-  }
 
   patchLogs(app, state)
 }
@@ -960,24 +943,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
     const startButton = target.closest<HTMLElement>('#exploration-start')
     if (startButton) {
       handlers.onStartExploration()
-      return
-    }
-
-    const returnButton = target.closest<HTMLElement>('#exploration-return')
-    if (returnButton) {
-      handlers.onReturnExploration()
-      return
-    }
-
-    const moveButton = target.closest<HTMLElement>('[data-move]')
-    if (moveButton) {
-      const value = moveButton.getAttribute('data-move')
-      if (!value || value === '0,0') return
-      const [dxRaw, dyRaw] = value.split(',')
-      const dx = Number(dxRaw)
-      const dy = Number(dyRaw)
-      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return
-      handlers.onMoveExploration(dx, dy)
       return
     }
 

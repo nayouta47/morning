@@ -241,6 +241,25 @@ function positionKey(x: number, y: number): string {
   return `${x},${y}`
 }
 
+function revealExplorationTilesInRadius(state: GameState): void {
+  const { x, y } = state.exploration.position
+  const size = state.exploration.mapSize
+  const revealed = new Set(state.exploration.visited)
+
+  for (let yy = y - 2; yy <= y + 2; yy += 1) {
+    for (let xx = x - 2; xx <= x + 2; xx += 1) {
+      if (xx < 0 || yy < 0 || xx >= size || yy >= size) continue
+      const dx = xx - x
+      const dy = yy - y
+      if (dx * dx + dy * dy <= 2) {
+        revealed.add(positionKey(xx, yy))
+      }
+    }
+  }
+
+  state.exploration.visited = [...revealed]
+}
+
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
   if (state.exploration.mode === 'active') {
     pushLog(state, '이미 탐험 중이다.')
@@ -258,6 +277,7 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.position = { x: center, y: center }
   state.exploration.steps = 0
   state.exploration.visited = [positionKey(center, center)]
+  revealExplorationTilesInRadius(state)
   state.activeTab = 'exploration'
   pushLog(state, '탐험 시작. 주변은 정적이고 어둡다.')
   return true
@@ -275,9 +295,17 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
 
   state.exploration.position = { x: nextX, y: nextY }
   state.exploration.steps += 1
+  revealExplorationTilesInRadius(state)
 
-  const key = positionKey(nextX, nextY)
-  if (!state.exploration.visited.includes(key)) state.exploration.visited.push(key)
+  const atStart =
+    state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
+
+  if (atStart) {
+    state.exploration.mode = 'loadout'
+    state.activeTab = 'exploration'
+    pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
+    return true
+  }
 
   pushLog(state, `탐험 이동: (${nextX}, ${nextY}) · ${state.exploration.steps}보`)
   return true

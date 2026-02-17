@@ -13,7 +13,6 @@ import {
   startCraft,
   startExploration,
   toggleBuildingRun,
-  tryReturnFromExploration,
   unequipModuleFromSlot,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
@@ -171,11 +170,6 @@ function redraw(nowOverride?: number): void {
         onMoveExploration: (dx, dy) => {
           syncState()
           moveExplorationStep(state, dx, dy)
-          redraw()
-        },
-        onReturnExploration: () => {
-          syncState()
-          tryReturnFromExploration(state)
           redraw()
         },
         onCraftPistol: () => {
