@@ -4,7 +4,9 @@ export const RESOURCE_DEFS = {
   iron: { id: 'iron', label: '철', emoji: '⛓️', order: 3, precision: 1 },
   chromium: { id: 'chromium', label: '크롬', emoji: '🟢', order: 4, precision: 1 },
   molybdenum: { id: 'molybdenum', label: '몰리브덴', emoji: '🔵', order: 5, precision: 1 },
-  shovel: { id: 'shovel', label: '삽', emoji: '🪏', order: 6, precision: 0 },
+  cobalt: { id: 'cobalt', label: '코발트', emoji: '🟣', order: 6, precision: 1 },
+  shovel: { id: 'shovel', label: '삽', emoji: '🪏', order: 7, precision: 0 },
+  scavengerDrone: { id: 'scavengerDrone', label: '스캐빈저 드론', emoji: '🛸', order: 8, precision: 0 },
 } as const
 
 export type ResourceId = keyof typeof RESOURCE_DEFS

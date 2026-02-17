@@ -41,13 +41,16 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.iron = Number(loaded.resources.iron ?? base.resources.iron)
     base.resources.chromium = Number(loaded.resources.chromium ?? base.resources.chromium)
     base.resources.molybdenum = Number(loaded.resources.molybdenum ?? base.resources.molybdenum)
+    base.resources.cobalt = Number(loaded.resources.cobalt ?? base.resources.cobalt)
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
+    base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
   }
   if (loaded.buildings) {
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
     base.buildings.miner = Number(loaded.buildings.miner ?? base.buildings.miner)
     base.buildings.workbench = Number(loaded.buildings.workbench ?? base.buildings.workbench)
     base.buildings.lab = Number(loaded.buildings.lab ?? base.buildings.lab)
+    base.buildings.droneController = Number(loaded.buildings.droneController ?? base.buildings.droneController)
   }
   if (loaded.upgrades) {
     base.upgrades.betterAxe = Boolean(loaded.upgrades.betterAxe)
@@ -63,6 +66,7 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
   base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
+  base.productionProgress.scavenger = clampProgress(loaded.productionProgress?.scavenger)
 
   base.productionRunning.lumberMill =
     typeof loaded.productionRunning?.lumberMill === 'boolean'
@@ -70,6 +74,8 @@ function normalizeState(raw: unknown): GameState | null {
       : base.productionRunning.lumberMill
   base.productionRunning.miner =
     typeof loaded.productionRunning?.miner === 'boolean' ? loaded.productionRunning.miner : base.productionRunning.miner
+  base.productionRunning.scavenger =
+    typeof loaded.productionRunning?.scavenger === 'boolean' ? loaded.productionRunning.scavenger : base.productionRunning.scavenger
 
   base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
   base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
@@ -78,6 +84,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)
   base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
   base.craftProgress.shovel = clampProgress(loaded.craftProgress?.shovel)
+  base.craftProgress.scavengerDrone = clampProgress(loaded.craftProgress?.scavengerDrone)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()

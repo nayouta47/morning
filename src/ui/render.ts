@@ -23,14 +23,17 @@ type Handlers = {
   onBuyMiner: () => void
   onBuyWorkbench: () => void
   onBuyLab: () => void
+  onBuyDroneController: () => void
   onToggleLumberMillRun: () => void
   onToggleMinerRun: () => void
+  onToggleScavengerRun: () => void
   onBuyUpgrade: (key: keyof typeof UPGRADE_DEFS) => void
   onSelectTab: (tab: 'base' | 'assembly') => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
   onCraftShovel: () => void
+  onCraftScavengerDrone: () => void
   onSelectWeapon: (weaponId: string) => void
   onReorderWeapons: (sourceWeaponId: string, targetWeaponId: string | null) => void
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
@@ -100,7 +103,7 @@ function formatActionTime(progress: number, totalMs: number, isActive: boolean):
   return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
 }
 
-type ProductionBuildingKey = 'lumberMill' | 'miner'
+type ProductionBuildingKey = 'lumberMill' | 'miner' | 'scavenger'
 
 type BuildingGaugeView = {
   progress: number
@@ -110,12 +113,21 @@ type BuildingGaugeView = {
 }
 
 function getBuildingGaugeView(state: GameState, key: ProductionBuildingKey, now = Date.now()): BuildingGaugeView {
-  const isInstalled = state.buildings[key] > 0
+  const isInstalled = key === 'scavenger' ? state.buildings.droneController > 0 : state.buildings[key] > 0
   if (!isInstalled) {
     return {
       progress: 0,
-      percentText: '대기',
-      timeText: formatBuildingTime(0, false),
+      percentText: key === 'scavenger' ? '잠김' : '대기',
+      timeText: key === 'scavenger' ? '드론 컨트롤러 필요' : formatBuildingTime(0, false),
+      phase: 'idle',
+    }
+  }
+
+  if (key === 'scavenger' && state.resources.scavengerDrone < 1) {
+    return {
+      progress: 0,
+      percentText: '잠김',
+      timeText: '스캐빈저 드론 필요',
       phase: 'idle',
     }
   }
@@ -336,6 +348,10 @@ function renderCraftActions(state: GameState): string {
   const rifleView = craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle'))
   const moduleView = craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module'))
   const shovelView = shovelCraftView(state)
+  const scavengerDroneView = craftView(
+    state.craftProgress.scavengerDrone,
+    getCraftRecipeMissingRequirement(state, 'scavengerDrone'),
+  )
 
   return `
     <div class="craft-actions" role="group" aria-label="제작 행동">
@@ -362,6 +378,12 @@ function renderCraftActions(state: GameState): string {
         `${getResourceDisplay('shovel')} 제작 (${Math.round(CRAFT_RECIPE_DEFS.shovel.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.shovel.costs)})`,
         '🪏 삽 제작',
         shovelView,
+      )}
+      ${renderGaugeButton(
+        'craft-scavenger-drone',
+        `${getResourceDisplay('scavengerDrone')} 제작 (${Math.round(CRAFT_RECIPE_DEFS.scavengerDrone.durationMs / 1000)}초 · ${formatCost(CRAFT_RECIPE_DEFS.scavengerDrone.costs)})`,
+        '🛸 스캐빈저 드론 제작',
+        scavengerDroneView,
       )}
     </div>
   `
@@ -530,6 +552,11 @@ function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle')))
   patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module')))
   patchActionGauge(app, 'craft-shovel', shovelCraftView(state))
+  patchActionGauge(
+    app,
+    'craft-scavenger-drone',
+    craftView(state.craftProgress.scavengerDrone, getCraftRecipeMissingRequirement(state, 'scavengerDrone')),
+  )
 }
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
@@ -546,7 +573,9 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-iron', formatResourceValue('iron', state.resources.iron))
   setText(app, '#res-chromium', formatResourceValue('chromium', state.resources.chromium))
   setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
+  setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
+  setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
 
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`)
@@ -559,6 +588,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   const minerCost = getBuildingCost(state, 'miner')
   const workbenchCost = getBuildingCost(state, 'workbench')
   const labCost = getBuildingCost(state, 'lab')
+  const droneControllerCost = getBuildingCost(state, 'droneController')
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
   if (buyLumber) buyLumber.disabled = !state.unlocks.lumberMill
@@ -570,6 +600,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   setText(app, '#buy-lab-label', `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
   setText(app, '#buy-workbench-label', `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
+  setText(app, '#buy-drone-controller-label', `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
 
   setText(app, '#lumber-count', `${state.buildings.lumberMill}`)
   setText(app, '#lumber-output', `${state.buildings.lumberMill}`)
@@ -577,12 +608,15 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#miner-output', `${state.buildings.miner}`)
   setText(app, '#workbench-count', `${state.buildings.workbench}`)
   setText(app, '#lab-count', `${state.buildings.lab}`)
+  setText(app, '#drone-controller-count', `${state.buildings.droneController}`)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
+  const scavengerGauge = getBuildingGaugeView(state, 'scavenger', now)
 
   patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)
   patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText, minerGauge.phase)
+  patchBuildingGauge(app, 'scavenger-progress', scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
 
@@ -619,9 +653,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const minerCost = getBuildingCost(state, 'miner')
   const workbenchCost = getBuildingCost(state, 'workbench')
   const labCost = getBuildingCost(state, 'lab')
+  const droneControllerCost = getBuildingCost(state, 'droneController')
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const minerGauge = getBuildingGaugeView(state, 'miner', now)
+  const scavengerGauge = getBuildingGaugeView(state, 'scavenger', now)
 
   app.innerHTML = `
     <main class="layout">
@@ -645,13 +681,16 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
             <p>${getResourceDisplay('iron')} <strong id="res-iron">${formatResourceValue('iron', state.resources.iron)}</strong></p>
             <p>${getResourceDisplay('chromium')} <strong id="res-chromium">${formatResourceValue('chromium', state.resources.chromium)}</strong></p>
             <p>${getResourceDisplay('molybdenum')} <strong id="res-molybdenum">${formatResourceValue('molybdenum', state.resources.molybdenum)}</strong></p>
+            <p>${getResourceDisplay('cobalt')} <strong id="res-cobalt">${formatResourceValue('cobalt', state.resources.cobalt)}</strong></p>
             <p>${getResourceDisplay('shovel')} <strong id="res-shovel">${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}</strong></p>
+            <p>${getResourceDisplay('scavengerDrone')} <strong id="res-scavenger-drone">${formatResourceValue('scavengerDrone', state.resources.scavengerDrone)}</strong></p>
           </section>
           <section class="resources-buildings" aria-label="설치된 건물">
             <p>${getBuildingLabel('lumberMill')}: <span id="lumber-count">${state.buildings.lumberMill}</span> (10초마다 ${getResourceDisplay('wood')} +<span id="lumber-output">${state.buildings.lumberMill}</span>)</p>
             <p>${getBuildingLabel('miner')}: <span id="miner-count">${state.buildings.miner}</span> (10초마다 최대 ${getResourceDisplay('scrap')} <span id="miner-output">${state.buildings.miner}</span> 처리)</p>
             <p>${getBuildingLabel('workbench')}: <span id="workbench-count">${state.buildings.workbench}</span></p>
             <p>${getBuildingLabel('lab')}: <span id="lab-count">${state.buildings.lab}</span></p>
+            <p>${getBuildingLabel('droneController')}: <span id="drone-controller-count">${state.buildings.droneController}</span></p>
           </section>
         </div>
       </section>
@@ -686,6 +725,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           <span id="buy-workbench-label">제작대 설치 (${formatCost(workbenchCost)})</span>
         </button>
 
+        <button id="buy-drone-controller" aria-label="건물 설치">
+          <span id="buy-drone-controller-label">드론 컨트롤러 설치 (${formatCost(droneControllerCost)})</span>
+        </button>
+
         ${renderBuildingGauge(
           'lumber-progress',
           '벌목기 가동',
@@ -702,6 +745,15 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           minerGauge.percentText,
           minerGauge.timeText,
           minerGauge.phase,
+        )}
+
+        ${renderBuildingGauge(
+          'scavenger-progress',
+          '스캐빈저 가동',
+          scavengerGauge.progress,
+          scavengerGauge.percentText,
+          scavengerGauge.timeText,
+          scavengerGauge.phase,
         )}
       </section>
 
@@ -745,8 +797,10 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)
   app.querySelector<HTMLButtonElement>('#buy-workbench')?.addEventListener('click', handlers.onBuyWorkbench)
   app.querySelector<HTMLButtonElement>('#buy-lab')?.addEventListener('click', handlers.onBuyLab)
+  app.querySelector<HTMLButtonElement>('#buy-drone-controller')?.addEventListener('click', handlers.onBuyDroneController)
   app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)
   app.querySelector<HTMLButtonElement>('#miner-progress')?.addEventListener('click', handlers.onToggleMinerRun)
+  app.querySelector<HTMLButtonElement>('#scavenger-progress')?.addEventListener('click', handlers.onToggleScavengerRun)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-upgrade]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -759,6 +813,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-rifle')?.addEventListener('click', handlers.onCraftRifle)
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
   app.querySelector<HTMLButtonElement>('#craft-shovel')?.addEventListener('click', handlers.onCraftShovel)
+  app.querySelector<HTMLButtonElement>('#craft-scavenger-drone')?.addEventListener('click', handlers.onCraftScavengerDrone)
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
     const target = getEventTargetElement(eventTarget)

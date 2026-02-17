@@ -11,11 +11,13 @@ const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
 const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
-type ProductionBuildingKey = 'lumberMill' | 'miner'
+type ProductionBuildingKey = 'lumberMill' | 'miner' | 'scavenger'
 
 function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number): void {
-  const count = state.buildings[key]
-  if (count <= 0) {
+  const count = key === 'scavenger' ? 1 : state.buildings[key]
+  const scavengerEnabled = state.buildings.droneController > 0 && state.resources.scavengerDrone > 0
+
+  if (count <= 0 || (key === 'scavenger' && !scavengerEnabled)) {
     state.productionProgress[key] = 0
     return
   }
@@ -27,6 +29,12 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
   if (cycles <= 0) return
 
   const capacity = cycles * count
+
+  if (key === 'scavenger') {
+    state.resources.scrap += capacity
+    appendLog(state, `스캐빈저 가동: 🗑️ 고물 +${capacity}`)
+    return
+  }
 
   if (key === 'lumberMill') {
     state.resources.wood += capacity
@@ -151,6 +159,7 @@ export function advanceState(state: GameState, now = Date.now()): void {
 
   processBuildingElapsed(state, 'lumberMill', elapsed)
   processBuildingElapsed(state, 'miner', elapsed)
+  processBuildingElapsed(state, 'scavenger', elapsed)
 
   ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed))
 
