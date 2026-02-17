@@ -108,6 +108,26 @@ h1 {
   grid-column: 1 / -1;
 }
 
+.actions {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.crafting {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.buildings {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.upgrades {
+  grid-column: 1;
+  grid-row: 3;
+}
+
 .resources-split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -692,6 +712,14 @@ li {
   }
 
   .equipment-group {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .actions,
+  .crafting,
+  .buildings,
+  .upgrades {
     grid-column: auto;
     grid-row: auto;
   }
