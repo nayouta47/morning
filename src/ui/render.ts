@@ -5,6 +5,7 @@ import type { GameState, ModuleType, WeaponInstance } from '../core/state.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay, type ResourceId } from '../data/resources.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../core/rewards.ts'
+import { getWeaponCombatStats } from '../core/combat.ts'
 
 type ActionPhase = 'ready' | 'cooldown' | 'locked'
 
@@ -277,6 +278,11 @@ function getSelectedWeapon(state: GameState): WeaponInstance | null {
   return state.weapons.find((w) => w.id === state.selectedWeaponId) ?? null
 }
 
+function getExplorationCarriedWeapon(state: GameState): WeaponInstance | null {
+  if (!state.exploration.carriedWeaponId) return null
+  return state.weapons.find((weapon) => weapon.id === state.exploration.carriedWeaponId) ?? null
+}
+
 function getWeaponStats(weapon: WeaponInstance): {
   baseDamage: number
   baseCooldown: number
@@ -460,6 +466,36 @@ function renderExplorationMap(state: GameState): string {
   return rows.join('\n')
 }
 
+function renderExplorationCombatOverlay(state: GameState): string {
+  const combat = state.exploration.combat
+  if (!combat) return ''
+
+  const weaponStats = getWeaponCombatStats(getExplorationCarriedWeapon(state) ?? getSelectedWeapon(state))
+  const cooldownProgress = clamp01(combat.playerAttackElapsedMs / weaponStats.cooldownMs)
+  const cooldownPercent = Math.round(cooldownProgress * 100)
+
+  return `<div class="exploration-combat-overlay" role="dialog" aria-modal="false" aria-label="전투 현황 오버레이">
+    <div class="exploration-combat-overlay-upper">
+      <div class="combat-entity combat-entity-player" aria-label="플레이어 체력 ${state.exploration.hp}/${state.exploration.maxHp}">
+        <p class="combat-hp">HP ${state.exploration.hp}/${state.exploration.maxHp}</p>
+        <p class="combat-emoji" aria-hidden="true">🧍</p>
+      </div>
+      <div class="combat-versus" aria-hidden="true">vs</div>
+      <div class="combat-entity combat-entity-enemy" aria-label="적 체력 ${combat.enemyHp}/${combat.enemyMaxHp}">
+        <p class="combat-hp">HP ${combat.enemyHp}/${combat.enemyMaxHp}</p>
+        <p class="combat-emoji" aria-hidden="true">👾</p>
+      </div>
+    </div>
+    <div class="exploration-combat-overlay-lower" aria-label="무기 재사용 대기시간">
+      <p class="combat-cooldown-label">무기 쿨다운</p>
+      <div class="combat-cooldown-gauge" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${cooldownPercent}" aria-label="무기 쿨다운 진행률 ${cooldownPercent}%">
+        <span class="combat-cooldown-fill" style="width:${cooldownPercent}%"></span>
+      </div>
+      <p class="combat-cooldown-text">${cooldownPercent}%</p>
+    </div>
+  </div>`
+}
+
 function renderExplorationBody(state: GameState): string {
   const isActive = state.exploration.mode === 'active'
 
@@ -478,11 +514,12 @@ function renderExplorationBody(state: GameState): string {
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">
       ${baseInfo}
-      <div class="exploration-combat-box">
-        <p>${state.exploration.combat.enemyName} · HP ${state.exploration.combat.enemyHp}/${state.exploration.combat.enemyMaxHp}</p>
-        <p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 불가)</p>
+      <div class="exploration-map-stage">
+        <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+        <div class="exploration-combat-backdrop" aria-hidden="true"></div>
+        ${renderExplorationCombatOverlay(state)}
       </div>
-      <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+      <p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 불가)</p>
     </div>`
   }
 
@@ -600,6 +637,28 @@ function patchModuleInventory(app: ParentNode, state: GameState): void {
   root.innerHTML = entries.join('')
   if (entries.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'
   root.dataset.signature = sig
+}
+
+function patchExplorationCombatOverlay(app: ParentNode, state: GameState): void {
+  const combat = state.exploration.combat
+  if (!combat || state.exploration.phase !== 'combat') return
+
+  const weaponStats = getWeaponCombatStats(getExplorationCarriedWeapon(state) ?? getSelectedWeapon(state))
+  const progress = clamp01(combat.playerAttackElapsedMs / weaponStats.cooldownMs)
+  const percent = Math.round(progress * 100)
+
+  setText(app, '.combat-entity-player .combat-hp', `HP ${state.exploration.hp}/${state.exploration.maxHp}`)
+  setText(app, '.combat-entity-enemy .combat-hp', `HP ${combat.enemyHp}/${combat.enemyMaxHp}`)
+  setText(app, '.combat-cooldown-text', `${percent}%`)
+
+  const meter = app.querySelector<HTMLElement>('.combat-cooldown-gauge')
+  if (meter) {
+    meter.setAttribute('aria-valuenow', String(percent))
+    meter.setAttribute('aria-label', `무기 쿨다운 진행률 ${percent}%`)
+  }
+
+  const fill = app.querySelector<HTMLElement>('.combat-cooldown-fill')
+  if (fill) fill.style.width = `${percent}%`
 }
 
 function patchExplorationBody(app: ParentNode, state: GameState): void {
@@ -749,6 +808,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchModuleInventory(app, state)
   patchModuleDetail(app, state)
   patchExplorationBody(app, state)
+  patchExplorationCombatOverlay(app, state)
 
   setText(app, '#exploration-hp', `${state.exploration.hp}/${state.exploration.maxHp}`)
   setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
