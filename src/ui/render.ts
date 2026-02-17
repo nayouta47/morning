@@ -459,34 +459,36 @@ function renderExplorationMap(state: GameState): string {
   return rows.join('\n')
 }
 
-function renderExplorationPanel(state: GameState): string {
+function renderExplorationBody(state: GameState): string {
   const isActive = state.exploration.mode === 'active'
   const atStart =
     state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
 
+  return isActive
+    ? `<div class="exploration-active">
+        <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지도 ${state.exploration.mapSize}x${state.exploration.mapSize}</p>
+        <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+        <div class="exploration-controls" role="group" aria-label="탐험 이동">
+          <button data-move="-1,-1">↖</button><button data-move="0,-1">↑</button><button data-move="1,-1">↗</button>
+          <button data-move="-1,0">←</button><button data-move="0,0" disabled>●</button><button data-move="1,0">→</button>
+          <button data-move="-1,1">↙</button><button data-move="0,1">↓</button><button data-move="1,1">↘</button>
+        </div>
+        <button id="exploration-return" ${atStart ? '' : 'disabled'}>거점 귀환</button>
+        <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C 또는 대각 버튼</p>
+      </div>`
+    : `<div class="exploration-loadout">
+        <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
+        <p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p>
+        <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>
+        <button id="exploration-start">탐험 출발</button>
+      </div>`
+}
+
+function renderExplorationPanel(state: GameState): string {
   return `
-    <section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration">
+    <section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}">
       <h2>탐험</h2>
-      ${
-        isActive
-          ? `<div class="exploration-active">
-              <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지도 ${state.exploration.mapSize}x${state.exploration.mapSize}</p>
-              <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
-              <div class="exploration-controls" role="group" aria-label="탐험 이동">
-                <button data-move="-1,-1">↖</button><button data-move="0,-1">↑</button><button data-move="1,-1">↗</button>
-                <button data-move="-1,0">←</button><button data-move="0,0" disabled>●</button><button data-move="1,0">→</button>
-                <button data-move="-1,1">↙</button><button data-move="0,1">↓</button><button data-move="1,1">↘</button>
-              </div>
-              <button id="exploration-return" ${atStart ? '' : 'disabled'}>거점 귀환</button>
-              <p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C 또는 대각 버튼</p>
-            </div>`
-          : `<div class="exploration-loadout">
-              <p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p>
-              <p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p>
-              <p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>
-              <button id="exploration-start">탐험 출발</button>
-            </div>`
-      }
+      <div id="exploration-body">${renderExplorationBody(state)}</div>
     </section>
   `
 }
@@ -574,6 +576,17 @@ function patchModuleInventory(app: ParentNode, state: GameState): void {
   root.innerHTML = entries.join('')
   if (entries.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'
   root.dataset.signature = sig
+}
+
+function patchExplorationBody(app: ParentNode, state: GameState): void {
+  const panel = app.querySelector<HTMLElement>('#panel-exploration')
+  const body = app.querySelector<HTMLElement>('#exploration-body')
+  if (!panel || !body) return
+
+  if (panel.dataset.mode === state.exploration.mode) return
+
+  panel.dataset.mode = state.exploration.mode
+  body.innerHTML = renderExplorationBody(state)
 }
 
 function patchWeaponBoard(app: ParentNode, state: GameState): void {
@@ -709,6 +722,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchWeaponBoard(app, state)
   patchModuleInventory(app, state)
   patchModuleDetail(app, state)
+  patchExplorationBody(app, state)
 
   setText(app, '#exploration-hp', `${state.exploration.hp}/${state.exploration.maxHp}`)
   setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
@@ -925,20 +939,6 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#craft-shovel')?.addEventListener('click', handlers.onCraftShovel)
   app.querySelector<HTMLButtonElement>('#craft-scavenger-drone')?.addEventListener('click', handlers.onCraftScavengerDrone)
 
-  app.querySelector<HTMLButtonElement>('#exploration-start')?.addEventListener('click', handlers.onStartExploration)
-  app.querySelector<HTMLButtonElement>('#exploration-return')?.addEventListener('click', handlers.onReturnExploration)
-  app.querySelectorAll<HTMLButtonElement>('[data-move]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const value = button.dataset.move
-      if (!value || value === '0,0') return
-      const [dxRaw, dyRaw] = value.split(',')
-      const dx = Number(dxRaw)
-      const dy = Number(dyRaw)
-      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return
-      handlers.onMoveExploration(dx, dy)
-    })
-  })
-
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
     const target = getEventTargetElement(eventTarget)
     const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
@@ -955,7 +955,33 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
-    const button = target?.closest<HTMLElement>('[data-weapon-id]')
+    if (!target) return
+
+    const startButton = target.closest<HTMLElement>('#exploration-start')
+    if (startButton) {
+      handlers.onStartExploration()
+      return
+    }
+
+    const returnButton = target.closest<HTMLElement>('#exploration-return')
+    if (returnButton) {
+      handlers.onReturnExploration()
+      return
+    }
+
+    const moveButton = target.closest<HTMLElement>('[data-move]')
+    if (moveButton) {
+      const value = moveButton.getAttribute('data-move')
+      if (!value || value === '0,0') return
+      const [dxRaw, dyRaw] = value.split(',')
+      const dx = Number(dxRaw)
+      const dy = Number(dyRaw)
+      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return
+      handlers.onMoveExploration(dx, dy)
+      return
+    }
+
+    const button = target.closest<HTMLElement>('[data-weapon-id]')
     if (!button) return
     const id = button.getAttribute('data-weapon-id')
     if (id) dispatchInteractionIntent(handlers, { type: 'weapon/select', weaponId: id })
