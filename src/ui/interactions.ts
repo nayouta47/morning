@@ -38,11 +38,13 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   app.querySelector<HTMLButtonElement>('#buy-vehicle-repair')?.addEventListener('click', handlers.onBuyVehicleRepair)
   app.querySelector<HTMLButtonElement>('#buy-drone-controller')?.addEventListener('click', handlers.onBuyDroneController)
   app.querySelector<HTMLButtonElement>('#buy-electric-furnace')?.addEventListener('click', handlers.onBuyElectricFurnace)
-  app.querySelectorAll<HTMLInputElement>('input[data-smelting-allocation]').forEach((input) => {
-    input.addEventListener('change', () => {
-      const key = input.dataset.smeltingAllocation as SmeltingProcessKey | undefined
-      if (!key) return
-      handlers.onSetSmeltingAllocation(key, Number(input.value))
+  app.querySelectorAll<HTMLButtonElement>('button[data-smelting-allocation-step][data-smelting-allocation-key]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.smeltingAllocationKey as SmeltingProcessKey | undefined
+      const direction = button.dataset.smeltingAllocationStep
+      if (!key || (direction !== 'up' && direction !== 'down')) return
+      const current = state.smeltingAllocation[key]
+      handlers.onSetSmeltingAllocation(key, current + (direction === 'up' ? 1 : -1))
     })
   })
   app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)

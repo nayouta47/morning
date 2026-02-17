@@ -261,29 +261,39 @@ button:disabled {
 
 .smelting-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 56px;
   gap: 8px;
   align-items: stretch;
 }
 
-.smelting-alloc-label {
-  display: grid;
-  align-content: center;
-  gap: 4px;
-  color: #9a9385;
-  font-size: 10px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+.smelting-row .building-gauge {
+  margin: 0;
 }
 
-.smelting-alloc-label input {
-  width: 64px;
+.smelting-alloc-stepper {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.smelting-step-btn {
+  margin: 0;
+  min-height: 0;
+  padding: 3px 0;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.smelting-alloc-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #47423a;
   border-radius: 4px;
   background: #161616;
   color: #d9d0bf;
-  padding: 4px 6px;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .hint {
