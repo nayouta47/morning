@@ -399,10 +399,6 @@ function renderAssemblyPanel(state: GameState): string {
   return `
     <section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
       <h2>무기 조립</h2>
-      <section id="crafting-panel" class="panel crafting">
-        <h3>제작</h3>
-        ${renderCraftActions(state)}
-      </section>
       <div class="assembly-grid">
         <aside class="weapon-list" aria-label="무기 인벤토리">
           <h3>무기 인벤토리</h3>
@@ -755,6 +751,11 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
           scavengerGauge.timeText,
           scavengerGauge.phase,
         )}
+      </section>
+
+      <section id="crafting-panel" class="panel crafting">
+        <h2>제작</h2>
+        ${renderCraftActions(state)}
       </section>
 
       <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}>
