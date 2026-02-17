@@ -58,11 +58,11 @@ export function renderGaugeButton(id: string, text: string, ariaLabel: string, a
   return `
     <button id="${id}" class="gauge-action gauge-${action.phase}" aria-label="${ariaLabel}" ${action.disabled ? 'disabled' : ''}>
       <span class="gauge-fill" style="width:${progress}%"></span>
-      <span class="gauge-content">
-        <span class="gauge-title">${text}</span>
-        <span class="gauge-meta">
-          <span class="gauge-state">${action.label}</span>
-          <span class="gauge-time">${action.timeText}</span>
+      <span class="gauge-content gauge-text-stack">
+        <span class="gauge-title gauge-text-title">${text}</span>
+        <span class="gauge-meta gauge-text-meta">
+          <span class="gauge-state gauge-text-state">${action.label}</span>
+          <span class="gauge-time gauge-text-time">${action.timeText}</span>
         </span>
       </span>
     </button>
@@ -81,11 +81,11 @@ export function renderBuildingGauge(
   return `
     <button class="building-gauge gauge-${phase}" aria-label="${title} 가동 토글" id="${id}" ${phase === 'idle' ? 'disabled' : ''}>
       <span class="gauge-fill" style="width:${width}%"></span>
-      <span class="gauge-content">
-        <span class="gauge-title">${title}</span>
-        <span class="gauge-meta">
-          <span class="gauge-state">${stateText}</span>
-          <span class="gauge-time">${timeText}</span>
+      <span class="gauge-content gauge-text-stack">
+        <span class="gauge-title gauge-text-title">${title}</span>
+        <span class="gauge-meta gauge-text-meta">
+          <span class="gauge-state gauge-text-state">${stateText}</span>
+          <span class="gauge-time gauge-text-time">${timeText}</span>
         </span>
       </span>
     </button>
@@ -112,7 +112,7 @@ export function getSmeltingGaugeMeta(state: GameState, key: SmeltingProcessKey, 
 function renderSmeltingRow(state: GameState, key: SmeltingProcessKey, title: string, rightLabel: string, now = Date.now()): string {
   const gauge = getSmeltingGaugeMeta(state, key, now)
   const width = Math.round(clamp01(gauge.progress) * 100)
-  return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content"><span class="gauge-title">${title}</span><span class="gauge-meta"><span class="gauge-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><label class="smelting-alloc-label">${rightLabel}<input type="number" min="0" step="1" inputmode="numeric" data-smelting-allocation="${key}" id="smelting-allocation-${key}" value="${state.smeltingAllocation[key]}" aria-label="${title} 전기로 배정 수량"></label></div>`
+  return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><label class="smelting-alloc-label">${rightLabel}<input type="number" min="0" step="1" inputmode="numeric" data-smelting-allocation="${key}" id="smelting-allocation-${key}" value="${state.smeltingAllocation[key]}" aria-label="${title} 전기로 배정 수량"></label></div>`
 }
 
 function craftView(remainingMs: number, lockedReason: string | null = null): ActionGaugeView {
@@ -158,6 +158,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   const minerCost = getBuildingCost(state, 'miner')
   const workbenchCost = getBuildingCost(state, 'workbench')
   const labCost = getBuildingCost(state, 'lab')
+  const vehicleRepairCost = getBuildingCost(state, 'vehicleRepair')
   const droneControllerCost = getBuildingCost(state, 'droneController')
   const electricFurnaceCost = getBuildingCost(state, 'electricFurnace')
 
@@ -167,6 +168,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
 
   const singletonInstalled = {
     lab: state.buildings.lab >= 1,
+    vehicleRepair: state.buildings.vehicleRepair >= 1,
     workbench: state.buildings.workbench >= 1,
     droneController: state.buildings.droneController >= 1,
   }
@@ -177,7 +179,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   return `<section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
       <section class="panel resources"><h2>자원</h2><section class="resources-owned" aria-label="보유 자원"><div class="resource-group">${renderResourceRow('wood', 'res-wood', formatResourceValue('wood', state.resources.wood))}${renderResourceRow('scrap', 'res-scrap', formatResourceValue('scrap', state.resources.scrap))}${renderResourceRow('siliconMass', 'res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))}</div><div class="resource-group">${renderResourceRow('chromium', 'res-chromium', formatResourceValue('chromium', state.resources.chromium))}${renderResourceRow('molybdenum', 'res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))}${renderResourceRow('cobalt', 'res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))}${renderResourceRow('nickel', 'res-nickel', formatResourceValue('nickel', state.resources.nickel))}</div><div class="resource-group">${renderResourceRow('iron', 'res-iron', formatResourceValue('iron', state.resources.iron))}${renderResourceRow('lowAlloySteel', 'res-low-alloy-steel', formatResourceValue('lowAlloySteel', state.resources.lowAlloySteel))}${renderResourceRow('highAlloySteel', 'res-high-alloy-steel', formatResourceValue('highAlloySteel', state.resources.highAlloySteel))}</div><div class="resource-group">${renderResourceRow('shovel', 'res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)}${renderResourceRow('scavengerDrone', 'res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))}${renderResourceRow('carbon', 'res-carbon', formatResourceValue('carbon', state.resources.carbon))}${renderResourceRow('siliconIngot', 'res-silicon-ingot', formatResourceValue('siliconIngot', state.resources.siliconIngot))}</div></section></section>
       <section class="panel actions"><h2>행동</h2><section class="action-group" aria-label="줍기 행동"><h3 class="subheading">줍기</h3>${renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)}${renderGaugeButton('gather-scrap', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`, state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동', actionUI.gatherScrap)}<p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p></section><section class="action-group" aria-label="가동 행동"><h3 class="subheading">가동</h3>${renderBuildingGauge('lumber-progress', `벌목기 가동 x${state.buildings.lumberMill}`, lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)}${renderBuildingGauge('miner-progress', `분쇄기 가동 x${state.buildings.miner}`, minerGauge.progress, minerGauge.percentText, minerGauge.timeText, minerGauge.phase)}${renderBuildingGauge('scavenger-progress', `스캐빈저 가동 x${state.resources.scavengerDrone}`, scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)}<section class="smelting-group" aria-label="녹이기 행동"><h4 class="subheading">녹이기</h4><p class="hint" id="smelting-remaining">전기로 배정: ${smeltingUsed}/${state.buildings.electricFurnace} (남음 ${smeltingRemaining})</p>${renderSmeltingRow(state, 'burnWood', '땔감 태우기 (🪵1000 → ⚫탄소1)', '배정')}${renderSmeltingRow(state, 'meltScrap', '고물 녹이기 (🗑️10+🟢3+🔵1 → 🔗1)', '배정')}${renderSmeltingRow(state, 'meltIron', '철 녹이기 (⛓️10+🟡8 → 🖇️1)', '배정')}${renderSmeltingRow(state, 'meltSiliconMass', '규소 덩어리 녹이기 (🧱1 → 🗞️90%/🟡10%)', '배정')}</section></section></section>
-      <section class="panel buildings"><h2>건설</h2><button id="buy-lumber" aria-label="건물 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}><span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span></button><button id="buy-miner" aria-label="건물 설치" ${state.unlocks.miner ? '' : 'disabled'}><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button><button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button><button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button><button id="buy-drone-controller" aria-label="건물 설치" ${singletonInstalled.droneController ? 'disabled' : ''}><span id="buy-drone-controller-label">${singletonInstalled.droneController ? `${getBuildingLabel('droneController')} (설치 완료)` : `드론 컨트롤러 설치 (${formatCost(droneControllerCost)})`}</span></button><button id="buy-electric-furnace" aria-label="건물 설치"><span id="buy-electric-furnace-label">전기로 설치 (${formatCost(electricFurnaceCost)})</span></button></section>
+      <section class="panel buildings"><h2>건설</h2><button id="buy-lumber" aria-label="건물 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}><span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span></button><button id="buy-miner" aria-label="건물 설치" ${state.unlocks.miner ? '' : 'disabled'}><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button><button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button><button id="buy-vehicle-repair" aria-label="건물 설치" ${singletonInstalled.vehicleRepair ? 'disabled' : ''}><span id="buy-vehicle-repair-label">${singletonInstalled.vehicleRepair ? `${getBuildingLabel('vehicleRepair')} (설치 완료)` : `${getBuildingLabel('vehicleRepair')} 설치 (${formatCost(vehicleRepairCost)})`}</span></button><button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button><button id="buy-drone-controller" aria-label="건물 설치" ${singletonInstalled.droneController ? 'disabled' : ''}><span id="buy-drone-controller-label">${singletonInstalled.droneController ? `${getBuildingLabel('droneController')} (설치 완료)` : `드론 컨트롤러 설치 (${formatCost(droneControllerCost)})`}</span></button><button id="buy-electric-furnace" aria-label="건물 설치"><span id="buy-electric-furnace-label">전기로 설치 (${formatCost(electricFurnaceCost)})</span></button></section>
       <section id="crafting-panel" class="panel crafting"><h2>제작</h2>${renderCraftActions(state)}</section>
       <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}><h2>연구</h2>${Object.entries(UPGRADE_DEFS)
         .map(([key, def]) => {

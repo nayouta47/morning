@@ -2,6 +2,11 @@
   font-family: "IBM Plex Sans", "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #d3cfc2;
   background: #0d0d0d;
+  --gauge-title-size: 12px;
+  --gauge-title-weight: 500;
+  --gauge-state-size: 11px;
+  --gauge-time-size: 10px;
+  --gauge-line-height: 1.2;
 }
 
 * {
@@ -193,36 +198,47 @@ button:disabled {
   transition: width 90ms linear;
 }
 
-.gauge-content {
+.gauge-content,
+.gauge-text-stack {
   position: relative;
   z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  gap: 10px;
+  padding: 9px 10px;
 }
 
-.gauge-title {
+.gauge-title,
+.gauge-text-title {
   text-align: left;
+  font-size: var(--gauge-title-size);
+  font-weight: var(--gauge-title-weight);
+  line-height: var(--gauge-line-height);
 }
 
-.gauge-meta {
+.gauge-meta,
+.gauge-text-meta {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 1px;
+  flex-shrink: 0;
 }
 
-.gauge-state {
+.gauge-state,
+.gauge-text-state {
   color: #b8ad95;
-  font-size: 12px;
+  font-size: var(--gauge-state-size);
+  line-height: var(--gauge-line-height);
   white-space: nowrap;
 }
 
-.gauge-time {
+.gauge-time,
+.gauge-text-time {
   color: #8d8679;
-  font-size: 11px;
+  font-size: var(--gauge-time-size);
+  line-height: var(--gauge-line-height);
   white-space: nowrap;
 }
 
@@ -241,6 +257,33 @@ button:disabled {
 .gauge-paused .gauge-fill,
 .gauge-idle .gauge-fill {
   background: linear-gradient(90deg, rgba(122, 122, 122, 0.26), rgba(122, 122, 122, 0.06));
+}
+
+.smelting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.smelting-alloc-label {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  color: #9a9385;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.smelting-alloc-label input {
+  width: 64px;
+  border: 1px solid #47423a;
+  border-radius: 4px;
+  background: #161616;
+  color: #d9d0bf;
+  padding: 4px 6px;
+  font-size: 12px;
 }
 
 .hint {
