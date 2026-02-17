@@ -1,4 +1,4 @@
-import { BUILDING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
+import { WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, WeaponType } from './state.ts'
 import { appendLog, handleExplorationDeath } from './actions.ts'
 import { createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
@@ -6,15 +6,14 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
-import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from './rewards.ts'
+import { SHOVEL_MAX_STACK, getShovelCount } from './rewards.ts'
+import { ACTION_DEFS, ACTION_KEYS, PRODUCTION_DEFS, PRODUCTION_KEYS, type ActionKey, type ProductionKey } from './timedDefs.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
 const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
-type ProductionBuildingKey = 'lumberMill' | 'miner' | 'scavenger'
-
-function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number): void {
+function processBuildingElapsed(state: GameState, key: ProductionKey, elapsedMs: number): void {
   const count = key === 'scavenger' ? 1 : state.buildings[key]
   const scavengerEnabled = state.buildings.droneController > 0 && state.resources.scavengerDrone > 0
 
@@ -23,9 +22,10 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
     return
   }
 
-  if (!state.productionRunning[key]) return
+  const def = PRODUCTION_DEFS[key]
+  if (!state.productionRunning[def.runningKey]) return
 
-  const { nextProgressMs, cycles } = advanceCycleProgress(state.productionProgress[key], elapsedMs, BUILDING_CYCLE_MS)
+  const { nextProgressMs, cycles } = advanceCycleProgress(state.productionProgress[key], elapsedMs, def.cycleMs)
   state.productionProgress[key] = nextProgressMs
   if (cycles <= 0) return
 
@@ -127,20 +127,14 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key)
 }
 
-function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap'): void {
-  if (key === 'gatherWood') {
-    const amount = getGatherWoodReward(state)
-    state.resources.wood += amount
-    appendLog(state, `🪵 뗄감 +${amount}`)
-    return
-  }
-
-  const amount = getGatherScrapReward(state)
-  state.resources.scrap += amount
-  appendLog(state, `🗑️ 고물 +${amount}`)
+function resolveGatherCompletion(state: GameState, key: ActionKey): void {
+  const def = ACTION_DEFS[key]
+  const amount = def.getRewardAmount(state)
+  state.resources[def.rewardResource] += amount
+  appendLog(state, `${def.completeLogPrefix} +${amount}`)
 }
 
-function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap', elapsedMs: number): void {
+function processActionElapsed(state: GameState, key: ActionKey, elapsedMs: number): void {
   const current = state.actionProgress[key]
   if (current <= 0) return
 
@@ -193,14 +187,11 @@ export function advanceState(state: GameState, now = Date.now()): void {
 
   if (elapsed <= 0) return
 
-  processBuildingElapsed(state, 'lumberMill', elapsed)
-  processBuildingElapsed(state, 'miner', elapsed)
-  processBuildingElapsed(state, 'scavenger', elapsed)
+  PRODUCTION_KEYS.forEach((productionKey) => processBuildingElapsed(state, productionKey, elapsed))
 
   ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed))
 
-  processActionElapsed(state, 'gatherWood', elapsed)
-  processActionElapsed(state, 'gatherScrap', elapsed)
+  ACTION_KEYS.forEach((actionKey) => processActionElapsed(state, actionKey, elapsed))
   processExplorationCombat(state, elapsed)
 
   const unlockLogs = evaluateUnlocks(state)

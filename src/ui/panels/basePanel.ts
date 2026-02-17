@@ -1,14 +1,15 @@
 import type { GameState } from '../../core/state.ts'
 import { getBuildingCost } from '../../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../../core/rewards.ts'
-import { BUILDING_CYCLE_MS, UPGRADE_DEFS, WEAPON_CRAFT_DURATION_MS, getUpgradeCost } from '../../data/balance.ts'
+import { UPGRADE_DEFS, WEAPON_CRAFT_DURATION_MS, getUpgradeCost } from '../../data/balance.ts'
 import { getBuildingLabel } from '../../data/buildings.ts'
 import { CRAFT_RECIPE_DEFS, getCraftRecipeMissingRequirement } from '../../data/crafting.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../../data/resources.ts'
 import type { ActionGaugeView, ActionUI } from '../types.ts'
 import { clamp01, formatActionTime } from '../view.ts'
+import { PRODUCTION_DEFS, type ProductionKey } from '../../core/timedDefs.ts'
 
-export type ProductionBuildingKey = 'lumberMill' | 'miner' | 'scavenger'
+export type ProductionBuildingKey = ProductionKey
 
 export type BuildingGaugeView = {
   progress: number
@@ -17,20 +18,21 @@ export type BuildingGaugeView = {
   phase: 'running' | 'paused' | 'idle'
 }
 
-function formatBuildingTime(progress: number, isActive: boolean): string {
-  const totalSec = BUILDING_CYCLE_MS / 1000
+function formatBuildingTime(progress: number, cycleMs: number, isActive: boolean): string {
+  const totalSec = cycleMs / 1000
   if (!isActive) return `- / ${totalSec.toFixed(1)}s`
   const remainingSec = (1 - clamp01(progress)) * totalSec
   return `${remainingSec.toFixed(1)}s / ${totalSec.toFixed(1)}s`
 }
 
 export function getBuildingGaugeView(state: GameState, key: ProductionBuildingKey, now = Date.now()): BuildingGaugeView {
+  const def = PRODUCTION_DEFS[key]
   const isInstalled = key === 'scavenger' ? state.buildings.droneController > 0 : state.buildings[key] > 0
   if (!isInstalled) {
     return {
       progress: 0,
       percentText: key === 'scavenger' ? '잠김' : '대기',
-      timeText: key === 'scavenger' ? '드론 컨트롤러 필요' : formatBuildingTime(0, false),
+      timeText: key === 'scavenger' ? '드론 컨트롤러 필요' : formatBuildingTime(0, def.cycleMs, false),
       phase: 'idle',
     }
   }
@@ -42,13 +44,13 @@ export function getBuildingGaugeView(state: GameState, key: ProductionBuildingKe
   const isRunning = state.productionRunning[key]
   const baseProgressMs = state.productionProgress[key]
   const elapsedSinceUpdate = isRunning ? Math.max(0, now - state.lastUpdate) : 0
-  const smoothedProgressMs = (baseProgressMs + elapsedSinceUpdate) % BUILDING_CYCLE_MS
-  const progress = clamp01(smoothedProgressMs / BUILDING_CYCLE_MS)
+  const smoothedProgressMs = (baseProgressMs + elapsedSinceUpdate) % def.cycleMs
+  const progress = clamp01(smoothedProgressMs / def.cycleMs)
 
   return {
     progress,
     percentText: isRunning ? `${Math.round(progress * 100)}%` : '중지됨',
-    timeText: isRunning ? formatBuildingTime(progress, true) : '일시정지',
+    timeText: isRunning ? formatBuildingTime(progress, def.cycleMs, true) : '일시정지',
     phase: isRunning ? 'running' : 'paused',
   }
 }

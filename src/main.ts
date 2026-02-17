@@ -21,14 +21,12 @@ import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
-import { ACTION_DURATION_MS } from './data/balance.ts'
+import { ACTION_DEFS, type ActionKey } from './core/timedDefs.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
 
 const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
-
-type ActionKey = 'gatherWood' | 'gatherScrap'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -36,7 +34,7 @@ let simulationLastTickAt = Date.now()
 let appMounted = false
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
-  const duration = ACTION_DURATION_MS[key]
+  const duration = ACTION_DEFS[key].durationMs
   const totalSecText = `${(duration / 1000).toFixed(1)}s`
 
   if (locked) {
