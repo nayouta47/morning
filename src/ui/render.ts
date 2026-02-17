@@ -118,7 +118,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
     '#buy-vehicle-repair-label',
     vehicleRepairInstalled
       ? `${getBuildingLabel('vehicleRepair')} (설치 완료)`
-      : `${getBuildingLabel('vehicleRepair')} 설치 (${formatCost(vehicleRepairCost)})`,
+      : `${getBuildingLabel('vehicleRepair')} (${formatCost(vehicleRepairCost)})`,
   )
 
   const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
