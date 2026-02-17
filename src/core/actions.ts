@@ -65,20 +65,25 @@ export function gatherScrap(state: GameState): void {
   pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherScrap / 1000)}초)`)
 }
 
-export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner'): void {
-  if (state.buildings[key] <= 0) {
+export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' | 'scavenger'): void {
+  if (key !== 'scavenger' && state.buildings[key] <= 0) {
     pushLog(state, '설치된 건물이 없습니다.')
     return
   }
 
+  if (key === 'scavenger' && (state.buildings.droneController <= 0 || state.resources.scavengerDrone <= 0)) {
+    pushLog(state, '스캐빈저 가동 조건이 부족합니다.')
+    return
+  }
+
   state.productionRunning[key] = !state.productionRunning[key]
-  const targetLabel = key === 'lumberMill' ? '벌목기' : '분쇄기'
+  const targetLabel = key === 'lumberMill' ? '벌목기' : key === 'miner' ? '분쇄기' : '스캐빈저'
   pushLog(state, `${targetLabel} ${state.productionRunning[key] ? '가동 재개' : '가동 중지'}`)
 }
 
 export function buyBuilding(state: GameState, key: BuildingId): void {
   if (key === 'miner' && !state.unlocks.miner) return
-  if ((key === 'lumberMill' || key === 'workbench' || key === 'lab') && !state.unlocks.lumberMill) return
+  if ((key === 'lumberMill' || key === 'workbench' || key === 'lab' || key === 'droneController') && !state.unlocks.lumberMill) return
 
   const cost = getBuildingCost(state, key)
   if (!canAfford(state.resources, cost)) {

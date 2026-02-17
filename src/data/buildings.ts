@@ -32,6 +32,14 @@ export const BUILDING_DEFS = {
     baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
     effectsText: '연구 가능',
   },
+
+  droneController: {
+    id: 'droneController',
+    label: '드론 컨트롤러',
+    unlockRequirements: [] as Requirement[],
+    baseCost: { wood: 260, scrap: 90, iron: 45 } as ResourceCost,
+    effectsText: '스캐빈저 가동 조건 충족',
+  },
 } as const
 
 export type BuildingId = keyof typeof BUILDING_DEFS

@@ -125,6 +125,11 @@ function redraw(nowOverride?: number): void {
           buyBuilding(state, 'lab')
           redraw()
         },
+        onBuyDroneController: () => {
+          syncState()
+          buyBuilding(state, 'droneController')
+          redraw()
+        },
         onToggleLumberMillRun: () => {
           syncState()
           toggleBuildingRun(state, 'lumberMill')
@@ -133,6 +138,11 @@ function redraw(nowOverride?: number): void {
         onToggleMinerRun: () => {
           syncState()
           toggleBuildingRun(state, 'miner')
+          redraw()
+        },
+        onToggleScavengerRun: () => {
+          syncState()
+          toggleBuildingRun(state, 'scavenger')
           redraw()
         },
         onBuyUpgrade: (key) => {
@@ -162,6 +172,11 @@ function redraw(nowOverride?: number): void {
         onCraftShovel: () => {
           syncState()
           startCraft(state, 'shovel')
+          redraw()
+        },
+        onCraftScavengerDrone: () => {
+          syncState()
+          startCraft(state, 'scavengerDrone')
           redraw()
         },
         onSelectWeapon: (weaponId) => {

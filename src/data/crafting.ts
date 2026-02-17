@@ -52,6 +52,18 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     requirements: [],
     outputs: [{ kind: 'resource', resource: 'shovel', amount: 1 }],
   },
+
+  scavengerDrone: {
+    id: 'scavengerDrone',
+    label: '스캐빈저 드론',
+    durationMs: WEAPON_CRAFT_DURATION_MS,
+    costs: { scrap: 80, iron: 40, cobalt: 2 },
+    requirements: [
+      { kind: 'building', building: 'workbench', count: 1 },
+      { kind: 'building', building: 'droneController', count: 1 },
+    ],
+    outputs: [{ kind: 'resource', resource: 'scavengerDrone', amount: 1 }],
+  },
 }
 
 export function getCraftRecipeMissingRequirement(state: GameState, recipe: CraftRecipeKey): string | null {

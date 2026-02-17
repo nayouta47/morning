@@ -21,11 +21,13 @@ export type Unlocks = {
 export type ProductionProgress = {
   lumberMill: number
   miner: number
+  scavenger: number
 }
 
 export type ProductionRunning = {
   lumberMill: boolean
   miner: boolean
+  scavenger: boolean
 }
 
 export type ActionProgress = {
@@ -51,6 +53,7 @@ export type CraftProgress = {
   rifle: number
   module: number
   shovel: number
+  scavengerDrone: number
 }
 
 export type GameState = {
@@ -78,13 +81,16 @@ export const initialState: GameState = {
     iron: 0,
     chromium: 0,
     molybdenum: 0,
+    cobalt: 0,
     shovel: 0,
+    scavengerDrone: 0,
   },
   buildings: {
     lumberMill: 0,
     miner: 0,
     workbench: 0,
     lab: 0,
+    droneController: 0,
   },
   upgrades: {
     betterAxe: false,
@@ -100,10 +106,12 @@ export const initialState: GameState = {
   productionProgress: {
     lumberMill: 0,
     miner: 0,
+    scavenger: 0,
   },
   productionRunning: {
     lumberMill: true,
     miner: true,
+    scavenger: true,
   },
   actionProgress: {
     gatherWood: 0,
@@ -123,6 +131,7 @@ export const initialState: GameState = {
     rifle: 0,
     module: 0,
     shovel: 0,
+    scavengerDrone: 0,
   },
   nextWeaponId: 1,
 }
