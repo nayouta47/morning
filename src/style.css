@@ -115,6 +115,19 @@ h1 {
   gap: 6px;
 }
 
+.resources-owned {
+  gap: 10px;
+}
+
+.resource-group {
+  display: grid;
+  gap: 6px;
+}
+
+.resources-owned p {
+  margin: 0;
+}
+
 .logs {
   grid-column: 1 / -1;
 }
