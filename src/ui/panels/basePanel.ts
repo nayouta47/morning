@@ -95,7 +95,7 @@ export function renderBuildingGauge(
 export function getSmeltingGaugeMeta(state: GameState, key: SmeltingProcessKey, now = Date.now()): BuildingGaugeView {
   const allocated = state.smeltingAllocation[key]
   if (allocated <= 0) {
-    return { progress: 0, percentText: '미배정', timeText: `- / ${(SMELTING_CYCLE_MS / 1000).toFixed(0)}s`, phase: 'idle' }
+    return { progress: 0, percentText: '배정 없음', timeText: `- / ${(SMELTING_CYCLE_MS / 1000).toFixed(0)}s`, phase: 'idle' }
   }
   const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
   const progressMs = (state.smeltingProgress[key] + elapsedSinceUpdate) % SMELTING_CYCLE_MS
@@ -103,7 +103,7 @@ export function getSmeltingGaugeMeta(state: GameState, key: SmeltingProcessKey, 
   const remainingSec = ((1 - progress) * SMELTING_CYCLE_MS) / 1000
   return {
     progress,
-    percentText: `${Math.round(progress * 100)}%`,
+    percentText: `배정 x${allocated}`,
     timeText: `${remainingSec.toFixed(1)}s / ${(SMELTING_CYCLE_MS / 1000).toFixed(0)}s`,
     phase: 'running',
   }
@@ -118,7 +118,7 @@ function renderSmeltingRow(state: GameState, key: SmeltingProcessKey, title: str
   const canIncrement = smeltingRemaining > 0
   const canDecrement = allocated > 0
 
-  return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><div class="smelting-alloc-stepper" aria-label="${title} 전기로 배정"><button type="button" class="smelting-step-btn" data-smelting-allocation-step="up" data-smelting-allocation-key="${key}" id="smelting-allocation-inc-${key}" aria-label="${title} 배정 증가" ${canIncrement ? '' : 'disabled'}>▲</button><span class="smelting-alloc-value" id="smelting-allocation-${key}">${allocated}</span><button type="button" class="smelting-step-btn" data-smelting-allocation-step="down" data-smelting-allocation-key="${key}" id="smelting-allocation-dec-${key}" aria-label="${title} 배정 감소" ${canDecrement ? '' : 'disabled'}>▼</button></div></div>`
+  return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><div class="smelting-alloc-stepper" aria-label="${title} 전기로 배정"><button type="button" class="smelting-step-btn" data-smelting-allocation-step="up" data-smelting-allocation-key="${key}" id="smelting-allocation-inc-${key}" aria-label="${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${smeltingRemaining})" ${canIncrement ? '' : 'disabled'}>▲</button><button type="button" class="smelting-step-btn" data-smelting-allocation-step="down" data-smelting-allocation-key="${key}" id="smelting-allocation-dec-${key}" aria-label="${title} 배정 감소 (현재 ${allocated})" ${canDecrement ? '' : 'disabled'}>▼</button></div></div>`
 }
 
 function craftView(remainingMs: number, lockedReason: string | null = null): ActionGaugeView {
@@ -237,15 +237,30 @@ export function patchSmeltingPanel(app: ParentNode, state: GameState, now = Date
     const gauge = getSmeltingGaugeMeta(state, key, now)
     patchBuildingGauge(app, `smelting-gauge-${key}`, gauge.progress, gauge.percentText, gauge.timeText, gauge.phase)
 
-    const valueNode = app.querySelector<HTMLElement>(`#smelting-allocation-${key}`)
-    if (valueNode) valueNode.textContent = String(state.smeltingAllocation[key])
+    const allocated = state.smeltingAllocation[key]
+    const title = getSmeltingTitle(key)
 
     const decrementButton = app.querySelector<HTMLButtonElement>(`#smelting-allocation-dec-${key}`)
-    if (decrementButton) decrementButton.disabled = state.smeltingAllocation[key] <= 0
+    if (decrementButton) decrementButton.disabled = allocated <= 0
+    if (decrementButton) decrementButton.setAttribute('aria-label', `${title} 배정 감소 (현재 ${allocated})`)
 
     const incrementButton = app.querySelector<HTMLButtonElement>(`#smelting-allocation-inc-${key}`)
     if (incrementButton) incrementButton.disabled = smeltingRemaining <= 0
+    if (incrementButton) incrementButton.setAttribute('aria-label', `${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${smeltingRemaining})`)
   })
+}
+
+function getSmeltingTitle(key: SmeltingProcessKey): string {
+  switch (key) {
+    case 'burnWood':
+      return '땔감 태우기'
+    case 'meltScrap':
+      return '고물 녹이기'
+    case 'meltIron':
+      return '철 녹이기'
+    case 'meltSiliconMass':
+      return '규소 덩어리 녹이기'
+  }
 }
 
 export function patchCraftButtons(app: ParentNode, state: GameState): void {
