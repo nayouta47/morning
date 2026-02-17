@@ -1,5 +1,6 @@
 import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
+import type { ActionKey, ProductionKey } from './timedDefs.ts'
 
 export type Resources = Record<ResourceId, number>
 
@@ -18,22 +19,11 @@ export type Unlocks = {
   miner: boolean
 }
 
-export type ProductionProgress = {
-  lumberMill: number
-  miner: number
-  scavenger: number
-}
+export type ProductionProgress = Record<ProductionKey, number>
 
-export type ProductionRunning = {
-  lumberMill: boolean
-  miner: boolean
-  scavenger: boolean
-}
+export type ProductionRunning = Record<ProductionKey, boolean>
 
-export type ActionProgress = {
-  gatherWood: number
-  gatherScrap: number
-}
+export type ActionProgress = Record<ActionKey, number>
 
 export type TabKey = 'base' | 'assembly' | 'exploration'
 

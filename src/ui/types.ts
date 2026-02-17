@@ -1,4 +1,5 @@
 import type { ModuleType } from '../core/state.ts'
+import type { ActionKey } from '../core/timedDefs.ts'
 import type { ResourceId } from '../data/resources.ts'
 
 type UpgradeKey = keyof typeof import('../data/balance.ts').UPGRADE_DEFS
@@ -42,10 +43,7 @@ export type Handlers = {
   onUnequipModule: (slotIndex: number) => void
 }
 
-export type ActionUI = {
-  gatherWood: ActionGaugeView
-  gatherScrap: ActionGaugeView
-}
+export type ActionUI = Record<ActionKey, ActionGaugeView>
 
 export type InteractionIntent =
   | { type: 'weapon/select'; weaponId: string }

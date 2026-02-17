@@ -1,6 +1,7 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
+import { ACTION_KEYS, PRODUCTION_KEYS } from './timedDefs.ts'
 
 const SAVE_KEY = 'morning-save-v3'
 const AUTOSAVE_MS = 5000
@@ -66,21 +67,15 @@ function normalizeState(raw: unknown): GameState | null {
     base.unlocks.miner = Boolean(loaded.unlocks.miner)
   }
 
-  base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
-  base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
-  base.productionProgress.scavenger = clampProgress(loaded.productionProgress?.scavenger)
+  PRODUCTION_KEYS.forEach((key) => {
+    base.productionProgress[key] = clampProgress(loaded.productionProgress?.[key])
+    base.productionRunning[key] =
+      typeof loaded.productionRunning?.[key] === 'boolean' ? loaded.productionRunning[key] : base.productionRunning[key]
+  })
 
-  base.productionRunning.lumberMill =
-    typeof loaded.productionRunning?.lumberMill === 'boolean'
-      ? loaded.productionRunning.lumberMill
-      : base.productionRunning.lumberMill
-  base.productionRunning.miner =
-    typeof loaded.productionRunning?.miner === 'boolean' ? loaded.productionRunning.miner : base.productionRunning.miner
-  base.productionRunning.scavenger =
-    typeof loaded.productionRunning?.scavenger === 'boolean' ? loaded.productionRunning.scavenger : base.productionRunning.scavenger
-
-  base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
-  base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
+  ACTION_KEYS.forEach((key) => {
+    base.actionProgress[key] = clampProgress(loaded.actionProgress?.[key])
+  })
 
   base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)

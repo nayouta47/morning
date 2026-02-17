@@ -1,7 +1,8 @@
-import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
+import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { CRAFT_RECIPE_DEFS, isCraftRecipeUnlocked, type CraftRecipeKey } from '../data/crafting.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../data/buildings.ts'
 import type { GameState, ModuleType, Resources, TabKey } from './state.ts'
+import { ACTION_DEFS, type ActionKey, type ProductionKey } from './timedDefs.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import type { ResourceCost, ResourceId } from '../data/resources.ts'
 import { getResourceDisplay } from '../data/resources.ts'
@@ -42,14 +43,19 @@ function applyUnlocks(state: GameState): void {
 
 export { getBuildingCost }
 
-export function gatherWood(state: GameState): void {
-  if (state.actionProgress.gatherWood > 0) {
-    pushLog(state, '이미 뗄감을 줍는 중입니다.')
+function startGatherAction(state: GameState, key: ActionKey): void {
+  const def = ACTION_DEFS[key]
+  if (state.actionProgress[key] > 0) {
+    pushLog(state, def.runningLog)
     return
   }
 
-  state.actionProgress.gatherWood = ACTION_DURATION_MS.gatherWood
-  pushLog(state, `🪵 뗄감 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherWood / 1000)}초)`)
+  state.actionProgress[key] = def.durationMs
+  pushLog(state, `${def.startLog} (${Math.round(def.durationMs / 1000)}초)`)
+}
+
+export function gatherWood(state: GameState): void {
+  startGatherAction(state, 'gatherWood')
 }
 
 export function gatherScrap(state: GameState): void {
@@ -58,16 +64,10 @@ export function gatherScrap(state: GameState): void {
     return
   }
 
-  if (state.actionProgress.gatherScrap > 0) {
-    pushLog(state, '이미 고물을 줍는 중입니다.')
-    return
-  }
-
-  state.actionProgress.gatherScrap = ACTION_DURATION_MS.gatherScrap
-  pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherScrap / 1000)}초)`)
+  startGatherAction(state, 'gatherScrap')
 }
 
-export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' | 'scavenger'): void {
+export function toggleBuildingRun(state: GameState, key: ProductionKey): void {
   if (key !== 'scavenger' && state.buildings[key] <= 0) {
     pushLog(state, '설치된 건물이 없습니다.')
     return
