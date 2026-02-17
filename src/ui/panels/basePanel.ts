@@ -2,7 +2,7 @@ import type { GameState, SmeltingProcessKey } from '../../core/state.ts'
 import { getBuildingCost } from '../../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../../core/rewards.ts'
 import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, UPGRADE_DEFS, WEAPON_CRAFT_DURATION_MS, getUpgradeCost } from '../../data/balance.ts'
-import { CRAFT_RECIPE_DEFS, getCraftRecipeMissingRequirement } from '../../data/crafting.ts'
+import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeMissingRequirement } from '../../data/crafting.ts'
 import { getBuildingLabel } from '../../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../../data/resources.ts'
 import type { ActionGaugeView, ActionUI } from '../types.ts'
@@ -151,11 +151,11 @@ export function renderCraftActions(state: GameState): string {
   const scavengerDroneView = craftView(state.craftProgress.scavengerDrone, getCraftRecipeMissingRequirement(state, 'scavengerDrone'))
 
   return `<div class="craft-actions" role="group" aria-label="제작 행동">
-      ${renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(CRAFT_RECIPE_DEFS.shovel.costs)})`, '🪏 삽 제작', shovelView)}
-      ${renderGaugeButton('craft-pistol', `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.pistol.costs)})`, '권총 제작', pistolView)}
-      ${renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.rifle.costs)})`, '소총 제작', rifleView)}
-      ${renderGaugeButton('craft-module', `${CRAFT_RECIPE_DEFS.module.label} 제작 (${formatCost(CRAFT_RECIPE_DEFS.module.costs)})`, '모듈 제작', moduleView)}
-      ${renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(CRAFT_RECIPE_DEFS.scavengerDrone.costs)})`, '🛸 스캐빈저 드론 제작', scavengerDroneView)}
+      ${renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView)}
+      ${renderGaugeButton('craft-pistol', `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(getCraftRecipeCost(state, 'pistol'))})`, '권총 제작', pistolView)}
+      ${renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(getCraftRecipeCost(state, 'rifle'))})`, '소총 제작', rifleView)}
+      ${renderGaugeButton('craft-module', `${CRAFT_RECIPE_DEFS.module.label} 제작 (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}
+      ${renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`, '🛸 스캐빈저 드론 제작', scavengerDroneView)}
     </div>`
 }
 
@@ -262,10 +262,17 @@ function getSmeltingTitle(key: SmeltingProcessKey): string {
   }
 }
 
+function patchGaugeTitle(app: ParentNode, id: string, text: string): void {
+  const title = app.querySelector<HTMLElement>(`#${id} .gauge-title`)
+  if (title) title.textContent = text
+}
+
 export function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol')))
   patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle')))
   patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module')))
   patchActionGauge(app, 'craft-shovel', shovelCraftView(state))
   patchActionGauge(app, 'craft-scavenger-drone', craftView(state.craftProgress.scavengerDrone, getCraftRecipeMissingRequirement(state, 'scavengerDrone')))
+
+  patchGaugeTitle(app, 'craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`)
 }

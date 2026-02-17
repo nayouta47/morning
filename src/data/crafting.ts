@@ -1,4 +1,5 @@
 import type { CraftProgress, GameState, ModuleType, WeaponType } from '../core/state.ts'
+import { SHOVEL_MAX_STACK, getShovelCount } from '../core/rewards.ts'
 import type { ResourceCost } from './resources.ts'
 import { getMissingRequirementFromList, areRequirementsMet, type Requirement } from '../core/requirements.ts'
 import { WEAPON_CRAFT_DURATION_MS } from './balance.ts'
@@ -64,6 +65,17 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     ],
     outputs: [{ kind: 'resource', resource: 'scavengerDrone', amount: 1 }],
   },
+}
+
+const SHOVEL_CRAFT_BASE_WOOD_COST = 10
+const SHOVEL_CRAFT_COST_GROWTH = 1.35
+
+export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): ResourceCost {
+  if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].costs
+
+  const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
+  const woodCost = Math.ceil(SHOVEL_CRAFT_BASE_WOOD_COST * SHOVEL_CRAFT_COST_GROWTH ** shovelCount)
+  return { wood: woodCost }
 }
 
 export function getCraftRecipeMissingRequirement(state: GameState, recipe: CraftRecipeKey): string | null {

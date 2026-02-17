@@ -1,4 +1,4 @@
-import { CRAFT_RECIPE_DEFS, isCraftRecipeUnlocked, type CraftRecipeKey } from '../../data/crafting.ts'
+import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, isCraftRecipeUnlocked, type CraftRecipeKey } from '../../data/crafting.ts'
 import type { GameState } from '../state.ts'
 import { SHOVEL_MAX_STACK, getShovelCount } from '../rewards.ts'
 import { canAfford, payCost } from './costs.ts'
@@ -22,12 +22,13 @@ export function startCraft(state: GameState, recipeKey: CraftRecipeKey): void {
     return
   }
 
-  if (!canAfford(state.resources, recipe.costs)) {
+  const recipeCost = getCraftRecipeCost(state, recipeKey)
+  if (!canAfford(state.resources, recipeCost)) {
     pushLog(state, '자원이 부족합니다.')
     return
   }
 
-  payCost(state.resources, recipe.costs)
+  payCost(state.resources, recipeCost)
   state.craftProgress[recipeKey] = recipe.durationMs
   pushLog(state, `${recipe.label} 제작 시작 (${Math.round(recipe.durationMs / 1000)}초)`)
 }
