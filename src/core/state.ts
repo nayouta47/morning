@@ -35,7 +35,25 @@ export type ActionProgress = {
   gatherScrap: number
 }
 
-export type TabKey = 'base' | 'assembly'
+export type TabKey = 'base' | 'assembly' | 'exploration'
+
+export type ExplorationMode = 'loadout' | 'active'
+
+export type Position = {
+  x: number
+  y: number
+}
+
+export type ExplorationState = {
+  mode: ExplorationMode
+  mapSize: number
+  hp: number
+  maxHp: number
+  start: Position
+  position: Position
+  steps: number
+  visited: string[]
+}
 
 export type WeaponType = 'pistol' | 'rifle'
 export type ModuleType = 'damage' | 'cooldown'
@@ -72,6 +90,7 @@ export type GameState = {
   modules: ModuleStacks
   craftProgress: CraftProgress
   nextWeaponId: number
+  exploration: ExplorationState
 }
 
 export const initialState: GameState = {
@@ -134,4 +153,14 @@ export const initialState: GameState = {
     scavengerDrone: 0,
   },
   nextWeaponId: 1,
+  exploration: {
+    mode: 'loadout',
+    mapSize: 64,
+    hp: 10,
+    maxHp: 10,
+    start: { x: 32, y: 32 },
+    position: { x: 32, y: 32 },
+    steps: 0,
+    visited: ['32,32'],
+  },
 }

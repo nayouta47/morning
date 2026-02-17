@@ -114,6 +114,10 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {
+  if (state.exploration.mode === 'active' && tab !== 'exploration') {
+    pushLog(state, '탐험 중에는 다른 탭으로 이동할 수 없다.')
+    return
+  }
   state.activeTab = tab
 }
 
@@ -230,6 +234,68 @@ export function reorderWeapons(state: GameState, sourceWeaponId: string, targetW
   }
 
   state.weapons.splice(targetIndex, 0, sourceWeapon)
+  return true
+}
+
+function positionKey(x: number, y: number): string {
+  return `${x},${y}`
+}
+
+export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
+  if (state.exploration.mode === 'active') {
+    pushLog(state, '이미 탐험 중이다.')
+    return false
+  }
+
+  if (!state.selectedWeaponId && !proceedWithoutWeapon) {
+    return false
+  }
+
+  const center = Math.floor(state.exploration.mapSize / 2)
+  state.exploration.mode = 'active'
+  state.exploration.hp = state.exploration.maxHp
+  state.exploration.start = { x: center, y: center }
+  state.exploration.position = { x: center, y: center }
+  state.exploration.steps = 0
+  state.exploration.visited = [positionKey(center, center)]
+  state.activeTab = 'exploration'
+  pushLog(state, '탐험 시작. 주변은 정적이고 어둡다.')
+  return true
+}
+
+export function moveExplorationStep(state: GameState, dx: number, dy: number): boolean {
+  if (state.exploration.mode !== 'active') return false
+  const nextX = Math.max(0, Math.min(state.exploration.mapSize - 1, state.exploration.position.x + dx))
+  const nextY = Math.max(0, Math.min(state.exploration.mapSize - 1, state.exploration.position.y + dy))
+
+  if (nextX === state.exploration.position.x && nextY === state.exploration.position.y) {
+    pushLog(state, '더 이상 갈 수 없는 경계다.')
+    return false
+  }
+
+  state.exploration.position = { x: nextX, y: nextY }
+  state.exploration.steps += 1
+
+  const key = positionKey(nextX, nextY)
+  if (!state.exploration.visited.includes(key)) state.exploration.visited.push(key)
+
+  pushLog(state, `탐험 이동: (${nextX}, ${nextY}) · ${state.exploration.steps}보`)
+  return true
+}
+
+export function tryReturnFromExploration(state: GameState): boolean {
+  if (state.exploration.mode !== 'active') return false
+  const atStart =
+    state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
+
+  if (!atStart) {
+    pushLog(state, '출발 지점으로 돌아와야 귀환할 수 있다.')
+    return false
+  }
+
+  state.exploration.mode = 'loadout'
+  state.activeTab = 'exploration'
+  pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
   return true
 }
 

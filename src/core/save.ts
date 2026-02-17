@@ -33,6 +33,7 @@ function normalizeState(raw: unknown): GameState | null {
     actionProgress?: Partial<GameState['actionProgress']>
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
+    exploration?: unknown
   }
 
   if (loaded.resources) {
@@ -95,7 +96,7 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   const activeTab = loaded.activeTab as TabKey
-  base.activeTab = activeTab === 'assembly' ? 'assembly' : 'base'
+  base.activeTab = activeTab === 'assembly' || activeTab === 'exploration' ? activeTab : 'base'
 
   if (Array.isArray(loaded.weapons)) {
     base.weapons = loaded.weapons
@@ -134,6 +135,38 @@ function normalizeState(raw: unknown): GameState | null {
     ...base.weapons.map((w) => Number(w.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
     1,
   )
+
+  if (loaded.exploration && typeof loaded.exploration === 'object') {
+    const exploration = loaded.exploration as Partial<GameState['exploration']>
+    base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
+    base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize)) ? Math.max(8, Number(exploration.mapSize)) : 64
+    base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
+    base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
+
+    const clampPos = (value: unknown) => Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || 0))
+    base.exploration.start = {
+      x: clampPos(exploration.start?.x),
+      y: clampPos(exploration.start?.y),
+    }
+    base.exploration.position = {
+      x: clampPos(exploration.position?.x),
+      y: clampPos(exploration.position?.y),
+    }
+    base.exploration.steps = Math.max(0, Math.floor(Number(exploration.steps) || 0))
+
+    if (Array.isArray(exploration.visited)) {
+      base.exploration.visited = exploration.visited
+        .filter((value): value is string => typeof value === 'string' && value.includes(','))
+        .slice(-4096)
+    }
+
+    const startKey = `${base.exploration.start.x},${base.exploration.start.y}`
+    if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
+  }
+
+  if (base.exploration.mode === 'active') {
+    base.activeTab = 'exploration'
+  }
 
   return base
 }
