@@ -1,14 +1,24 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
-import type { GameState, LootEntry, WeaponInstance } from './state.ts'
+import { getEnemyDef, type EnemyId } from '../data/enemies.ts'
+import type { CombatState, GameState, LootEntry, WeaponInstance } from './state.ts'
 
 export const ENCOUNTER_FIGHT_DELAY = 3
 export const ENCOUNTER_FIGHT_CHANCE = 0.2
 
-export const ENEMY_TEMPLATE = {
-  name: '규소생물',
-  hp: 20,
-  damage: 2,
-  attackCooldownMs: 3000,
+export const DEFAULT_ENEMY_ID: EnemyId = 'siliconLifeform'
+
+export function createEnemyCombatState(enemyId: EnemyId): CombatState {
+  const enemy = getEnemyDef(enemyId)
+  return {
+    enemyId,
+    enemyName: enemy.name,
+    enemyHp: enemy.hp,
+    enemyMaxHp: enemy.hp,
+    enemyDamage: enemy.damage,
+    enemyAttackCooldownMs: enemy.attackCooldownMs,
+    enemyAttackElapsedMs: 0,
+    playerAttackElapsedMs: 0,
+  }
 }
 
 export function getSelectedWeapon(state: GameState): WeaponInstance | null {
@@ -34,9 +44,15 @@ export function getWeaponCombatStats(weapon: WeaponInstance | null): { damage: n
   }
 }
 
-export function createEnemyLootTable(): LootEntry[] {
-  const rows: LootEntry[] = [{ resource: 'siliconMass', amount: 1 }]
-  if (Math.random() < 0.65) rows.push({ resource: 'scrap', amount: 1 + Math.floor(Math.random() * 2) })
-  if (Math.random() < 0.25) rows.push({ resource: 'iron', amount: 1 })
+export function createEnemyLootTable(enemyId: EnemyId): LootEntry[] {
+  const enemy = getEnemyDef(enemyId)
+  const rows: LootEntry[] = []
+
+  enemy.drops.forEach((drop) => {
+    if (Math.random() > drop.chance) return
+    const amount = drop.minAmount + Math.floor(Math.random() * (drop.maxAmount - drop.minAmount + 1))
+    if (amount > 0) rows.push({ resource: drop.resource, amount })
+  })
+
   return rows
 }

@@ -1,6 +1,8 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
+import { DEFAULT_ENEMY_ID } from './combat.ts'
+import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 
 const SAVE_KEY = 'morning-save-v3'
 const AUTOSAVE_MS = 5000
@@ -34,6 +36,7 @@ function normalizeState(raw: unknown): GameState | null {
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
     exploration?: unknown
+    enemyCodex?: unknown
   }
 
   if (loaded.resources) {
@@ -97,7 +100,7 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   const activeTab = loaded.activeTab as TabKey
-  base.activeTab = activeTab === 'assembly' || activeTab === 'exploration' ? activeTab : 'base'
+  base.activeTab = activeTab === 'assembly' || activeTab === 'exploration' || activeTab === 'codex' ? activeTab : 'base'
 
   if (Array.isArray(loaded.weapons)) {
     base.weapons = loaded.weapons
@@ -136,6 +139,20 @@ function normalizeState(raw: unknown): GameState | null {
     ...base.weapons.map((w) => Number(w.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
     1,
   )
+
+  ENEMY_IDS.forEach((enemyId) => {
+    const rawEntry = (loaded.enemyCodex as Partial<Record<EnemyId, unknown>> | undefined)?.[enemyId]
+    if (!rawEntry || typeof rawEntry !== 'object') return
+    const entry = rawEntry as Partial<GameState['enemyCodex'][EnemyId]>
+    base.enemyCodex[enemyId] = {
+      encountered: Boolean(entry.encountered),
+      firstEncounteredAt:
+        typeof entry.firstEncounteredAt === 'number' && Number.isFinite(entry.firstEncounteredAt)
+          ? entry.firstEncounteredAt
+          : null,
+      defeatCount: Math.max(0, Math.floor(Number(entry.defeatCount) || 0)),
+    }
+  })
 
   if (loaded.exploration && typeof loaded.exploration === 'object') {
     const exploration = loaded.exploration as Partial<GameState['exploration']>
@@ -181,6 +198,9 @@ function normalizeState(raw: unknown): GameState | null {
 
     if (exploration.combat && typeof exploration.combat === 'object') {
       base.exploration.combat = {
+        enemyId: ENEMY_IDS.includes(exploration.combat.enemyId as EnemyId)
+          ? (exploration.combat.enemyId as EnemyId)
+          : DEFAULT_ENEMY_ID,
         enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '규소생물',
         enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
         enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),

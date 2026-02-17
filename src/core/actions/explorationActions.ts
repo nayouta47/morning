@@ -1,4 +1,4 @@
-import { ENCOUNTER_FIGHT_CHANCE, ENCOUNTER_FIGHT_DELAY, ENEMY_TEMPLATE } from '../combat.ts'
+import { createEnemyCombatState, DEFAULT_ENEMY_ID, ENCOUNTER_FIGHT_CHANCE, ENCOUNTER_FIGHT_DELAY } from '../combat.ts'
 import type { GameState } from '../state.ts'
 import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
@@ -97,16 +97,18 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   if (state.exploration.movesSinceEncounter > ENCOUNTER_FIGHT_DELAY && Math.random() < ENCOUNTER_FIGHT_CHANCE) {
     state.exploration.movesSinceEncounter = 0
     state.exploration.phase = 'combat'
-    state.exploration.combat = {
-      enemyName: ENEMY_TEMPLATE.name,
-      enemyHp: ENEMY_TEMPLATE.hp,
-      enemyMaxHp: ENEMY_TEMPLATE.hp,
-      enemyDamage: ENEMY_TEMPLATE.damage,
-      enemyAttackCooldownMs: ENEMY_TEMPLATE.attackCooldownMs,
-      enemyAttackElapsedMs: 0,
-      playerAttackElapsedMs: 0,
+
+    const enemyId = DEFAULT_ENEMY_ID
+    const combatState = createEnemyCombatState(enemyId)
+    state.exploration.combat = combatState
+
+    const codex = state.enemyCodex[enemyId]
+    if (codex) {
+      codex.encountered = true
+      if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
     }
-    pushLog(state, `어둠 사이에서 ${ENEMY_TEMPLATE.name}이(가) 튀어나왔다.`)
+
+    pushLog(state, `어둠 사이에서 ${combatState.enemyName}이(가) 튀어나왔다.`)
     return true
   }
 
