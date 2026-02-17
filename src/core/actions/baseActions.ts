@@ -59,6 +59,9 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
   if (key === 'miner' && !state.unlocks.miner) return
   if ((key === 'lumberMill' || key === 'workbench' || key === 'lab' || key === 'droneController') && !state.unlocks.lumberMill) return
 
+  const singletonBuildings: BuildingId[] = ['lab', 'workbench', 'droneController']
+  if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return
+
   const cost = getBuildingCost(state, key)
   if (!canAfford(state.resources, cost)) {
     pushLog(state, '자원이 부족합니다.')
