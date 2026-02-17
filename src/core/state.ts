@@ -110,7 +110,7 @@ export const initialState: GameState = {
     gatherScrap: 0,
   },
   lastUpdate: Date.now(),
-  log: ['게임 시작. 🪵 나무를 모아보자.'],
+  log: ['게임 시작. 🪵 뗄감을 모아보자.'],
   activeTab: 'base',
   selectedWeaponId: null,
   weapons: [],

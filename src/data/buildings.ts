@@ -9,7 +9,7 @@ export const BUILDING_DEFS = {
     label: '벌목기',
     unlockRequirements: [] as Requirement[],
     baseCost: { wood: 0, scrap: 10, iron: 0 } as ResourceCost,
-    effectsText: '10초마다 나무 +설치 수량',
+    effectsText: '10초마다 뗄감 +설치 수량',
   },
   miner: {
     id: 'miner',
@@ -30,7 +30,7 @@ export const BUILDING_DEFS = {
     label: '연구대',
     unlockRequirements: [] as Requirement[],
     baseCost: { wood: 120, scrap: 20, iron: 0 } as ResourceCost,
-    effectsText: '업그레이드 연구 가능',
+    effectsText: '연구 가능',
   },
 } as const
 

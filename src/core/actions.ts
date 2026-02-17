@@ -42,12 +42,12 @@ export { getBuildingCost }
 
 export function gatherWood(state: GameState): void {
   if (state.actionProgress.gatherWood > 0) {
-    pushLog(state, '이미 나무를 줍는 중입니다.')
+    pushLog(state, '이미 뗄감을 줍는 중입니다.')
     return
   }
 
   state.actionProgress.gatherWood = ACTION_DURATION_MS.gatherWood
-  pushLog(state, `🪵 나무 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherWood / 1000)}초)`)
+  pushLog(state, `🪵 뗄감 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherWood / 1000)}초)`)
 }
 
 export function gatherScrap(state: GameState): void {
@@ -105,7 +105,7 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 
   payCost(state.resources, cost)
   state.upgrades[key] = true
-  pushLog(state, `업그레이드 완료: ${def.name}`)
+  pushLog(state, `연구 완료: ${def.name}`)
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {

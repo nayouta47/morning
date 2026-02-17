@@ -30,7 +30,7 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
 
   if (key === 'lumberMill') {
     state.resources.wood += capacity
-    appendLog(state, `벌목기 생산: 🪵 나무 +${capacity}`)
+    appendLog(state, `벌목기 생산: 🪵 뗄감 +${capacity}`)
     return
   }
 
@@ -122,7 +122,7 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
   if (key === 'gatherWood') {
     const amount = getGatherWoodReward(state)
     state.resources.wood += amount
-    appendLog(state, `🪵 나무 +${amount}`)
+    appendLog(state, `🪵 뗄감 +${amount}`)
     return
   }
 
