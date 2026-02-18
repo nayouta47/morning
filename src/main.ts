@@ -12,6 +12,7 @@ import {
   selectWeapon,
   setActiveTab,
   setSmeltingAllocation,
+  setMinerAllocation,
   startCraft,
   startExploration,
   startExplorationFlee,
@@ -149,6 +150,11 @@ function redraw(nowOverride?: number): void {
         onSetSmeltingAllocation: (key, value) => {
           syncState()
           setSmeltingAllocation(state, key, value)
+          redraw()
+        },
+        onSetMinerAllocation: (key, value) => {
+          syncState()
+          setMinerAllocation(state, key, value)
           redraw()
         },
         onToggleLumberMillRun: () => {

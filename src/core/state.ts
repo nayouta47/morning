@@ -33,9 +33,11 @@ export type ProductionRunning = {
 }
 
 export type SmeltingProcessKey = 'burnWood' | 'meltScrap' | 'meltIron' | 'meltSiliconMass'
+export type MinerProcessKey = 'crushScrap' | 'crushSiliconMass'
 
 export type SmeltingAllocation = Record<SmeltingProcessKey, number>
 export type SmeltingProgress = Record<SmeltingProcessKey, number>
+export type MinerAllocation = Record<MinerProcessKey, number>
 
 export type ActionProgress = {
   gatherWood: number
@@ -123,6 +125,7 @@ export type GameState = {
   productionRunning: ProductionRunning
   smeltingAllocation: SmeltingAllocation
   smeltingProgress: SmeltingProgress
+  minerAllocation: MinerAllocation
   actionProgress: ActionProgress
   lastUpdate: number
   log: string[]
@@ -194,6 +197,10 @@ export const initialState: GameState = {
     meltScrap: 0,
     meltIron: 0,
     meltSiliconMass: 0,
+  },
+  minerAllocation: {
+    crushScrap: 0,
+    crushSiliconMass: 0,
   },
   actionProgress: {
     gatherWood: 0,

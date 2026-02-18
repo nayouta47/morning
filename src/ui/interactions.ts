@@ -1,4 +1,4 @@
-import type { GameState, ModuleType, SmeltingProcessKey } from '../core/state.ts'
+import type { GameState, MinerProcessKey, ModuleType, SmeltingProcessKey } from '../core/state.ts'
 import type { ResourceId } from '../data/resources.ts'
 import type { Handlers, InteractionIntent } from './types.ts'
 import { getEventTargetElement } from './view.ts'
@@ -47,8 +47,17 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
       handlers.onSetSmeltingAllocation(key, current + (direction === 'up' ? 1 : -1))
     })
   })
+  app.querySelectorAll<HTMLButtonElement>('button[data-miner-allocation-step][data-miner-allocation-key]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.minerAllocationKey as MinerProcessKey | undefined
+      const direction = button.dataset.minerAllocationStep
+      if (!key || (direction !== 'up' && direction !== 'down')) return
+      const current = state.minerAllocation[key]
+      handlers.onSetMinerAllocation(key, current + (direction === 'up' ? 1 : -1))
+    })
+  })
   app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)
-  app.querySelector<HTMLButtonElement>('#miner-progress')?.addEventListener('click', handlers.onToggleMinerRun)
+  app.querySelector<HTMLButtonElement>('#miner-run-toggle')?.addEventListener('click', handlers.onToggleMinerRun)
   app.querySelector<HTMLButtonElement>('#scavenger-progress')?.addEventListener('click', handlers.onToggleScavengerRun)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-upgrade]').forEach((button) => {

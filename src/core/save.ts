@@ -36,6 +36,7 @@ function normalizeState(raw: unknown): GameState | null {
     actionProgress?: Partial<GameState['actionProgress']>
     smeltingAllocation?: Partial<GameState['smeltingAllocation']>
     smeltingProgress?: Partial<GameState['smeltingProgress']>
+    minerAllocation?: Partial<GameState['minerAllocation']>
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
     exploration?: unknown
@@ -120,6 +121,21 @@ function normalizeState(raw: unknown): GameState | null {
   base.smeltingProgress.meltScrap = clampProgress(loaded.smeltingProgress?.meltScrap)
   base.smeltingProgress.meltIron = clampProgress(loaded.smeltingProgress?.meltIron)
   base.smeltingProgress.meltSiliconMass = clampProgress(loaded.smeltingProgress?.meltSiliconMass)
+
+  base.minerAllocation.crushScrap = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushScrap) || 0))
+  base.minerAllocation.crushSiliconMass = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushSiliconMass) || 0))
+
+  const minerCount = Math.max(0, Math.floor(base.buildings.miner))
+  const minerTotalAllocation = base.minerAllocation.crushScrap + base.minerAllocation.crushSiliconMass
+  if (minerTotalAllocation <= 0 && minerCount > 0) {
+    base.minerAllocation.crushScrap = minerCount
+  } else if (minerTotalAllocation > minerCount) {
+    let overflow = minerTotalAllocation - minerCount
+    const cutSilicon = Math.min(base.minerAllocation.crushSiliconMass, overflow)
+    base.minerAllocation.crushSiliconMass -= cutSilicon
+    overflow -= cutSilicon
+    if (overflow > 0) base.minerAllocation.crushScrap = Math.max(0, base.minerAllocation.crushScrap - overflow)
+  }
 
   base.craftProgress.pistol = clampProgress(loaded.craftProgress?.pistol)
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)

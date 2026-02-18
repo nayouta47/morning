@@ -8,7 +8,7 @@ import type { ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
 import { setHidden, setText } from './view.ts'
 import { patchModuleDetail, patchModuleInventory, patchWeaponBoard, patchWeaponInventory, renderAssemblyPanel } from './panels/assemblyPanel.ts'
-import { patchActionGauge, patchBuildingGauge, patchCraftButtons, renderBasePanel, getBuildingGaugeView } from './panels/basePanel.ts'
+import { patchActionGauge, patchBuildingGauge, patchCraftButtons, patchMinerPanel, patchSmeltingPanel, renderBasePanel, getBuildingGaugeView } from './panels/basePanel.ts'
 import { patchExplorationCombatOverlay } from './panels/combatOverlay.ts'
 import { patchExplorationBody, renderExplorationMap, renderExplorationPanel } from './panels/explorationPanel.ts'
 import { patchCodexPanel, renderCodexPanel } from './panels/codexPanel.ts'
@@ -136,15 +136,15 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#buy-drone-controller-label', droneControllerInstalled ? `${getBuildingLabel('droneController')} (설치 완료)` : `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
-  const minerGauge = getBuildingGaugeView(state, 'miner', now)
   const scavengerGauge = getBuildingGaugeView(state, 'scavenger', now)
   patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)
-  patchBuildingGauge(app, 'miner-progress', minerGauge.progress, minerGauge.percentText, minerGauge.timeText, minerGauge.phase)
   patchBuildingGauge(app, 'scavenger-progress', scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)
 
   setText(app, '#lumber-progress .gauge-title', `벌목기 가동 x${state.buildings.lumberMill}`)
-  setText(app, '#miner-progress .gauge-title', `분쇄기 가동 x${state.buildings.miner}`)
   setText(app, '#scavenger-progress .gauge-title', `스캐빈저 가동 x${state.resources.scavengerDrone}`)
+
+  patchMinerPanel(app, state, now)
+  patchSmeltingPanel(app, state, now)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
   ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {

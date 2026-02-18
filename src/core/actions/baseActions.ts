@@ -1,6 +1,6 @@
 import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../../data/buildings.ts'
-import type { GameState, SmeltingProcessKey, TabKey } from '../state.ts'
+import type { GameState, MinerProcessKey, SmeltingProcessKey, TabKey } from '../state.ts'
 import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
@@ -55,6 +55,18 @@ export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' 
   pushLog(state, `${targetLabel} ${state.productionRunning[key] ? '가동 재개' : '가동 중지'}`)
 }
 
+function clampMinerAllocationToOwned(state: GameState): void {
+  const owned = Math.max(0, Math.floor(state.buildings.miner))
+  const total = state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass
+  if (total <= owned) return
+
+  let overflow = total - owned
+  const cutSilicon = Math.min(state.minerAllocation.crushSiliconMass, overflow)
+  state.minerAllocation.crushSiliconMass -= cutSilicon
+  overflow -= cutSilicon
+  if (overflow > 0) state.minerAllocation.crushScrap = Math.max(0, state.minerAllocation.crushScrap - overflow)
+}
+
 export function buyBuilding(state: GameState, key: BuildingId): void {
   if (key === 'miner' && !state.unlocks.miner) return
   if (
@@ -79,6 +91,13 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
 
   payCost(state.resources, cost)
   state.buildings[key] += 1
+
+  if (key === 'miner') {
+    const totalAllocated = state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass
+    if (totalAllocated < state.buildings.miner) state.minerAllocation.crushScrap += 1
+    clampMinerAllocationToOwned(state)
+  }
+
   pushLog(state, `${getBuildingLabel(key)} 설치 (${state.buildings[key]})`)
   applyUnlocks(state)
 }
@@ -91,6 +110,16 @@ export function setSmeltingAllocation(state: GameState, key: SmeltingProcessKey,
     .reduce((sum, processKey) => sum + state.smeltingAllocation[processKey], 0)
 
   state.smeltingAllocation[key] = Math.min(nextValue, Math.max(0, owned - usedByOthers))
+}
+
+export function setMinerAllocation(state: GameState, key: MinerProcessKey, requestedValue: number): void {
+  const nextValue = Math.max(0, Math.floor(requestedValue))
+  const owned = Math.max(0, Math.floor(state.buildings.miner))
+  const usedByOthers = (Object.keys(state.minerAllocation) as MinerProcessKey[])
+    .filter((processKey) => processKey !== key)
+    .reduce((sum, processKey) => sum + state.minerAllocation[processKey], 0)
+
+  state.minerAllocation[key] = Math.min(nextValue, Math.max(0, owned - usedByOthers))
 }
 
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {
