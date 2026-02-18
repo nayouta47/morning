@@ -54,6 +54,15 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     outputs: [{ kind: 'resource', resource: 'shovel', amount: 1 }],
   },
 
+
+  smallHealPotion: {
+    id: 'smallHealPotion',
+    label: '회복약(소)',
+    durationMs: WEAPON_CRAFT_DURATION_MS,
+    costs: { iron: 10, chromium: 1, carbon: 1 },
+    requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
+    outputs: [{ kind: 'resource', resource: 'smallHealPotion', amount: 1 }],
+  },
   scavengerDrone: {
     id: 'scavengerDrone',
     label: '스캐빈저 드론',

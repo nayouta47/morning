@@ -41,6 +41,7 @@ export function createEnemyCombatState(enemyId: EnemyId): CombatState {
     fleeGaugeDurationMs: FLEE_GAUGE_DURATION_MS,
     fleeGaugeElapsedMs: 0,
     fleeGaugeRunning: false,
+    smallHealPotionCooldownRemainingMs: 0,
   }
 }
 

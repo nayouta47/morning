@@ -19,6 +19,7 @@ import {
   takeExplorationLoot,
   toggleBuildingRun,
   unequipModuleFromSlot,
+  useSmallHealPotion,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
@@ -202,6 +203,11 @@ function redraw(nowOverride?: number): void {
           startExplorationFlee(state)
           redraw()
         },
+        onUseSmallHealPotion: () => {
+          syncState()
+          useSmallHealPotion(state)
+          redraw()
+        },
         onTakeLoot: (resourceId) => {
           syncState()
           takeExplorationLoot(state, resourceId)
@@ -235,6 +241,11 @@ function redraw(nowOverride?: number): void {
         onCraftScavengerDrone: () => {
           syncState()
           startCraft(state, 'scavengerDrone')
+          redraw()
+        },
+        onCraftSmallHealPotion: () => {
+          syncState()
+          startCraft(state, 'smallHealPotion')
           redraw()
         },
         onSelectWeapon: (weaponId) => {

@@ -263,6 +263,8 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
 
   const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
 
+  combat.smallHealPotionCooldownRemainingMs = Math.max(0, combat.smallHealPotionCooldownRemainingMs - elapsedMs)
+
   combat.playerAttackElapsedMs += elapsedMs
   while (combat.playerAttackElapsedMs >= weaponStats.cooldownMs && combat.enemyHp > 0) {
     combat.playerAttackElapsedMs -= weaponStats.cooldownMs

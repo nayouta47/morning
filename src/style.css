@@ -544,6 +544,11 @@ li {
 
 
 
+
+.combat-potion-fill {
+  background: linear-gradient(90deg, rgba(98, 181, 122, 0.48), rgba(98, 181, 122, 0.2));
+}
+
 .combat-flee-fill {
   background: linear-gradient(90deg, rgba(123, 163, 191, 0.48), rgba(123, 163, 191, 0.2));
 }

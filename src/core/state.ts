@@ -71,6 +71,7 @@ export type CombatState = {
   fleeGaugeDurationMs: number
   fleeGaugeElapsedMs: number
   fleeGaugeRunning: boolean
+  smallHealPotionCooldownRemainingMs: number
 }
 
 export type EnemyCodexEntry = {
@@ -114,6 +115,7 @@ export type CraftProgress = {
   module: number
   shovel: number
   scavengerDrone: number
+  smallHealPotion: number
 }
 
 export type GameState = {
@@ -149,6 +151,7 @@ export const initialState: GameState = {
     cobalt: 0,
     shovel: 0,
     scavengerDrone: 0,
+    smallHealPotion: 0,
     siliconMass: 0,
     carbon: 0,
     siliconIngot: 0,
@@ -221,6 +224,7 @@ export const initialState: GameState = {
     module: 0,
     shovel: 0,
     scavengerDrone: 0,
+    smallHealPotion: 0,
   },
   nextWeaponId: 1,
   exploration: {

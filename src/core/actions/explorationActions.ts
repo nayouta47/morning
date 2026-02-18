@@ -8,6 +8,7 @@ import type { GameState } from '../state.ts'
 import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
+import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 
 function positionKey(x: number, y: number): string {
   return `${x},${y}`
@@ -129,6 +130,31 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   return true
 }
 
+
+
+export function useSmallHealPotion(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
+  const combat = state.exploration.combat
+  if (!combat) return false
+
+  if (state.resources.smallHealPotion <= 0) {
+    pushLog(state, '회복약(소)이 없다.')
+    return false
+  }
+
+  if (combat.smallHealPotionCooldownRemainingMs > 0) {
+    pushLog(state, '회복약(소) 재사용 대기 중.')
+    return false
+  }
+
+  state.resources.smallHealPotion -= 1
+  const prevHp = state.exploration.hp
+  state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + SMALL_HEAL_POTION_HEAL)
+  const healed = state.exploration.hp - prevHp
+  combat.smallHealPotionCooldownRemainingMs = SMALL_HEAL_POTION_COOLDOWN_MS
+  pushLog(state, `회복약(소) 사용. HP +${healed}`)
+  return true
+}
 
 export function startExplorationFlee(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false

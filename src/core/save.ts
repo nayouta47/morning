@@ -52,6 +52,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.cobalt = Number(loaded.resources.cobalt ?? base.resources.cobalt)
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
     base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
+    base.resources.smallHealPotion = Math.max(0, Number(loaded.resources.smallHealPotion ?? base.resources.smallHealPotion) || 0)
     base.resources.siliconMass = Math.max(0, Number(loaded.resources.siliconMass ?? base.resources.siliconMass) || 0)
     base.resources.carbon = Math.max(0, Number(loaded.resources.carbon ?? base.resources.carbon) || 0)
     base.resources.siliconIngot = Math.max(0, Number(loaded.resources.siliconIngot ?? base.resources.siliconIngot) || 0)
@@ -142,6 +143,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
   base.craftProgress.shovel = clampProgress(loaded.craftProgress?.shovel)
   base.craftProgress.scavengerDrone = clampProgress(loaded.craftProgress?.scavengerDrone)
+  base.craftProgress.smallHealPotion = clampProgress(loaded.craftProgress?.smallHealPotion)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
@@ -266,6 +268,7 @@ function normalizeState(raw: unknown): GameState | null {
         fleeGaugeDurationMs: Math.max(500, Number(exploration.combat.fleeGaugeDurationMs) || 2500),
         fleeGaugeElapsedMs: Math.max(0, Number(exploration.combat.fleeGaugeElapsedMs) || 0),
         fleeGaugeRunning: Boolean(exploration.combat.fleeGaugeRunning),
+        smallHealPotionCooldownRemainingMs: Math.max(0, Number(exploration.combat.smallHealPotionCooldownRemainingMs) || 0),
       }
     }
 

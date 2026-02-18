@@ -39,6 +39,9 @@ export const UPGRADE_DEFS = {
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
+export const SMALL_HEAL_POTION_HEAL = 8
+export const SMALL_HEAL_POTION_COOLDOWN_MS = 5000
+
 export const WEAPON_BASE_STATS = {
   pistol: { damage: 3, cooldown: 5 },
   rifle: { damage: 8, cooldown: 10 },
