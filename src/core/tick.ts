@@ -12,7 +12,7 @@ const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
 const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
-type ProductionBuildingKey = 'lumberMill' | 'miner' | 'scavenger'
+type ProductionBuildingKey = 'lumberMill' | 'scavenger'
 
 function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number): void {
   const count = key === 'scavenger' ? 1 : state.buildings[key]
@@ -37,68 +37,62 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
     return
   }
 
-  if (key === 'lumberMill') {
-    state.resources.wood += capacity
-    appendLog(state, `벌목기 생산: 🪵 뗄감 +${capacity}`)
-    return
-  }
-
+  state.resources.wood += capacity
+  appendLog(state, `벌목기 생산: 🪵 뗄감 +${capacity}`)
 }
 
-function processMinerElapsed(state: GameState, elapsedMs: number): void {
+function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSiliconMass', elapsedMs: number): void {
   const count = Math.max(0, Math.floor(state.buildings.miner))
   if (count <= 0) {
-    state.productionProgress.miner = 0
+    state.minerProgress[key] = 0
     return
   }
 
-  if (!state.productionRunning.miner) return
+  const allocated = Math.max(0, Math.floor(state.minerAllocation[key]))
+  if (allocated <= 0) {
+    state.minerProgress[key] = 0
+    return
+  }
 
-  const { nextProgressMs, cycles } = advanceCycleProgress(state.productionProgress.miner, elapsedMs, BUILDING_CYCLE_MS)
-  state.productionProgress.miner = nextProgressMs
+  if (!state.minerProcessRunning[key]) return
+
+  const { nextProgressMs, cycles } = advanceCycleProgress(state.minerProgress[key], elapsedMs, BUILDING_CYCLE_MS)
+  state.minerProgress[key] = nextProgressMs
   if (cycles <= 0) return
 
-  const scrapAllocated = Math.max(0, Math.floor(state.minerAllocation.crushScrap))
-  const siliconAllocated = Math.max(0, Math.floor(state.minerAllocation.crushSiliconMass))
-
-  if (scrapAllocated <= 0 && siliconAllocated <= 0) return
-
-  if (scrapAllocated > 0) {
-    const attempts = cycles * scrapAllocated
+  const attempts = cycles * allocated
+  if (key === 'crushScrap') {
     const processed = Math.min(attempts, Math.floor(state.resources.scrap))
-    if (processed > 0) {
-      state.resources.scrap -= processed
-      state.resources.iron += processed
+    if (processed <= 0) return
 
-      let chromium = 0
-      let molybdenum = 0
-      for (let i = 0; i < processed; i += 1) {
-        if (Math.random() < CHROMIUM_CHANCE_PER_SCRAP) chromium += 1
-        if (Math.random() < MOLYBDENUM_CHANCE_PER_SCRAP) molybdenum += 1
-      }
+    state.resources.scrap -= processed
+    state.resources.iron += processed
 
-      if (chromium > 0) state.resources.chromium += chromium
-      if (molybdenum > 0) state.resources.molybdenum += molybdenum
-
-      const bonusParts: string[] = []
-      if (chromium > 0) bonusParts.push(`🟢 크롬 +${chromium}`)
-      if (molybdenum > 0) bonusParts.push(`🔵 몰리브덴 +${molybdenum}`)
-
-      const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
-      appendLog(state, `고물 분쇄: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
+    let chromium = 0
+    let molybdenum = 0
+    for (let i = 0; i < processed; i += 1) {
+      if (Math.random() < CHROMIUM_CHANCE_PER_SCRAP) chromium += 1
+      if (Math.random() < MOLYBDENUM_CHANCE_PER_SCRAP) molybdenum += 1
     }
+
+    if (chromium > 0) state.resources.chromium += chromium
+    if (molybdenum > 0) state.resources.molybdenum += molybdenum
+
+    const bonusParts: string[] = []
+    if (chromium > 0) bonusParts.push(`🟢 크롬 +${chromium}`)
+    if (molybdenum > 0) bonusParts.push(`🔵 몰리브덴 +${molybdenum}`)
+
+    const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
+    appendLog(state, `고물 분쇄: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
+    return
   }
 
-  if (siliconAllocated > 0) {
-    const attempts = cycles * siliconAllocated
-    const processed = Math.min(attempts, Math.floor(state.resources.siliconMass))
-    if (processed > 0) {
-      state.resources.siliconMass -= processed
-      state.resources.cobalt += processed
-      appendLog(state, `규소 덩어리 분쇄: 🧱 규소 덩어리 -${processed}, 🟣 코발트 +${processed}`)
-    }
+  const processed = Math.min(attempts, Math.floor(state.resources.siliconMass))
+  if (processed > 0) {
+    state.resources.siliconMass -= processed
+    state.resources.cobalt += processed
+    appendLog(state, `규소 덩어리 분쇄: 🧱 규소 덩어리 -${processed}, 🟣 코발트 +${processed}`)
   }
-
 }
 
 function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elapsedMs: number): void {
@@ -321,7 +315,8 @@ export function advanceState(state: GameState, now = Date.now()): void {
   if (elapsed <= 0) return
 
   processBuildingElapsed(state, 'lumberMill', elapsed)
-  processMinerElapsed(state, elapsed)
+  processMinerElapsed(state, 'crushScrap', elapsed)
+  processMinerElapsed(state, 'crushSiliconMass', elapsed)
   processBuildingElapsed(state, 'scavenger', elapsed)
 
   processSmeltingElapsed(state, 'burnWood', elapsed)

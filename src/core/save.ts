@@ -37,6 +37,8 @@ function normalizeState(raw: unknown): GameState | null {
     smeltingAllocation?: Partial<GameState['smeltingAllocation']>
     smeltingProgress?: Partial<GameState['smeltingProgress']>
     minerAllocation?: Partial<GameState['minerAllocation']>
+    minerProgress?: Partial<GameState['minerProgress']>
+    minerProcessRunning?: Partial<GameState['minerProcessRunning']>
     craftProgress?: Partial<GameState['craftProgress']>
     modules?: unknown
     exploration?: unknown
@@ -82,17 +84,26 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
-  base.productionProgress.miner = clampProgress(loaded.productionProgress?.miner)
   base.productionProgress.scavenger = clampProgress(loaded.productionProgress?.scavenger)
 
   base.productionRunning.lumberMill =
     typeof loaded.productionRunning?.lumberMill === 'boolean'
       ? loaded.productionRunning.lumberMill
       : base.productionRunning.lumberMill
-  base.productionRunning.miner =
-    typeof loaded.productionRunning?.miner === 'boolean' ? loaded.productionRunning.miner : base.productionRunning.miner
   base.productionRunning.scavenger =
     typeof loaded.productionRunning?.scavenger === 'boolean' ? loaded.productionRunning.scavenger : base.productionRunning.scavenger
+
+
+  const legacyMinerRunningRaw = (loaded as { productionRunning?: { miner?: unknown } }).productionRunning?.miner
+  const legacyMinerRunning = typeof legacyMinerRunningRaw === 'boolean' ? legacyMinerRunningRaw : null
+  base.minerProcessRunning.crushScrap =
+    typeof loaded.minerProcessRunning?.crushScrap === 'boolean'
+      ? loaded.minerProcessRunning.crushScrap
+      : (legacyMinerRunning ?? base.minerProcessRunning.crushScrap)
+  base.minerProcessRunning.crushSiliconMass =
+    typeof loaded.minerProcessRunning?.crushSiliconMass === 'boolean'
+      ? loaded.minerProcessRunning.crushSiliconMass
+      : (legacyMinerRunning ?? base.minerProcessRunning.crushSiliconMass)
 
   base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
   base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
@@ -125,6 +136,10 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.minerAllocation.crushScrap = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushScrap) || 0))
   base.minerAllocation.crushSiliconMass = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushSiliconMass) || 0))
+
+
+  base.minerProgress.crushScrap = clampProgress(loaded.minerProgress?.crushScrap)
+  base.minerProgress.crushSiliconMass = clampProgress(loaded.minerProgress?.crushSiliconMass)
 
   const minerCount = Math.max(0, Math.floor(base.buildings.miner))
   const minerTotalAllocation = base.minerAllocation.crushScrap + base.minerAllocation.crushSiliconMass

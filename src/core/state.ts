@@ -22,13 +22,11 @@ export type Unlocks = {
 
 export type ProductionProgress = {
   lumberMill: number
-  miner: number
   scavenger: number
 }
 
 export type ProductionRunning = {
   lumberMill: boolean
-  miner: boolean
   scavenger: boolean
 }
 
@@ -38,6 +36,8 @@ export type MinerProcessKey = 'crushScrap' | 'crushSiliconMass'
 export type SmeltingAllocation = Record<SmeltingProcessKey, number>
 export type SmeltingProgress = Record<SmeltingProcessKey, number>
 export type MinerAllocation = Record<MinerProcessKey, number>
+export type MinerProgress = Record<MinerProcessKey, number>
+export type MinerProcessRunning = Record<MinerProcessKey, boolean>
 
 export type ActionProgress = {
   gatherWood: number
@@ -128,6 +128,8 @@ export type GameState = {
   smeltingAllocation: SmeltingAllocation
   smeltingProgress: SmeltingProgress
   minerAllocation: MinerAllocation
+  minerProgress: MinerProgress
+  minerProcessRunning: MinerProcessRunning
   actionProgress: ActionProgress
   lastUpdate: number
   log: string[]
@@ -181,12 +183,10 @@ export const initialState: GameState = {
   },
   productionProgress: {
     lumberMill: 0,
-    miner: 0,
     scavenger: 0,
   },
   productionRunning: {
     lumberMill: true,
-    miner: true,
     scavenger: true,
   },
   smeltingAllocation: {
@@ -204,6 +204,14 @@ export const initialState: GameState = {
   minerAllocation: {
     crushScrap: 0,
     crushSiliconMass: 0,
+  },
+  minerProgress: {
+    crushScrap: 0,
+    crushSiliconMass: 0,
+  },
+  minerProcessRunning: {
+    crushScrap: true,
+    crushSiliconMass: true,
   },
   actionProgress: {
     gatherWood: 0,

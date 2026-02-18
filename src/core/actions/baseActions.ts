@@ -39,7 +39,7 @@ export function gatherScrap(state: GameState): void {
   pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherScrap / 1000)}초)`)
 }
 
-export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' | 'scavenger'): void {
+export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'scavenger'): void {
   if (key !== 'scavenger' && state.buildings[key] <= 0) {
     pushLog(state, '설치된 건물이 없습니다.')
     return
@@ -51,7 +51,7 @@ export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'miner' 
   }
 
   state.productionRunning[key] = !state.productionRunning[key]
-  const targetLabel = key === 'lumberMill' ? '벌목기' : key === 'miner' ? '분쇄기' : '스캐빈저'
+  const targetLabel = key === 'lumberMill' ? '벌목기' : '스캐빈저'
   pushLog(state, `${targetLabel} ${state.productionRunning[key] ? '가동 재개' : '가동 중지'}`)
 }
 
@@ -100,6 +100,18 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
 
   pushLog(state, `${getBuildingLabel(key)} 설치 (${state.buildings[key]})`)
   applyUnlocks(state)
+}
+
+
+export function toggleMinerProcessRun(state: GameState, key: MinerProcessKey): void {
+  if (state.buildings.miner <= 0) {
+    pushLog(state, '설치된 건물이 없습니다.')
+    return
+  }
+
+  state.minerProcessRunning[key] = !state.minerProcessRunning[key]
+  const targetLabel = key === 'crushScrap' ? '고물 분쇄' : '규소 덩어리 분쇄'
+  pushLog(state, `${targetLabel} ${state.minerProcessRunning[key] ? '가동 재개' : '가동 중지'}`)
 }
 
 export function setSmeltingAllocation(state: GameState, key: SmeltingProcessKey, requestedValue: number): void {
