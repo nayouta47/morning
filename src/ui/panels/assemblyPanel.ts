@@ -1,4 +1,5 @@
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
+import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
 import { WEAPON_BASE_STATS } from '../../data/balance.ts'
 
 const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️' }
@@ -7,7 +8,7 @@ const MODULE_LABEL: Record<ModuleType, string> = { damage: '공격력 +1', coold
 let selectedModuleType: ModuleType | null = null
 
 function getActiveSlots(weapon: WeaponInstance): Set<number> {
-  return weapon.type === 'pistol' ? new Set([22, 23, 24, 25, 26, 27]) : new Set([13, 14, 15, 16, 23, 24, 25, 26])
+  return getActiveWeaponSlots(weapon.type)
 }
 
 function getSelectedWeapon(state: GameState): WeaponInstance | null {
@@ -17,10 +18,11 @@ function getSelectedWeapon(state: GameState): WeaponInstance | null {
 
 function getWeaponStats(weapon: WeaponInstance): { baseDamage: number; baseCooldown: number; finalDamage: number; finalCooldown: number } {
   const base = WEAPON_BASE_STATS[weapon.type]
+  const activeSlots = getActiveSlots(weapon)
   let damageBonus = 0
   let cooldownBonus = 0
-  weapon.slots.forEach((moduleType) => {
-    if (!moduleType) return
+  weapon.slots.forEach((moduleType, index) => {
+    if (!moduleType || !activeSlots.has(index)) return
     if (moduleType === 'damage') damageBonus += 1
     if (moduleType === 'cooldown') cooldownBonus += 1
   })
@@ -51,7 +53,7 @@ export function renderAssemblyPanel(state: GameState): string {
       <h2>무기 조립</h2>
       <div class="assembly-grid">
         <aside class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></aside>
-        <div class="weapon-board-wrap"><h3>선택 무기 슬롯 (5x10)</h3><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><p class="hint" id="weapon-stat-text">${stats ? `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>` : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭)</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
+        <div class="weapon-board-wrap"><h3>선택 무기 슬롯 (5x10)</h3><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><p class="hint" id="weapon-stat-text">${stats ? `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>` : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
       </div>
       <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><p id="module-detail-effect" class="module-effect hint">${selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'}</p></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
     </section>`

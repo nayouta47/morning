@@ -228,8 +228,6 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     }
 
     const dragKind = event.dataTransfer.getData('text/module-drag-kind')
-    const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
-    if (moduleType !== 'damage' && moduleType !== 'cooldown') return
 
     if (target.closest<HTMLElement>('.module-inventory') && dragKind === 'slot') {
       const sourceSlotIndex = Number(event.dataTransfer.getData('text/module-slot-index'))
@@ -239,6 +237,9 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
       dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex: sourceSlotIndex })
       return
     }
+
+    const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
+    if (moduleType !== 'damage' && moduleType !== 'cooldown') return
 
     const slot = target.closest<HTMLElement>('[data-slot-index]')
     if (!slot) return

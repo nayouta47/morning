@@ -1,4 +1,5 @@
 import type { GameState, ModuleType } from '../state.ts'
+import { isActiveWeaponSlot } from '../weaponSlots.ts'
 import { pushLog } from './logging.ts'
 
 function moduleName(type: ModuleType): string {
@@ -9,6 +10,7 @@ export function equipModuleToSlot(state: GameState, weaponId: string, moduleType
   const weapon = state.weapons.find((w) => w.id === weaponId)
   if (!weapon) return false
   if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
+  if (!isActiveWeaponSlot(weapon.type, slotIndex)) return false
   if (weapon.slots[slotIndex]) return false
   if (state.modules[moduleType] <= 0) return false
 
@@ -42,6 +44,7 @@ export function moveEquippedModuleBetweenSlots(
   if (!weapon) return false
   if (fromSlotIndex < 0 || fromSlotIndex >= weapon.slots.length) return false
   if (toSlotIndex < 0 || toSlotIndex >= weapon.slots.length) return false
+  if (!isActiveWeaponSlot(weapon.type, toSlotIndex)) return false
   if (fromSlotIndex === toSlotIndex) return false
 
   const sourceModuleType = weapon.slots[fromSlotIndex]

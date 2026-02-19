@@ -41,7 +41,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     id: 'module',
     label: '모듈',
     durationMs: WEAPON_CRAFT_DURATION_MS,
-    costs: { iron: 10, molybdenum: 1 },
+    costs: { iron: 200, molybdenum: 1 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
     outputs: [{ kind: 'moduleRandom', pool: ['damage', 'cooldown'], count: 1 }],
   },
