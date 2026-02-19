@@ -1,8 +1,8 @@
 import type { GameState, MinerProcessKey, SmeltingProcessKey } from '../../core/state.ts'
 import { getBuildingCost } from '../../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from '../../core/rewards.ts'
-import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, UPGRADE_DEFS, WEAPON_CRAFT_DURATION_MS, getUpgradeCost } from '../../data/balance.ts'
-import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeMissingRequirement } from '../../data/crafting.ts'
+import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
+import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeDuration, getCraftRecipeMissingRequirement, type CraftRecipeKey } from '../../data/crafting.ts'
 import { getBuildingLabel } from '../../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../../data/resources.ts'
 import type { ActionGaugeView, ActionUI } from '../types.ts'
@@ -156,17 +156,21 @@ function renderSmeltingRow(state: GameState, key: SmeltingProcessKey, title: str
   return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><div class="smelting-alloc-stepper" aria-label="${title} 전기로 배정"><button type="button" class="smelting-step-btn" data-smelting-allocation-step="up" data-smelting-allocation-key="${key}" id="smelting-allocation-inc-${key}" aria-label="${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${smeltingRemaining})" ${canIncrement ? '' : 'disabled'}>▲</button><button type="button" class="smelting-step-btn" data-smelting-allocation-step="down" data-smelting-allocation-key="${key}" id="smelting-allocation-dec-${key}" aria-label="${title} 배정 감소 (현재 ${allocated})" ${canDecrement ? '' : 'disabled'}>▼</button></div></div>`
 }
 
-function craftView(remainingMs: number, lockedReason: string | null = null): ActionGaugeView {
+function craftView(remainingMs: number, durationMs: number, lockedReason: string | null = null): ActionGaugeView {
   if (lockedReason) return { phase: 'locked', progress: 0, disabled: true, label: '잠김', timeText: lockedReason }
   if (remainingMs <= 0) {
-    return { phase: 'ready', progress: 1, disabled: false, label: '준비됨', timeText: formatActionTime(0, WEAPON_CRAFT_DURATION_MS, false) }
+    return { phase: 'ready', progress: 1, disabled: false, label: '준비됨', timeText: formatActionTime(0, durationMs, false) }
   }
-  const progress = (WEAPON_CRAFT_DURATION_MS - remainingMs) / WEAPON_CRAFT_DURATION_MS
-  return { phase: 'cooldown', progress, disabled: true, label: '진행 중', timeText: formatActionTime(progress, WEAPON_CRAFT_DURATION_MS, true) }
+  const progress = (durationMs - remainingMs) / durationMs
+  return { phase: 'cooldown', progress, disabled: true, label: '진행 중', timeText: formatActionTime(progress, durationMs, true) }
+}
+
+function craftViewByRecipe(state: GameState, recipeKey: CraftRecipeKey): ActionGaugeView {
+  return craftView(state.craftProgress[recipeKey], getCraftRecipeDuration(state, recipeKey), getCraftRecipeMissingRequirement(state, recipeKey))
 }
 
 function shovelCraftView(state: GameState): ActionGaugeView {
-  const runningView = craftView(state.craftProgress.shovel, getCraftRecipeMissingRequirement(state, 'shovel'))
+  const runningView = craftViewByRecipe(state, 'shovel')
   if (state.craftProgress.shovel > 0) return runningView
   if (getShovelCount(state) >= SHOVEL_MAX_STACK) {
     return { phase: 'locked', progress: 1, disabled: true, label: '최대치', timeText: `최대 ${SHOVEL_MAX_STACK}개` }
@@ -179,12 +183,12 @@ function renderResourceRow(resource: keyof GameState['resources'], id: string, v
 }
 
 export function renderCraftActions(state: GameState): string {
-  const pistolView = craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol'))
-  const rifleView = craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle'))
-  const moduleView = craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module'))
+  const pistolView = craftViewByRecipe(state, 'pistol')
+  const rifleView = craftViewByRecipe(state, 'rifle')
+  const moduleView = craftViewByRecipe(state, 'module')
   const shovelView = shovelCraftView(state)
-  const scavengerDroneView = craftView(state.craftProgress.scavengerDrone, getCraftRecipeMissingRequirement(state, 'scavengerDrone'))
-  const smallHealPotionView = craftView(state.craftProgress.smallHealPotion, getCraftRecipeMissingRequirement(state, 'smallHealPotion'))
+  const scavengerDroneView = craftViewByRecipe(state, 'scavengerDrone')
+  const smallHealPotionView = craftViewByRecipe(state, 'smallHealPotion')
 
   return `<div class="craft-actions" role="group" aria-label="제작 행동">
       ${renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView)}
@@ -340,12 +344,12 @@ function patchGaugeTitle(app: ParentNode, id: string, text: string): void {
 }
 
 export function patchCraftButtons(app: ParentNode, state: GameState): void {
-  patchActionGauge(app, 'craft-pistol', craftView(state.craftProgress.pistol, getCraftRecipeMissingRequirement(state, 'pistol')))
-  patchActionGauge(app, 'craft-rifle', craftView(state.craftProgress.rifle, getCraftRecipeMissingRequirement(state, 'rifle')))
-  patchActionGauge(app, 'craft-module', craftView(state.craftProgress.module, getCraftRecipeMissingRequirement(state, 'module')))
+  patchActionGauge(app, 'craft-pistol', craftViewByRecipe(state, 'pistol'))
+  patchActionGauge(app, 'craft-rifle', craftViewByRecipe(state, 'rifle'))
+  patchActionGauge(app, 'craft-module', craftViewByRecipe(state, 'module'))
   patchActionGauge(app, 'craft-shovel', shovelCraftView(state))
-  patchActionGauge(app, 'craft-scavenger-drone', craftView(state.craftProgress.scavengerDrone, getCraftRecipeMissingRequirement(state, 'scavengerDrone')))
-  patchActionGauge(app, 'craft-small-heal-potion', craftView(state.craftProgress.smallHealPotion, getCraftRecipeMissingRequirement(state, 'smallHealPotion')))
+  patchActionGauge(app, 'craft-scavenger-drone', craftViewByRecipe(state, 'scavengerDrone'))
+  patchActionGauge(app, 'craft-small-heal-potion', craftViewByRecipe(state, 'smallHealPotion'))
 
   patchGaugeTitle(app, 'craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`)
   patchGaugeTitle(app, 'craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`)

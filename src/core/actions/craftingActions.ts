@@ -1,4 +1,4 @@
-import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, isCraftRecipeUnlocked, type CraftRecipeKey } from '../../data/crafting.ts'
+import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeDuration, isCraftRecipeUnlocked, type CraftRecipeKey } from '../../data/crafting.ts'
 import type { GameState } from '../state.ts'
 import { SHOVEL_MAX_STACK, getShovelCount } from '../rewards.ts'
 import { canAfford, payCost } from './costs.ts'
@@ -28,7 +28,8 @@ export function startCraft(state: GameState, recipeKey: CraftRecipeKey): void {
     return
   }
 
+  const recipeDuration = getCraftRecipeDuration(state, recipeKey)
   payCost(state.resources, recipeCost)
-  state.craftProgress[recipeKey] = recipe.durationMs
-  pushLog(state, `${recipe.label} 제작 시작 (${Math.round(recipe.durationMs / 1000)}초)`)
+  state.craftProgress[recipeKey] = recipeDuration
+  pushLog(state, `${recipe.label} 제작 시작 (${Math.round(recipeDuration / 1000)}초)`)
 }

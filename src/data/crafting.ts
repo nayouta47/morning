@@ -78,6 +78,15 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
 
 const SHOVEL_CRAFT_BASE_WOOD_COST = 10
 const SHOVEL_CRAFT_COST_GROWTH = 1.35
+const SHOVEL_CRAFT_BASE_DURATION_MS = 10_000
+const SHOVEL_CRAFT_DURATION_INCREMENT_MS = 3_000
+
+export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {
+  if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].durationMs
+
+  const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
+  return SHOVEL_CRAFT_BASE_DURATION_MS + shovelCount * SHOVEL_CRAFT_DURATION_INCREMENT_MS
+}
 
 export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): ResourceCost {
   if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].costs
