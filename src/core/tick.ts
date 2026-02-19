@@ -120,8 +120,8 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
   if (key === 'meltScrap') {
     let produced = 0
     for (let i = 0; i < attempts; i += 1) {
-      if (state.resources.scrap < 10 || state.resources.chromium < 3 || state.resources.molybdenum < 1) continue
-      state.resources.scrap -= 10
+      if (state.resources.scrap < 1000 || state.resources.chromium < 3 || state.resources.molybdenum < 1) continue
+      state.resources.scrap -= 1000
       state.resources.chromium -= 3
       state.resources.molybdenum -= 1
       state.resources.lowAlloySteel += 1
@@ -134,8 +134,8 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
   if (key === 'meltIron') {
     let produced = 0
     for (let i = 0; i < attempts; i += 1) {
-      if (state.resources.iron < 10 || state.resources.nickel < 8) continue
-      state.resources.iron -= 10
+      if (state.resources.iron < 1000 || state.resources.nickel < 8) continue
+      state.resources.iron -= 1000
       state.resources.nickel -= 8
       state.resources.highAlloySteel += 1
       produced += 1
