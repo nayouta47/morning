@@ -40,7 +40,6 @@ export type Handlers = {
   onCraftRifle: () => void
   onCraftModule: () => void
   onCraftShovel: () => void
-  onCraftAxe: () => void
   onCraftScavengerDrone: () => void
   onCraftSmallHealPotion: () => void
   onSelectWeapon: (weaponId: string) => void

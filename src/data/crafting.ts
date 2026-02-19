@@ -1,5 +1,5 @@
 import type { CraftProgress, GameState, ModuleType, WeaponType } from '../core/state.ts'
-import { AXE_MAX_STACK, SHOVEL_MAX_STACK, getAxeCount, getShovelCount } from '../core/rewards.ts'
+import { SHOVEL_MAX_STACK, getShovelCount } from '../core/rewards.ts'
 import type { ResourceCost } from './resources.ts'
 import { getMissingRequirementFromList, areRequirementsMet, type Requirement } from '../core/requirements.ts'
 import { WEAPON_CRAFT_DURATION_MS } from './balance.ts'
@@ -53,14 +53,8 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     requirements: [],
     outputs: [{ kind: 'resource', resource: 'shovel', amount: 1 }],
   },
-  axe: {
-    id: 'axe',
-    label: '도끼',
-    durationMs: WEAPON_CRAFT_DURATION_MS,
-    costs: { scrap: 10 },
-    requirements: [],
-    outputs: [{ kind: 'resource', resource: 'axe', amount: 1 }],
-  },
+
+
   smallHealPotion: {
     id: 'smallHealPotion',
     label: '회복약(소)',
@@ -87,39 +81,19 @@ const SHOVEL_CRAFT_COST_GROWTH = 1.35
 const SHOVEL_CRAFT_BASE_DURATION_MS = 10_000
 const SHOVEL_CRAFT_DURATION_INCREMENT_MS = 3_000
 
-const AXE_CRAFT_BASE_SCRAP_COST = 10
-const AXE_CRAFT_COST_GROWTH = SHOVEL_CRAFT_COST_GROWTH
-const AXE_CRAFT_BASE_DURATION_MS = SHOVEL_CRAFT_BASE_DURATION_MS
-const AXE_CRAFT_DURATION_INCREMENT_MS = SHOVEL_CRAFT_DURATION_INCREMENT_MS
-
 export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {
-  if (recipe === 'shovel') {
-    const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
-    return SHOVEL_CRAFT_BASE_DURATION_MS + shovelCount * SHOVEL_CRAFT_DURATION_INCREMENT_MS
-  }
+  if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].durationMs
 
-  if (recipe === 'axe') {
-    const axeCount = Math.min(AXE_MAX_STACK, getAxeCount(state))
-    return AXE_CRAFT_BASE_DURATION_MS + axeCount * AXE_CRAFT_DURATION_INCREMENT_MS
-  }
-
-  return CRAFT_RECIPE_DEFS[recipe].durationMs
+  const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
+  return SHOVEL_CRAFT_BASE_DURATION_MS + shovelCount * SHOVEL_CRAFT_DURATION_INCREMENT_MS
 }
 
 export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): ResourceCost {
-  if (recipe === 'shovel') {
-    const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
-    const woodCost = Math.ceil(SHOVEL_CRAFT_BASE_WOOD_COST * SHOVEL_CRAFT_COST_GROWTH ** shovelCount)
-    return { wood: woodCost }
-  }
+  if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].costs
 
-  if (recipe === 'axe') {
-    const axeCount = Math.min(AXE_MAX_STACK, getAxeCount(state))
-    const scrapCost = Math.ceil(AXE_CRAFT_BASE_SCRAP_COST * AXE_CRAFT_COST_GROWTH ** axeCount)
-    return { scrap: scrapCost }
-  }
-
-  return CRAFT_RECIPE_DEFS[recipe].costs
+  const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
+  const woodCost = Math.ceil(SHOVEL_CRAFT_BASE_WOOD_COST * SHOVEL_CRAFT_COST_GROWTH ** shovelCount)
+  return { wood: woodCost }
 }
 
 export function getCraftRecipeMissingRequirement(state: GameState, recipe: CraftRecipeKey): string | null {

@@ -1,6 +1,6 @@
 import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeDuration, isCraftRecipeUnlocked, type CraftRecipeKey } from '../../data/crafting.ts'
 import type { GameState } from '../state.ts'
-import { AXE_MAX_STACK, SHOVEL_MAX_STACK, getAxeCount, getShovelCount } from '../rewards.ts'
+import { SHOVEL_MAX_STACK, getShovelCount } from '../rewards.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
 
@@ -9,11 +9,6 @@ export function startCraft(state: GameState, recipeKey: CraftRecipeKey): void {
 
   if (recipeKey === 'shovel' && getShovelCount(state) >= SHOVEL_MAX_STACK) {
     pushLog(state, '삽 보유량이 최대치입니다.')
-    return
-  }
-
-  if (recipeKey === 'axe' && getAxeCount(state) >= AXE_MAX_STACK) {
-    pushLog(state, '도끼 보유량이 최대치입니다.')
     return
   }
 

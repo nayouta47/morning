@@ -1,6 +1,6 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
-import { AXE_MAX_STACK, SHOVEL_MAX_STACK } from './rewards.ts'
+import { SHOVEL_MAX_STACK } from './rewards.ts'
 import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
@@ -53,7 +53,6 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.molybdenum = Number(loaded.resources.molybdenum ?? base.resources.molybdenum)
     base.resources.cobalt = Number(loaded.resources.cobalt ?? base.resources.cobalt)
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
-    base.resources.axe = Math.min(AXE_MAX_STACK, Math.max(0, Number(loaded.resources.axe ?? base.resources.axe) || 0))
     base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
     base.resources.smallHealPotion = Math.max(0, Number(loaded.resources.smallHealPotion ?? base.resources.smallHealPotion) || 0)
     base.resources.siliconMass = Math.max(0, Number(loaded.resources.siliconMass ?? base.resources.siliconMass) || 0)
@@ -158,7 +157,6 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.rifle = clampProgress(loaded.craftProgress?.rifle)
   base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
   base.craftProgress.shovel = clampProgress(loaded.craftProgress?.shovel)
-  base.craftProgress.axe = clampProgress(loaded.craftProgress?.axe)
   base.craftProgress.scavengerDrone = clampProgress(loaded.craftProgress?.scavengerDrone)
   base.craftProgress.smallHealPotion = clampProgress(loaded.craftProgress?.smallHealPotion)
 
