@@ -41,8 +41,8 @@ function commitExplorationBackpack(state: GameState): void {
 }
 
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
-  if (state.buildings.vehicleRepair <= 0) {
-    pushLog(state, '차량 수리를 완료해야 탐험을 시작할 수 있다.')
+  if (state.buildings.laikaRepair <= 0) {
+    pushLog(state, '🐶 라이카 수리를 완료해야 탐험을 시작할 수 있다.')
     return false
   }
 

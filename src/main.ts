@@ -136,9 +136,9 @@ function redraw(nowOverride?: number): void {
           buyBuilding(state, 'lab')
           redraw()
         },
-        onBuyVehicleRepair: () => {
+        onBuyLaikaRepair: () => {
           syncState()
-          buyBuilding(state, 'vehicleRepair')
+          buyBuilding(state, 'laikaRepair')
           redraw()
         },
         onBuyDroneController: () => {

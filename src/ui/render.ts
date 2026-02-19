@@ -32,7 +32,7 @@ function patchTabs(app: ParentNode, state: GameState): void {
   const isCodex = state.activeTab === 'codex'
   const explorationActive = state.exploration.mode === 'active'
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const explorationUnlocked = state.buildings.vehicleRepair >= 1
+  const explorationUnlocked = state.buildings.laikaRepair >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
   baseTab.classList.toggle('active', isBase)
@@ -99,7 +99,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   const minerCost = getBuildingCost(state, 'miner')
   const workbenchCost = getBuildingCost(state, 'workbench')
   const labCost = getBuildingCost(state, 'lab')
-  const vehicleRepairCost = getBuildingCost(state, 'vehicleRepair')
+  const laikaRepairCost = getBuildingCost(state, 'laikaRepair')
   const droneControllerCost = getBuildingCost(state, 'droneController')
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
@@ -115,15 +115,15 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   if (buyLab) buyLab.disabled = labInstalled
   setText(app, '#buy-lab-label', labInstalled ? `${getBuildingLabel('lab')} (설치 완료)` : `${getBuildingLabel('lab')} 설치 (${formatCost(labCost)})`)
 
-  const buyVehicleRepair = app.querySelector<HTMLButtonElement>('#buy-vehicle-repair')
-  const vehicleRepairInstalled = state.buildings.vehicleRepair >= 1
-  if (buyVehicleRepair) buyVehicleRepair.disabled = vehicleRepairInstalled
+  const buyLaikaRepair = app.querySelector<HTMLButtonElement>('#buy-laika-repair')
+  const laikaRepairInstalled = state.buildings.laikaRepair >= 1
+  if (buyLaikaRepair) buyLaikaRepair.disabled = laikaRepairInstalled
   setText(
     app,
-    '#buy-vehicle-repair-label',
-    vehicleRepairInstalled
-      ? `${getBuildingLabel('vehicleRepair')} (설치 완료)`
-      : `${getBuildingLabel('vehicleRepair')} (${formatCost(vehicleRepairCost)})`,
+    '#buy-laika-repair-label',
+    laikaRepairInstalled
+      ? `${getBuildingLabel('laikaRepair')} (설치 완료)`
+      : `${getBuildingLabel('laikaRepair')} (${formatCost(laikaRepairCost)})`,
   )
 
   const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
@@ -183,7 +183,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   const focusedId = (document.activeElement as HTMLElement | null)?.id ?? null
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const explorationUnlocked = state.buildings.vehicleRepair >= 1
+  const explorationUnlocked = state.buildings.laikaRepair >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
   app.innerHTML = `<main class="layout"><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section>${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}<section class="panel logs"><h2>로그</h2><ul id="log-list" data-signature="${state.log.length}:${state.log[state.log.length - 1] ?? ''}">${[...state.log].reverse().map((line) => `<li>${line}</li>`).join('')}</ul></section></main>`

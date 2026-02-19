@@ -64,11 +64,17 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.highAlloySteel = Math.max(0, Number(loaded.resources.highAlloySteel ?? base.resources.highAlloySteel) || 0)
   }
   if (loaded.buildings) {
+    const legacyBuildings = loaded.buildings as Partial<Record<string, unknown>>
+    const legacyVehicleRepair = Number(legacyBuildings.vehicleRepair ?? 0)
+
     base.buildings.lumberMill = Number(loaded.buildings.lumberMill ?? base.buildings.lumberMill)
     base.buildings.miner = Number(loaded.buildings.miner ?? base.buildings.miner)
     base.buildings.workbench = Number(loaded.buildings.workbench ?? base.buildings.workbench)
     base.buildings.lab = Number(loaded.buildings.lab ?? base.buildings.lab)
-    base.buildings.vehicleRepair = Number(loaded.buildings.vehicleRepair ?? base.buildings.vehicleRepair)
+    base.buildings.laikaRepair = Math.max(
+      Number(loaded.buildings.laikaRepair ?? base.buildings.laikaRepair),
+      Number.isFinite(legacyVehicleRepair) ? legacyVehicleRepair : 0,
+    )
     base.buildings.droneController = Number(loaded.buildings.droneController ?? base.buildings.droneController)
     base.buildings.electricFurnace = Number(loaded.buildings.electricFurnace ?? base.buildings.electricFurnace)
   }
@@ -305,7 +311,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.activeTab = 'base'
   }
 
-  if (base.buildings.vehicleRepair <= 0) {
+  if (base.buildings.laikaRepair <= 0) {
     if (base.activeTab === 'exploration') base.activeTab = 'base'
     if (base.exploration.mode === 'active') {
       base.exploration.mode = 'loadout'

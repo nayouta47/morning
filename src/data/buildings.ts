@@ -32,11 +32,11 @@ export const BUILDING_DEFS = {
     baseCost: { scrap: 20, iron: 20 } as ResourceCost,
     effectsText: '연구 가능',
   },
-  vehicleRepair: {
-    id: 'vehicleRepair',
-    label: '차량 수리',
+  laikaRepair: {
+    id: 'laikaRepair',
+    label: '🐶 라이카 수리',
     unlockRequirements: [] as Requirement[],
-    baseCost: { wood: 500, iron: 10, molybdenum: 1 } as ResourceCost,
+    baseCost: { chromium: 1, scrap: 100 } as ResourceCost,
     effectsText: '탐험 탭 해금',
   },
 
@@ -51,7 +51,7 @@ export const BUILDING_DEFS = {
     id: 'electricFurnace',
     label: '전기로',
     unlockRequirements: [] as Requirement[],
-    baseCost: { wood: 180, scrap: 120, iron: 80 } as ResourceCost,
+    baseCost: { siliconMass: 3, scrap: 120, iron: 80 } as ResourceCost,
     effectsText: '녹이기 공정 배정 가능',
   },
 } as const

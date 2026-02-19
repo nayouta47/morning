@@ -75,14 +75,14 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
     (key === 'lumberMill' ||
       key === 'workbench' ||
       key === 'lab' ||
-      key === 'vehicleRepair' ||
+      key === 'laikaRepair' ||
       key === 'droneController' ||
       key === 'electricFurnace') &&
     !state.unlocks.lumberMill
   )
     return
 
-  const singletonBuildings: BuildingId[] = ['lab', 'vehicleRepair', 'workbench', 'droneController']
+  const singletonBuildings: BuildingId[] = ['lab', 'laikaRepair', 'workbench', 'droneController']
   if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return
 
   const cost = getBuildingCost(state, key)
@@ -157,8 +157,8 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     pushLog(state, '금속 프린터를 설치해야 조립 탭을 사용할 수 있다.')
     return
   }
-  if (tab === 'exploration' && state.buildings.vehicleRepair <= 0) {
-    pushLog(state, '차량 수리를 완료해야 탐험 탭을 사용할 수 있다.')
+  if (tab === 'exploration' && state.buildings.laikaRepair <= 0) {
+    pushLog(state, '🐶 라이카 수리를 완료해야 탐험 탭을 사용할 수 있다.')
     return
   }
   if (tab === 'codex' && state.buildings.lab <= 0) {

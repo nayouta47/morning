@@ -167,7 +167,7 @@ export const initialState: GameState = {
     miner: 0,
     workbench: 0,
     lab: 0,
-    vehicleRepair: 0,
+    laikaRepair: 0,
     droneController: 0,
     electricFurnace: 0,
   },
