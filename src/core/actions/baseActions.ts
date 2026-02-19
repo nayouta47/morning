@@ -105,35 +105,82 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
 }
 
 
-export function toggleMinerProcessRun(state: GameState, key: MinerProcessKey): void {
-  if (state.buildings.miner <= 0) {
+function toggleProcessRun<Key extends string>(
+  state: GameState,
+  ownedCount: number,
+  allocation: Record<Key, number>,
+  running: Record<Key, boolean>,
+  key: Key,
+  targetLabel: string,
+): void {
+  if (ownedCount <= 0) {
     pushLog(state, '설치된 건물이 없습니다.')
     return
   }
 
-  state.minerProcessRunning[key] = !state.minerProcessRunning[key]
-  const targetLabel = key === 'crushScrap' ? '고물 분쇄' : '규소 덩어리 분쇄'
-  pushLog(state, `${targetLabel} ${state.minerProcessRunning[key] ? '가동 재개' : '가동 중지'}`)
+  if (allocation[key] <= 0) {
+    pushLog(state, '배정된 라인이 없습니다.')
+    return
+  }
+
+  running[key] = !running[key]
+  pushLog(state, `${targetLabel} ${running[key] ? '가동 재개' : '가동 중지'}`)
+}
+
+export function toggleSmeltingProcessRun(state: GameState, key: SmeltingProcessKey): void {
+  const targetLabelMap: Record<SmeltingProcessKey, string> = {
+    burnWood: '땔감 태우기',
+    meltScrap: '고물 녹이기',
+    meltIron: '철 녹이기',
+    meltSiliconMass: '규소 덩어리 녹이기',
+  }
+
+  toggleProcessRun(
+    state,
+    state.buildings.electricFurnace,
+    state.smeltingAllocation,
+    state.smeltingProcessRunning,
+    key,
+    targetLabelMap[key],
+  )
+}
+
+export function toggleMinerProcessRun(state: GameState, key: MinerProcessKey): void {
+  const targetLabelMap: Record<MinerProcessKey, string> = {
+    crushScrap: '고물 분쇄',
+    crushSiliconMass: '규소 덩어리 분쇄',
+  }
+
+  toggleProcessRun(
+    state,
+    state.buildings.miner,
+    state.minerAllocation,
+    state.minerProcessRunning,
+    key,
+    targetLabelMap[key],
+  )
+}
+
+function setProcessAllocation<Key extends string>(
+  allocation: Record<Key, number>,
+  key: Key,
+  requestedValue: number,
+  owned: number,
+): void {
+  const nextValue = Math.max(0, Math.floor(requestedValue))
+  const usedByOthers = (Object.keys(allocation) as Key[])
+    .filter((processKey) => processKey !== key)
+    .reduce((sum, processKey) => sum + allocation[processKey], 0)
+
+  allocation[key] = Math.min(nextValue, Math.max(0, Math.floor(owned) - usedByOthers))
 }
 
 export function setSmeltingAllocation(state: GameState, key: SmeltingProcessKey, requestedValue: number): void {
-  const nextValue = Math.max(0, Math.floor(requestedValue))
-  const owned = Math.max(0, Math.floor(state.buildings.electricFurnace))
-  const usedByOthers = (Object.keys(state.smeltingAllocation) as SmeltingProcessKey[])
-    .filter((processKey) => processKey !== key)
-    .reduce((sum, processKey) => sum + state.smeltingAllocation[processKey], 0)
-
-  state.smeltingAllocation[key] = Math.min(nextValue, Math.max(0, owned - usedByOthers))
+  setProcessAllocation(state.smeltingAllocation, key, requestedValue, state.buildings.electricFurnace)
 }
 
 export function setMinerAllocation(state: GameState, key: MinerProcessKey, requestedValue: number): void {
-  const nextValue = Math.max(0, Math.floor(requestedValue))
-  const owned = Math.max(0, Math.floor(state.buildings.miner))
-  const usedByOthers = (Object.keys(state.minerAllocation) as MinerProcessKey[])
-    .filter((processKey) => processKey !== key)
-    .reduce((sum, processKey) => sum + state.minerAllocation[processKey], 0)
-
-  state.minerAllocation[key] = Math.min(nextValue, Math.max(0, owned - usedByOthers))
+  setProcessAllocation(state.minerAllocation, key, requestedValue, state.buildings.miner)
 }
 
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {

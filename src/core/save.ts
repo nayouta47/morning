@@ -37,6 +37,7 @@ function normalizeState(raw: unknown): GameState | null {
     actionProgress?: Partial<GameState['actionProgress']>
     smeltingAllocation?: Partial<GameState['smeltingAllocation']>
     smeltingProgress?: Partial<GameState['smeltingProgress']>
+    smeltingProcessRunning?: Partial<GameState['smeltingProcessRunning']>
     minerAllocation?: Partial<GameState['minerAllocation']>
     minerProgress?: Partial<GameState['minerProgress']>
     minerProcessRunning?: Partial<GameState['minerProcessRunning']>
@@ -141,6 +142,23 @@ function normalizeState(raw: unknown): GameState | null {
   base.smeltingProgress.meltScrap = clampProgress(loaded.smeltingProgress?.meltScrap)
   base.smeltingProgress.meltIron = clampProgress(loaded.smeltingProgress?.meltIron)
   base.smeltingProgress.meltSiliconMass = clampProgress(loaded.smeltingProgress?.meltSiliconMass)
+
+  base.smeltingProcessRunning.burnWood =
+    typeof loaded.smeltingProcessRunning?.burnWood === 'boolean'
+      ? loaded.smeltingProcessRunning.burnWood
+      : base.smeltingProcessRunning.burnWood
+  base.smeltingProcessRunning.meltScrap =
+    typeof loaded.smeltingProcessRunning?.meltScrap === 'boolean'
+      ? loaded.smeltingProcessRunning.meltScrap
+      : base.smeltingProcessRunning.meltScrap
+  base.smeltingProcessRunning.meltIron =
+    typeof loaded.smeltingProcessRunning?.meltIron === 'boolean'
+      ? loaded.smeltingProcessRunning.meltIron
+      : base.smeltingProcessRunning.meltIron
+  base.smeltingProcessRunning.meltSiliconMass =
+    typeof loaded.smeltingProcessRunning?.meltSiliconMass === 'boolean'
+      ? loaded.smeltingProcessRunning.meltSiliconMass
+      : base.smeltingProcessRunning.meltSiliconMass
 
   base.minerAllocation.crushScrap = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushScrap) || 0))
   base.minerAllocation.crushSiliconMass = Math.max(0, Math.floor(Number(loaded.minerAllocation?.crushSiliconMass) || 0))

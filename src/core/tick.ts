@@ -102,6 +102,8 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
     return
   }
 
+  if (!state.smeltingProcessRunning[key]) return
+
   const { nextProgressMs, cycles } = advanceCycleProgress(state.smeltingProgress[key], elapsedMs, SMELTING_CYCLE_MS)
   state.smeltingProgress[key] = nextProgressMs
   if (cycles <= 0) return

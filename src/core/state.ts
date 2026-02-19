@@ -35,6 +35,7 @@ export type MinerProcessKey = 'crushScrap' | 'crushSiliconMass'
 
 export type SmeltingAllocation = Record<SmeltingProcessKey, number>
 export type SmeltingProgress = Record<SmeltingProcessKey, number>
+export type SmeltingProcessRunning = Record<SmeltingProcessKey, boolean>
 export type MinerAllocation = Record<MinerProcessKey, number>
 export type MinerProgress = Record<MinerProcessKey, number>
 export type MinerProcessRunning = Record<MinerProcessKey, boolean>
@@ -127,6 +128,7 @@ export type GameState = {
   productionRunning: ProductionRunning
   smeltingAllocation: SmeltingAllocation
   smeltingProgress: SmeltingProgress
+  smeltingProcessRunning: SmeltingProcessRunning
   minerAllocation: MinerAllocation
   minerProgress: MinerProgress
   minerProcessRunning: MinerProcessRunning
@@ -201,6 +203,12 @@ export const initialState: GameState = {
     meltScrap: 0,
     meltIron: 0,
     meltSiliconMass: 0,
+  },
+  smeltingProcessRunning: {
+    burnWood: true,
+    meltScrap: true,
+    meltIron: true,
+    meltSiliconMass: true,
   },
   minerAllocation: {
     crushScrap: 0,

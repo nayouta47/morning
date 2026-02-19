@@ -26,6 +26,7 @@ export type Handlers = {
   onSetSmeltingAllocation: (key: SmeltingProcessKey, value: number) => void
   onSetMinerAllocation: (key: MinerProcessKey, value: number) => void
   onToggleLumberMillRun: () => void
+  onToggleSmeltingProcessRun: (key: SmeltingProcessKey) => void
   onToggleMinerProcessRun: (key: MinerProcessKey) => void
   onToggleScavengerRun: () => void
   onBuyUpgrade: (key: UpgradeKey) => void

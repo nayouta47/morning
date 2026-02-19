@@ -58,8 +58,12 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     })
   })
   app.querySelector<HTMLButtonElement>('#lumber-progress')?.addEventListener('click', handlers.onToggleLumberMillRun)
-  app.querySelector<HTMLButtonElement>('#miner-gauge-crushScrap')?.addEventListener('click', () => handlers.onToggleMinerProcessRun('crushScrap'))
-  app.querySelector<HTMLButtonElement>('#miner-gauge-crushSiliconMass')?.addEventListener('click', () => handlers.onToggleMinerProcessRun('crushSiliconMass'))
+  ;(['burnWood', 'meltScrap', 'meltIron', 'meltSiliconMass'] as SmeltingProcessKey[]).forEach((key) => {
+    app.querySelector<HTMLButtonElement>(`#smelting-gauge-${key}`)?.addEventListener('click', () => handlers.onToggleSmeltingProcessRun(key))
+  })
+  ;(['crushScrap', 'crushSiliconMass'] as MinerProcessKey[]).forEach((key) => {
+    app.querySelector<HTMLButtonElement>(`#miner-gauge-${key}`)?.addEventListener('click', () => handlers.onToggleMinerProcessRun(key))
+  })
   app.querySelector<HTMLButtonElement>('#scavenger-progress')?.addEventListener('click', handlers.onToggleScavengerRun)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-upgrade]').forEach((button) => {

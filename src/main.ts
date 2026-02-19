@@ -18,6 +18,7 @@ import {
   startExplorationFlee,
   takeExplorationLoot,
   toggleBuildingRun,
+  toggleSmeltingProcessRun,
   toggleMinerProcessRun,
   unequipModuleFromSlot,
   useSmallHealPotion,
@@ -164,6 +165,11 @@ function redraw(nowOverride?: number): void {
         onToggleLumberMillRun: () => {
           syncState()
           toggleBuildingRun(state, 'lumberMill')
+          redraw()
+        },
+        onToggleSmeltingProcessRun: (key) => {
+          syncState()
+          toggleSmeltingProcessRun(state, key)
           redraw()
         },
         onToggleMinerProcessRun: (key) => {

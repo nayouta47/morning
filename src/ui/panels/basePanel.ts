@@ -92,68 +92,103 @@ export function renderBuildingGauge(
   `
 }
 
-export function getSmeltingGaugeMeta(state: GameState, key: SmeltingProcessKey, now = Date.now()): BuildingGaugeView {
-  const allocated = state.smeltingAllocation[key]
+function getProcessGaugeMeta<Key extends string>(
+  params: {
+    allocation: Record<Key, number>
+    progress: Record<Key, number>
+    running: Record<Key, boolean>
+    key: Key
+    owned: number
+    cycleMs: number
+    lockLabel: string
+    lastUpdate: number
+    now?: number
+  },
+): BuildingGaugeView {
+  const { allocation, progress, running, key, owned, cycleMs, lockLabel, lastUpdate, now = Date.now() } = params
+  const allocated = allocation[key]
   if (allocated <= 0) {
-    return { progress: 0, percentText: '배정 없음', timeText: `- / ${(SMELTING_CYCLE_MS / 1000).toFixed(0)}s`, phase: 'idle' }
+    return { progress: 0, percentText: '배정 없음', timeText: `- / ${(cycleMs / 1000).toFixed(1)}s`, phase: 'idle' }
   }
-  const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
-  const progressMs = (state.smeltingProgress[key] + elapsedSinceUpdate) % SMELTING_CYCLE_MS
-  const progress = clamp01(progressMs / SMELTING_CYCLE_MS)
-  const remainingSec = ((1 - progress) * SMELTING_CYCLE_MS) / 1000
+
+  if (owned <= 0) {
+    return { progress: 0, percentText: '잠김', timeText: lockLabel, phase: 'idle' }
+  }
+
+  const elapsedSinceUpdate = running[key] ? Math.max(0, now - lastUpdate) : 0
+  const progressMs = (progress[key] + elapsedSinceUpdate) % cycleMs
+  const normalized = clamp01(progressMs / cycleMs)
+  const remainingSec = ((1 - normalized) * cycleMs) / 1000
+
   return {
-    progress,
-    percentText: `배정 x${allocated}`,
-    timeText: `${remainingSec.toFixed(1)}s / ${(SMELTING_CYCLE_MS / 1000).toFixed(0)}s`,
-    phase: 'running',
+    progress: normalized,
+    percentText: `배정 x${allocated}${running[key] ? '' : ' · 중지됨'}`,
+    timeText: running[key] ? `${remainingSec.toFixed(1)}s / ${(cycleMs / 1000).toFixed(1)}s` : '일시정지',
+    phase: running[key] ? 'running' : 'paused',
   }
 }
 
+export function getSmeltingGaugeMeta(state: GameState, key: SmeltingProcessKey, now = Date.now()): BuildingGaugeView {
+  return getProcessGaugeMeta({
+    allocation: state.smeltingAllocation,
+    progress: state.smeltingProgress,
+    running: state.smeltingProcessRunning,
+    key,
+    owned: state.buildings.electricFurnace,
+    cycleMs: SMELTING_CYCLE_MS,
+    lockLabel: '전기로 필요',
+    lastUpdate: state.lastUpdate,
+    now,
+  })
+}
+
 export function getMinerGaugeMeta(state: GameState, key: MinerProcessKey, now = Date.now()): BuildingGaugeView {
-  const allocated = state.minerAllocation[key]
-  if (allocated <= 0) {
-    return { progress: 0, percentText: '배정 없음', timeText: `- / ${(BUILDING_CYCLE_MS / 1000).toFixed(1)}s`, phase: 'idle' }
-  }
+  return getProcessGaugeMeta({
+    allocation: state.minerAllocation,
+    progress: state.minerProgress,
+    running: state.minerProcessRunning,
+    key,
+    owned: state.buildings.miner,
+    cycleMs: BUILDING_CYCLE_MS,
+    lockLabel: '분쇄기 필요',
+    lastUpdate: state.lastUpdate,
+    now,
+  })
+}
 
-  if (state.buildings.miner <= 0) {
-    return { progress: 0, percentText: '잠김', timeText: '분쇄기 필요', phase: 'idle' }
-  }
+function renderProcessRow<Key extends string>(params: {
+  kind: 'smelting' | 'miner'
+  key: Key
+  title: string
+  gauge: BuildingGaugeView
+  allocated: number
+  remaining: number
+  canToggle: boolean
+}): string {
+  const { kind, key, title, gauge, allocated, remaining, canToggle } = params
+  const width = Math.round(clamp01(gauge.progress) * 100)
+  const gaugeId = `${kind}-gauge-${key}`
+  const incDataAttr = kind === 'smelting' ? `data-smelting-allocation-step="up" data-smelting-allocation-key="${key}"` : `data-miner-allocation-step="up" data-miner-allocation-key="${key}"`
+  const decDataAttr = kind === 'smelting' ? `data-smelting-allocation-step="down" data-smelting-allocation-key="${key}"` : `data-miner-allocation-step="down" data-miner-allocation-key="${key}"`
+  const allocLabel = `${title} ${kind === 'smelting' ? '전기로' : '분쇄기'} 배정`
 
-  const elapsedSinceUpdate = state.minerProcessRunning[key] ? Math.max(0, now - state.lastUpdate) : 0
-  const progressMs = (state.minerProgress[key] + elapsedSinceUpdate) % BUILDING_CYCLE_MS
-  const progress = clamp01(progressMs / BUILDING_CYCLE_MS)
-  const remainingSec = ((1 - progress) * BUILDING_CYCLE_MS) / 1000
-
-  return {
-    progress,
-    percentText: `배정 x${allocated}${state.minerProcessRunning[key] ? '' : ' · 중지됨'}`,
-    timeText: state.minerProcessRunning[key] ? `${remainingSec.toFixed(1)}s / ${(BUILDING_CYCLE_MS / 1000).toFixed(1)}s` : '일시정지',
-    phase: state.minerProcessRunning[key] ? 'running' : 'paused',
-  }
+  return `<div class="smelting-row"><button class="building-gauge gauge-${gauge.phase}" aria-label="${title} 가동 토글" id="${gaugeId}" ${canToggle ? '' : 'disabled'}><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="${kind}-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="${kind}-time-${key}">${gauge.timeText}</span></span></span></button><div class="smelting-alloc-stepper" aria-label="${allocLabel}"><button type="button" class="smelting-step-btn" ${incDataAttr} id="${kind}-allocation-inc-${key}" aria-label="${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${remaining})" ${remaining > 0 ? '' : 'disabled'}>▲</button><button type="button" class="smelting-step-btn" ${decDataAttr} id="${kind}-allocation-dec-${key}" aria-label="${title} 배정 감소 (현재 ${allocated})" ${allocated > 0 ? '' : 'disabled'}>▼</button></div></div>`
 }
 
 function renderMinerRow(state: GameState, key: MinerProcessKey, title: string, now = Date.now()): string {
   const gauge = getMinerGaugeMeta(state, key, now)
-  const width = Math.round(clamp01(gauge.progress) * 100)
   const allocated = state.minerAllocation[key]
   const used = state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass
   const remaining = Math.max(0, state.buildings.miner - used)
-  const canIncrement = remaining > 0
-  const canDecrement = allocated > 0
-
-  return `<div class="smelting-row"><button class="building-gauge gauge-${gauge.phase}" aria-label="${title} 가동 토글" id="miner-gauge-${key}" ${state.buildings.miner > 0 && allocated > 0 ? '' : 'disabled'}><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="miner-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="miner-time-${key}">${gauge.timeText}</span></span></span></button><div class="smelting-alloc-stepper" aria-label="${title} 분쇄기 배정"><button type="button" class="smelting-step-btn" data-miner-allocation-step="up" data-miner-allocation-key="${key}" id="miner-allocation-inc-${key}" aria-label="${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${remaining})" ${canIncrement ? '' : 'disabled'}>▲</button><button type="button" class="smelting-step-btn" data-miner-allocation-step="down" data-miner-allocation-key="${key}" id="miner-allocation-dec-${key}" aria-label="${title} 배정 감소 (현재 ${allocated})" ${canDecrement ? '' : 'disabled'}>▼</button></div></div>`
+  return renderProcessRow({ kind: 'miner', key, title, gauge, allocated, remaining, canToggle: state.buildings.miner > 0 && allocated > 0 })
 }
 
 function renderSmeltingRow(state: GameState, key: SmeltingProcessKey, title: string, now = Date.now()): string {
   const gauge = getSmeltingGaugeMeta(state, key, now)
-  const width = Math.round(clamp01(gauge.progress) * 100)
   const allocated = state.smeltingAllocation[key]
   const smeltingUsed = Object.values(state.smeltingAllocation).reduce((sum, value) => sum + value, 0)
   const smeltingRemaining = Math.max(0, state.buildings.electricFurnace - smeltingUsed)
-  const canIncrement = smeltingRemaining > 0
-  const canDecrement = allocated > 0
-
-  return `<div class="smelting-row"><div class="building-gauge gauge-${gauge.phase}" role="group" aria-label="${title} 진행" id="smelting-gauge-${key}"><span class="gauge-fill" style="width:${width}%"></span><span class="gauge-content gauge-text-stack"><span class="gauge-title gauge-text-title">${title}</span><span class="gauge-meta gauge-text-meta"><span class="gauge-state gauge-text-state" id="smelting-state-${key}">${gauge.percentText}</span><span class="gauge-time gauge-text-time" id="smelting-time-${key}">${gauge.timeText}</span></span></span></div><div class="smelting-alloc-stepper" aria-label="${title} 전기로 배정"><button type="button" class="smelting-step-btn" data-smelting-allocation-step="up" data-smelting-allocation-key="${key}" id="smelting-allocation-inc-${key}" aria-label="${title} 배정 증가 (현재 ${allocated}, 남은 배정 ${smeltingRemaining})" ${canIncrement ? '' : 'disabled'}>▲</button><button type="button" class="smelting-step-btn" data-smelting-allocation-step="down" data-smelting-allocation-key="${key}" id="smelting-allocation-dec-${key}" aria-label="${title} 배정 감소 (현재 ${allocated})" ${canDecrement ? '' : 'disabled'}>▼</button></div></div>`
+  return renderProcessRow({ kind: 'smelting', key, title, gauge, allocated, remaining: smeltingRemaining, canToggle: state.buildings.electricFurnace > 0 && allocated > 0 })
 }
 
 function craftView(remainingMs: number, durationMs: number, lockedReason: string | null = null): ActionGaugeView {
@@ -278,6 +313,9 @@ export function patchSmeltingPanel(app: ParentNode, state: GameState, now = Date
 
     const allocated = state.smeltingAllocation[key]
     const title = getSmeltingTitle(key)
+
+    const runButton = app.querySelector<HTMLButtonElement>(`#smelting-gauge-${key}`)
+    if (runButton) runButton.disabled = state.buildings.electricFurnace <= 0 || allocated <= 0
 
     const decrementButton = app.querySelector<HTMLButtonElement>(`#smelting-allocation-dec-${key}`)
     if (decrementButton) decrementButton.disabled = allocated <= 0
