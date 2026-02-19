@@ -6,7 +6,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
-import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from './rewards.ts'
+import { AXE_MAX_STACK, SHOVEL_MAX_STACK, getAxeCount, getGatherScrapReward, getGatherWoodReward, getShovelCount } from './rewards.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -195,6 +195,18 @@ function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
         const addAmount = Math.max(0, Math.min(output.amount, SHOVEL_MAX_STACK - current))
         if (addAmount > 0) {
           state.resources.shovel += addAmount
+          appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${addAmount}`)
+        } else {
+          appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} 최대치`)
+        }
+        return
+      }
+
+      if (output.resource === 'axe') {
+        const current = getAxeCount(state)
+        const addAmount = Math.max(0, Math.min(output.amount, AXE_MAX_STACK - current))
+        if (addAmount > 0) {
+          state.resources.axe += addAmount
           appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${addAmount}`)
         } else {
           appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} 최대치`)

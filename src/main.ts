@@ -239,6 +239,11 @@ function redraw(nowOverride?: number): void {
           startCraft(state, 'shovel')
           redraw()
         },
+        onCraftAxe: () => {
+          syncState()
+          startCraft(state, 'axe')
+          redraw()
+        },
         onCraftScavengerDrone: () => {
           syncState()
           startCraft(state, 'scavengerDrone')

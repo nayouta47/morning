@@ -114,6 +114,7 @@ export type CraftProgress = {
   rifle: number
   module: number
   shovel: number
+  axe: number
   scavengerDrone: number
   smallHealPotion: number
 }
@@ -152,6 +153,7 @@ export const initialState: GameState = {
     molybdenum: 0,
     cobalt: 0,
     shovel: 0,
+    axe: 0,
     scavengerDrone: 0,
     smallHealPotion: 0,
     siliconMass: 0,
@@ -231,6 +233,7 @@ export const initialState: GameState = {
     rifle: 0,
     module: 0,
     shovel: 0,
+    axe: 0,
     scavengerDrone: 0,
     smallHealPotion: 0,
   },

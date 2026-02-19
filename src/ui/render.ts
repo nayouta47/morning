@@ -1,6 +1,6 @@
 import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
-import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward } from '../core/rewards.ts'
+import { AXE_MAX_STACK, SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward } from '../core/rewards.ts'
 import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
@@ -84,6 +84,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
   setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
+  setText(app, '#res-axe', `${formatResourceValue('axe', state.resources.axe)}/${AXE_MAX_STACK}`)
   setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
   setText(app, '#res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))
   setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
