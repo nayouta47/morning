@@ -43,6 +43,7 @@ function normalizeState(raw: unknown): GameState | null {
     modules?: unknown
     exploration?: unknown
     enemyCodex?: unknown
+    gatherScrapRewardRemainderSevenths?: unknown
   }
 
   if (loaded.resources) {
@@ -207,6 +208,11 @@ function normalizeState(raw: unknown): GameState | null {
     Number(loaded.nextWeaponId) || 1,
     ...base.weapons.map((w) => Number(w.id.split('-')[1]) + 1).filter((n) => Number.isFinite(n)),
     1,
+  )
+
+  base.gatherScrapRewardRemainderSevenths = Math.max(
+    0,
+    Math.min(6, Math.floor(Number(loaded.gatherScrapRewardRemainderSevenths ?? 0) || 0)),
   )
 
   ENEMY_IDS.forEach((enemyId) => {

@@ -139,6 +139,7 @@ export type GameState = {
   modules: ModuleStacks
   craftProgress: CraftProgress
   nextWeaponId: number
+  gatherScrapRewardRemainderSevenths: number
   exploration: ExplorationState
   enemyCodex: Record<EnemyId, EnemyCodexEntry>
 }
@@ -235,6 +236,7 @@ export const initialState: GameState = {
     smallHealPotion: 0,
   },
   nextWeaponId: 1,
+  gatherScrapRewardRemainderSevenths: 0,
   exploration: {
     mode: 'loadout',
     phase: 'moving',

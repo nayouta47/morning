@@ -6,7 +6,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
-import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward, getShovelCount } from './rewards.ts'
+import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -234,7 +234,7 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
     return
   }
 
-  const amount = getGatherScrapReward(state)
+  const amount = resolveGatherScrapReward(state)
   state.resources.scrap += amount
   appendLog(state, `🗑️ 고물 +${amount}`)
 }

@@ -27,6 +27,7 @@ import { initialState, type GameState } from './core/state.ts'
 import { advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
+import { getGatherScrapDurationMs } from './core/rewards.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
 
@@ -41,7 +42,7 @@ let simulationLastTickAt = Date.now()
 let appMounted = false
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
-  const duration = ACTION_DURATION_MS[key]
+  const duration = key === 'gatherScrap' ? getGatherScrapDurationMs(state) : ACTION_DURATION_MS[key]
   const totalSecText = `${(duration / 1000).toFixed(1)}s`
 
   if (locked) {
@@ -58,14 +59,15 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
   if (remaining > 0) {
     const elapsedSinceUpdate = Math.max(0, now - state.lastUpdate)
     const smoothedRemaining = Math.max(0, remaining - elapsedSinceUpdate)
-    const progress = (duration - smoothedRemaining) / duration
+    const cycleDuration = Math.max(duration, remaining)
+    const progress = (cycleDuration - smoothedRemaining) / cycleDuration
     const remainingSec = smoothedRemaining / 1000
     return {
       phase: 'cooldown' as const,
       progress,
       disabled: true,
       label: '진행 중',
-      timeText: `${remainingSec.toFixed(1)}s / ${totalSecText}`,
+      timeText: `${remainingSec.toFixed(1)}s / ${(cycleDuration / 1000).toFixed(1)}s`,
     }
   }
 

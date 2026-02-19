@@ -4,6 +4,7 @@ import type { GameState, MinerProcessKey, SmeltingProcessKey, TabKey } from '../
 import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
+import { getGatherScrapDurationMs } from '../rewards.ts'
 
 type UpgradeKey = keyof typeof UPGRADE_DEFS
 
@@ -35,8 +36,9 @@ export function gatherScrap(state: GameState): void {
     return
   }
 
-  state.actionProgress.gatherScrap = ACTION_DURATION_MS.gatherScrap
-  pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherScrap / 1000)}초)`)
+  const durationMs = getGatherScrapDurationMs(state)
+  state.actionProgress.gatherScrap = durationMs
+  pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(durationMs / 1000)}초)`)
 }
 
 export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'scavenger'): void {

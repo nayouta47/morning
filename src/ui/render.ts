@@ -1,6 +1,6 @@
 import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
-import { SHOVEL_MAX_STACK, getGatherScrapReward, getGatherWoodReward } from '../core/rewards.ts'
+import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
 import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
@@ -89,7 +89,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
 
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
-  setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapReward(state)})`)
+  setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`)
 
   const gatherScrapButton = app.querySelector<HTMLButtonElement>('#gather-scrap')
   if (gatherScrapButton) gatherScrapButton.setAttribute('aria-label', state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동')
