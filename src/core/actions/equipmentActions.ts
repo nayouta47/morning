@@ -3,7 +3,9 @@ import { isActiveWeaponSlot } from '../weaponSlots.ts'
 import { pushLog } from './logging.ts'
 
 function moduleName(type: ModuleType): string {
-  return type === 'damage' ? '공격력 모듈(+1)' : '쿨다운 모듈(-1초)'
+  if (type === 'damage') return '공격력 모듈(+1)'
+  if (type === 'cooldown') return '쿨다운 모듈(-1초)'
+  return '증폭자(왼쪽 모듈 증폭)'
 }
 
 export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {

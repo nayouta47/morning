@@ -18,10 +18,11 @@ function toWeaponType(value: unknown): WeaponType {
 }
 
 function inferModuleType(value: unknown): ModuleType {
-  if (value === 'damage' || value === 'cooldown') return value
+  if (value === 'damage' || value === 'cooldown' || value === 'amplifier') return value
   if (typeof value === 'string') {
     if (value.startsWith('DMG-')) return 'damage'
     if (value.startsWith('CDN-')) return 'cooldown'
+    if (value.startsWith('AMP-')) return 'amplifier'
   }
   return 'cooldown'
 }
@@ -196,6 +197,7 @@ function normalizeState(raw: unknown): GameState | null {
     const modules = loaded.modules as Partial<Record<ModuleType, unknown>>
     base.modules.damage = Math.max(0, Number(modules.damage ?? 0) || 0)
     base.modules.cooldown = Math.max(0, Number(modules.cooldown ?? 0) || 0)
+    base.modules.amplifier = Math.max(0, Number(modules.amplifier ?? 0) || 0)
   }
 
   if (Array.isArray(loaded.modules)) {

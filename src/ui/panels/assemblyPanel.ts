@@ -1,9 +1,13 @@
+import { getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
 import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
-import { WEAPON_BASE_STATS } from '../../data/balance.ts'
 
-const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️' }
-const MODULE_LABEL: Record<ModuleType, string> = { damage: '공격력 +1', cooldown: '쿨다운 -1s' }
+const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️', amplifier: '📡' }
+const MODULE_LABEL: Record<ModuleType, string> = {
+  damage: '공격력 +1',
+  cooldown: '쿨다운 -1s',
+  amplifier: '증폭자 (왼쪽 모듈 효과 +1중첩)',
+}
 
 let selectedModuleType: ModuleType | null = null
 
@@ -16,22 +20,8 @@ function getSelectedWeapon(state: GameState): WeaponInstance | null {
   return state.weapons.find((w) => w.id === state.selectedWeaponId) ?? null
 }
 
-function getWeaponStats(weapon: WeaponInstance): { baseDamage: number; baseCooldown: number; finalDamage: number; finalCooldown: number } {
-  const base = WEAPON_BASE_STATS[weapon.type]
-  const activeSlots = getActiveSlots(weapon)
-  let damageBonus = 0
-  let cooldownBonus = 0
-  weapon.slots.forEach((moduleType, index) => {
-    if (!moduleType || !activeSlots.has(index)) return
-    if (moduleType === 'damage') damageBonus += 1
-    if (moduleType === 'cooldown') cooldownBonus += 1
-  })
-  return {
-    baseDamage: base.damage,
-    baseCooldown: base.cooldown,
-    finalDamage: base.damage + damageBonus,
-    finalCooldown: Math.max(0.5, base.cooldown - cooldownBonus),
-  }
+function getWeaponStats(weapon: WeaponInstance) {
+  return getWeaponModuleLayerStats(weapon)
 }
 
 function syncSelectedModuleType(state: GameState): void {
@@ -53,7 +43,7 @@ export function renderAssemblyPanel(state: GameState): string {
       <h2>무기 조립</h2>
       <div class="assembly-grid">
         <aside class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></aside>
-        <div class="weapon-board-wrap"><h3>선택 무기 슬롯 (5x10)</h3><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><p class="hint" id="weapon-stat-text">${stats ? `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>` : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
+        <div class="weapon-board-wrap"><h3>선택 무기 슬롯 (5x10)</h3><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><p class="hint" id="weapon-stat-text">${stats ? `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s</span>` : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
       </div>
       <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><p id="module-detail-effect" class="module-effect hint">${selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'}</p></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
     </section>`
@@ -89,7 +79,7 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${selectedModuleType ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${selectedModuleType ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])
@@ -111,21 +101,23 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   }
 
   const active = getActiveSlots(selected)
-  const sig = `${selected.id}:${selected.slots.join('|')}:${[...active].join(',')}`
+  const stats = getWeaponStats(selected)
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${[...active].join(',')}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
     const moduleType = selected.slots[index]
     const isActive = active.has(index)
     const isFilled = Boolean(moduleType)
-    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨` : '비어 있음'
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}" tabindex="0">${moduleType ? MODULE_EMOJI[moduleType] : ''}</div>`
+    const amplificationCount = stats.slotAmplification[index] ?? 0
+    const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 x${amplificationCount}">x${amplificationCount}</span>` : ''
+    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 x${amplificationCount}` : ''}` : '비어 있음'
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}</div>`
   }).join('')
 
   board.dataset.signature = sig
-  const stats = getWeaponStats(selected)
   const statText = app.querySelector<HTMLElement>('#weapon-stat-text')
   if (statText) {
-    statText.innerHTML = `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldown.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldown.toFixed(1)}s</span>`
+    statText.innerHTML = `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s</span>`
   }
 }

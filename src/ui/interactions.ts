@@ -1,3 +1,4 @@
+import { isModuleType } from '../core/moduleEffects.ts'
 import type { GameState, MinerProcessKey, ModuleType, SmeltingProcessKey } from '../core/state.ts'
 import type { ResourceId } from '../data/resources.ts'
 import type { Handlers, InteractionIntent } from './types.ts'
@@ -239,7 +240,7 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     }
 
     const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
-    if (moduleType !== 'damage' && moduleType !== 'cooldown') return
+    if (!isModuleType(moduleType)) return
 
     const slot = target.closest<HTMLElement>('[data-slot-index]')
     if (!slot) return

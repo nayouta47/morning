@@ -1,8 +1,7 @@
-import { WEAPON_BASE_STATS } from '../data/balance.ts'
 import { ENEMY_IDS, getEnemyDef, type EnemyId } from '../data/enemies.ts'
 import { BIOME_DEFS, type BiomeId } from '../data/maps/index.ts'
 import type { CombatState, GameState, LootEntry, WeaponInstance } from './state.ts'
-import { getActiveWeaponSlots } from './weaponSlots.ts'
+import { getWeaponModuleLayerStats } from './moduleEffects.ts'
 
 export const ENCOUNTER_FIGHT_DELAY = 3
 export const ENCOUNTER_FIGHT_CHANCE = 0.2
@@ -54,20 +53,10 @@ export function getSelectedWeapon(state: GameState): WeaponInstance | null {
 export function getWeaponCombatStats(weapon: WeaponInstance | null): { damage: number; cooldownMs: number } {
   if (!weapon) return { damage: 1, cooldownMs: 2500 }
 
-  const base = WEAPON_BASE_STATS[weapon.type]
-  let damage: number = base.damage
-  let cooldownSec: number = base.cooldown
-
-  const activeSlots = getActiveWeaponSlots(weapon.type)
-  weapon.slots.forEach((moduleType, index) => {
-    if (!activeSlots.has(index)) return
-    if (moduleType === 'damage') damage += 1
-    if (moduleType === 'cooldown') cooldownSec = Math.max(0.5, cooldownSec - 1)
-  })
-
+  const stats = getWeaponModuleLayerStats(weapon)
   return {
-    damage,
-    cooldownMs: cooldownSec * 1000,
+    damage: stats.finalDamage,
+    cooldownMs: stats.finalCooldownSec * 1000,
   }
 }
 

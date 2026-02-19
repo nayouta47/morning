@@ -99,7 +99,7 @@ export type ExplorationState = {
 }
 
 export type WeaponType = 'pistol' | 'rifle'
-export type ModuleType = 'damage' | 'cooldown'
+export type ModuleType = 'damage' | 'cooldown' | 'amplifier'
 
 export type WeaponInstance = {
   id: string
@@ -226,6 +226,7 @@ export const initialState: GameState = {
   modules: {
     damage: 0,
     cooldown: 0,
+    amplifier: 0,
   },
   craftProgress: {
     pistol: 0,
