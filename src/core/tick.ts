@@ -79,8 +79,8 @@ function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSilicon
     if (molybdenum > 0) state.resources.molybdenum += molybdenum
 
     const bonusParts: string[] = []
-    if (chromium > 0) bonusParts.push(`🟢 크롬 +${chromium}`)
-    if (molybdenum > 0) bonusParts.push(`🔵 몰리브덴 +${molybdenum}`)
+    if (chromium > 0) bonusParts.push(`🟢 +${chromium}`)
+    if (molybdenum > 0) bonusParts.push(`🔵 +${molybdenum}`)
 
     const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
     appendLog(state, `고물 분쇄: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
