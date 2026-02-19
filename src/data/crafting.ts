@@ -67,7 +67,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     id: 'scavengerDrone',
     label: '스캐빈저 드론',
     durationMs: WEAPON_CRAFT_DURATION_MS,
-    costs: { scrap: 500, iron: 40, cobalt: 2 },
+    costs: { iron: 500, cobalt: 2 },
     requirements: [
       { kind: 'building', building: 'workbench', count: 1 },
       { kind: 'building', building: 'droneController', count: 1 },
@@ -80,8 +80,7 @@ const SHOVEL_CRAFT_BASE_WOOD_COST = 10
 const SHOVEL_CRAFT_COST_GROWTH = 1.35
 const SHOVEL_CRAFT_BASE_DURATION_MS = 10_000
 const SHOVEL_CRAFT_DURATION_INCREMENT_MS = 3_000
-const SCAVENGER_DRONE_BASE_SCRAP_COST = 500
-const SCAVENGER_DRONE_BASE_IRON_COST = 40
+const SCAVENGER_DRONE_BASE_IRON_COST = 500
 const SCAVENGER_DRONE_COBALT_COST = 2
 const SCAVENGER_DRONE_IRON_COST_GROWTH = 1.15
 
@@ -103,7 +102,6 @@ export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): Re
     const droneCount = Math.max(0, Math.floor(state.resources.scavengerDrone))
     const ironCost = Math.ceil(SCAVENGER_DRONE_BASE_IRON_COST * SCAVENGER_DRONE_IRON_COST_GROWTH ** droneCount)
     return {
-      scrap: SCAVENGER_DRONE_BASE_SCRAP_COST,
       iron: ironCost,
       cobalt: SCAVENGER_DRONE_COBALT_COST,
     }
