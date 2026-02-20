@@ -25,6 +25,24 @@ export function dispatchInteractionIntent(handlers: Handlers, intent: Interactio
 }
 
 export function bindUIInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers): void {
+  let codexTitleTapCount = 0
+  let codexTitleTapResetTimer: ReturnType<typeof setTimeout> | null = null
+
+  const resetCodexTitleTapCount = (): void => {
+    codexTitleTapCount = 0
+    if (!codexTitleTapResetTimer) return
+    clearTimeout(codexTitleTapResetTimer)
+    codexTitleTapResetTimer = null
+  }
+
+  const armCodexTitleTapReset = (): void => {
+    if (codexTitleTapResetTimer) clearTimeout(codexTitleTapResetTimer)
+    codexTitleTapResetTimer = setTimeout(() => {
+      codexTitleTapCount = 0
+      codexTitleTapResetTimer = null
+    }, 1250)
+  }
+
   app.querySelector<HTMLButtonElement>('#tab-base')?.addEventListener('click', () => handlers.onSelectTab('base'))
   app.querySelector<HTMLButtonElement>('#tab-assembly')?.addEventListener('click', () => handlers.onSelectTab('assembly'))
   app.querySelector<HTMLButtonElement>('#tab-exploration')?.addEventListener('click', () => handlers.onSelectTab('exploration'))
@@ -97,6 +115,25 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
     if (!target) return
+
+    const codexTitle = target.closest<HTMLElement>('[data-codex-title]')
+    if (codexTitle) {
+      codexTitleTapCount += 1
+      armCodexTitleTapReset()
+      if (codexTitleTapCount >= 5) {
+        const cheatButton = app.querySelector<HTMLButtonElement>('#codex-unlock-all')
+        cheatButton?.classList.remove('hidden')
+        cheatButton?.setAttribute('aria-hidden', 'false')
+        resetCodexTitleTapCount()
+      }
+      return
+    }
+
+    const unlockAllCodexButton = target.closest<HTMLButtonElement>('#codex-unlock-all')
+    if (unlockAllCodexButton) {
+      handlers.onUnlockAllEnemyCodex()
+      return
+    }
 
     const codexToggle = target.closest<HTMLButtonElement>('[data-codex-toggle]')
     if (codexToggle) {

@@ -55,7 +55,7 @@ function codexSignature(state: GameState): string {
 }
 
 export function renderCodexPanel(state: GameState): string {
-  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2><p class="hint">조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.</p><div class="codex-list" id="codex-list" data-signature="${codexSignature(state)}">${renderCodexRows(state)}</div></section>`
+  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><div class="codex-head"><h2 class="codex-title" data-codex-title>도감</h2><button class="codex-cheat-btn hidden" id="codex-unlock-all" type="button" aria-hidden="true">도감 전체 해금</button></div><p class="hint">조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.</p><div class="codex-list" id="codex-list" data-signature="${codexSignature(state)}">${renderCodexRows(state)}</div></section>`
 }
 
 export function patchCodexPanel(app: ParentNode, state: GameState): void {

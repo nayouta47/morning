@@ -192,6 +192,11 @@ function redraw(nowOverride?: number): void {
           setActiveTab(state, tab)
           redraw()
         },
+        onUnlockAllEnemyCodex: () => {
+          syncState()
+          unlockAllEnemyCodex(state)
+          redraw()
+        },
         onStartExploration: () => {
           syncState()
           if (!state.selectedWeaponId) {

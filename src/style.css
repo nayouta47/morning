@@ -716,6 +716,33 @@ li {
   color: #d8be82;
 }
 
+.codex-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.codex-title {
+  margin: 0;
+  user-select: none;
+}
+
+.codex-cheat-btn {
+  border: 1px solid #3a352d;
+  border-radius: 4px;
+  background: #141312;
+  color: #8f887b;
+  font-size: 11px;
+  padding: 2px 8px;
+  opacity: 0.75;
+}
+
+.codex-cheat-btn:hover {
+  opacity: 1;
+  color: #bbb29f;
+}
+
 .codex-list {
   display: grid;
   gap: 10px;
