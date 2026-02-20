@@ -4,6 +4,11 @@ import { getActiveWeaponSlots } from './weaponSlots.ts'
 
 const MIN_COOLDOWN_SEC = 0.5
 const SLOT_COLUMNS = 10
+const HASTE_PER_COOLDOWN_MODULE = 10
+
+function applyHasteToCooldown(baseCooldownSec: number, totalHaste: number): number {
+  return baseCooldownSec * (100 / (100 + Math.max(0, totalHaste)))
+}
 
 export type ModuleLayerStats = {
   baseDamage: number
@@ -12,6 +17,7 @@ export type ModuleLayerStats = {
   damageAmplified: number
   cooldownBase: number
   cooldownAmplified: number
+  totalHaste: number
   finalDamage: number
   finalCooldownSec: number
   slotAmplification: number[]
@@ -90,8 +96,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   })
 
   const finalDamage = base.damage + damageBase + damageAmplified
-  const cooldownReduction = cooldownBase + cooldownAmplified
-  const finalCooldownSec = Math.max(MIN_COOLDOWN_SEC, base.cooldown - cooldownReduction)
+  const cooldownApplications = cooldownBase + cooldownAmplified
+  const totalHaste = cooldownApplications * HASTE_PER_COOLDOWN_MODULE
+  const finalCooldownSec = Math.max(MIN_COOLDOWN_SEC, applyHasteToCooldown(base.cooldown, totalHaste))
 
   return {
     baseDamage: base.damage,
@@ -100,6 +107,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     damageAmplified,
     cooldownBase,
     cooldownAmplified,
+    totalHaste,
     finalDamage,
     finalCooldownSec,
     slotAmplification,

@@ -179,7 +179,7 @@ function makeWeapon(state: GameState, type: WeaponType): void {
 
 function makeModule(state: GameState, type: ModuleType): void {
   state.modules[type] += 1
-  const label = type === 'damage' ? '💥 공격력(+1)' : type === 'cooldown' ? '⏱️ 쿨다운(-1초)' : '📡 증폭자(왼쪽 모듈 증폭)'
+  const label = type === 'damage' ? '💥 공격력(+1)' : type === 'cooldown' ? '⏱️ 쿨다운 가속(+10)' : '📡 증폭자(왼쪽 모듈 증폭)'
   appendLog(state, `모듈 제작 완료: ${label}`)
 }
 
