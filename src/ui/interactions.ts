@@ -26,21 +26,9 @@ export function dispatchInteractionIntent(handlers: Handlers, intent: Interactio
 
 export function bindUIInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers): void {
   let codexTitleTapCount = 0
-  let codexTitleTapResetTimer: ReturnType<typeof setTimeout> | null = null
 
   const resetCodexTitleTapCount = (): void => {
     codexTitleTapCount = 0
-    if (!codexTitleTapResetTimer) return
-    clearTimeout(codexTitleTapResetTimer)
-    codexTitleTapResetTimer = null
-  }
-
-  const armCodexTitleTapReset = (): void => {
-    if (codexTitleTapResetTimer) clearTimeout(codexTitleTapResetTimer)
-    codexTitleTapResetTimer = setTimeout(() => {
-      codexTitleTapCount = 0
-      codexTitleTapResetTimer = null
-    }, 1250)
   }
 
   app.querySelector<HTMLButtonElement>('#tab-base')?.addEventListener('click', () => handlers.onSelectTab('base'))
@@ -120,11 +108,12 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     const codexTitle = target.closest<HTMLElement>('[data-codex-title]')
     if (codexTitle) {
       codexTitleTapCount += 1
-      armCodexTitleTapReset()
       if (codexTitleTapCount >= 5) {
         const cheatButton = app.querySelector<HTMLButtonElement>('#codex-unlock-all')
+        const wasHidden = cheatButton?.classList.contains('hidden') ?? false
         cheatButton?.classList.remove('hidden')
         cheatButton?.setAttribute('aria-hidden', 'false')
+        if (wasHidden) console.info('[Codex] Hidden unlock button revealed.')
         resetCodexTitleTapCount()
       }
       return

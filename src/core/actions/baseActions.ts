@@ -215,7 +215,12 @@ export function unlockAllEnemyCodex(state: GameState): void {
     if (entry.firstEncounteredAt == null) entry.firstEncounteredAt = now
   })
 
-  if (changed) pushLog(state, '치트: 도감 전체 적 정보 해제')
+  if (changed) {
+    pushLog(state, '치트: 도감 전체 적 정보 해제')
+    return
+  }
+
+  pushLog(state, '치트: 도감 전체 적 정보 해제 (이미 적용됨)')
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {
