@@ -471,14 +471,22 @@ li {
 .exploration-combat-overlay-upper {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: end;
+  align-items: stretch;
   gap: 10px;
+}
+
+.combat-side {
+  display: grid;
+  align-content: space-between;
+  gap: 8px;
 }
 
 .combat-entity {
   display: grid;
   justify-items: center;
   gap: 6px;
+  transform: translateX(0);
+  transition: transform 150ms ease-out;
 }
 
 .combat-hp {
@@ -498,6 +506,14 @@ li {
 
 .combat-entity-enemy {
   justify-items: end;
+}
+
+.combat-entity-nudge-right {
+  transform: translateX(6px);
+}
+
+.combat-entity-nudge-left {
+  transform: translateX(-6px);
 }
 
 .combat-versus {
@@ -521,6 +537,10 @@ li {
   gap: 8px;
 }
 
+.combat-row-attack {
+  grid-template-columns: 36px 1fr 34px;
+}
+
 .combat-cooldown-label,
 .combat-cooldown-text {
   font-size: 12px;
@@ -542,8 +562,13 @@ li {
   background: linear-gradient(90deg, rgba(191, 140, 58, 0.48), rgba(191, 140, 58, 0.2));
 }
 
+.combat-player-attack-fill {
+  background: linear-gradient(90deg, rgba(191, 140, 58, 0.48), rgba(191, 140, 58, 0.2));
+}
 
-
+.combat-enemy-attack-fill {
+  background: linear-gradient(90deg, rgba(176, 109, 121, 0.46), rgba(176, 109, 121, 0.2));
+}
 
 .combat-potion-fill {
   background: linear-gradient(90deg, rgba(98, 181, 122, 0.48), rgba(98, 181, 122, 0.2));
