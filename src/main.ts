@@ -22,6 +22,7 @@ import {
   toggleMinerProcessRun,
   unequipModuleFromSlot,
   useSmallHealPotion,
+  useSyntheticFood,
   unlockAllEnemyCodex,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
@@ -218,6 +219,11 @@ function redraw(nowOverride?: number): void {
           startExplorationFlee(state)
           redraw()
         },
+        onUseSyntheticFood: () => {
+          syncState()
+          useSyntheticFood(state)
+          redraw()
+        },
         onUseSmallHealPotion: () => {
           syncState()
           useSmallHealPotion(state)
@@ -256,6 +262,11 @@ function redraw(nowOverride?: number): void {
         onCraftScavengerDrone: () => {
           syncState()
           startCraft(state, 'scavengerDrone')
+          redraw()
+        },
+        onCraftSyntheticFood: () => {
+          syncState()
+          startCraft(state, 'syntheticFood')
           redraw()
         },
         onCraftSmallHealPotion: () => {

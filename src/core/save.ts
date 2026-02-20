@@ -58,6 +58,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.cobalt = Number(loaded.resources.cobalt ?? base.resources.cobalt)
     base.resources.shovel = Math.min(SHOVEL_MAX_STACK, Math.max(0, Number(loaded.resources.shovel ?? base.resources.shovel) || 0))
     base.resources.scavengerDrone = Math.max(0, Number(loaded.resources.scavengerDrone ?? base.resources.scavengerDrone) || 0)
+    base.resources.syntheticFood = Math.max(0, Number(loaded.resources.syntheticFood ?? base.resources.syntheticFood) || 0)
     base.resources.smallHealPotion = Math.max(0, Number(loaded.resources.smallHealPotion ?? base.resources.smallHealPotion) || 0)
     base.resources.siliconMass = Math.max(0, Number(loaded.resources.siliconMass ?? base.resources.siliconMass) || 0)
     base.resources.carbon = Math.max(0, Number(loaded.resources.carbon ?? base.resources.carbon) || 0)
@@ -187,6 +188,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.module = clampProgress(loaded.craftProgress?.module)
   base.craftProgress.shovel = clampProgress(loaded.craftProgress?.shovel)
   base.craftProgress.scavengerDrone = clampProgress(loaded.craftProgress?.scavengerDrone)
+  base.craftProgress.syntheticFood = clampProgress(loaded.craftProgress?.syntheticFood)
   base.craftProgress.smallHealPotion = clampProgress(loaded.craftProgress?.smallHealPotion)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)

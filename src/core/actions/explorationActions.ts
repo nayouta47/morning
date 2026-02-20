@@ -132,6 +132,22 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
 
 
 
+export function useSyntheticFood(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase === 'combat') return false
+
+  if (state.resources.syntheticFood <= 0) {
+    pushLog(state, '인조식량이 없다.')
+    return false
+  }
+
+  state.resources.syntheticFood -= 1
+  const prevHp = state.exploration.hp
+  state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + 5)
+  const healed = state.exploration.hp - prevHp
+  pushLog(state, `인조식량 사용. HP +${healed}`)
+  return true
+}
+
 export function useSmallHealPotion(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
   const combat = state.exploration.combat

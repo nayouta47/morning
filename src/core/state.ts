@@ -116,6 +116,7 @@ export type CraftProgress = {
   module: number
   shovel: number
   scavengerDrone: number
+  syntheticFood: number
   smallHealPotion: number
 }
 
@@ -158,6 +159,7 @@ export const initialState: GameState = {
     cobalt: 0,
     shovel: 0,
     scavengerDrone: 0,
+    syntheticFood: 0,
     smallHealPotion: 0,
     siliconMass: 0,
     carbon: 0,
@@ -244,6 +246,7 @@ export const initialState: GameState = {
     module: 0,
     shovel: 0,
     scavengerDrone: 0,
+    syntheticFood: 0,
     smallHealPotion: 0,
   },
   nextWeaponId: 1,

@@ -96,6 +96,7 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   app.querySelector<HTMLButtonElement>('#craft-module')?.addEventListener('click', handlers.onCraftModule)
   app.querySelector<HTMLButtonElement>('#craft-shovel')?.addEventListener('click', handlers.onCraftShovel)
   app.querySelector<HTMLButtonElement>('#craft-scavenger-drone')?.addEventListener('click', handlers.onCraftScavengerDrone)
+  app.querySelector<HTMLButtonElement>('#craft-synthetic-food')?.addEventListener('click', handlers.onCraftSyntheticFood)
   app.querySelector<HTMLButtonElement>('#craft-small-heal-potion')?.addEventListener('click', handlers.onCraftSmallHealPotion)
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
@@ -164,6 +165,11 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
 
     if (target.closest<HTMLElement>('#exploration-flee')) {
       handlers.onFleeExplorationCombat()
+      return
+    }
+
+    if (target.closest<HTMLElement>('#exploration-use-synthetic-food')) {
+      handlers.onUseSyntheticFood()
       return
     }
 

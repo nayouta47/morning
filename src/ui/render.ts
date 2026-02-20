@@ -85,6 +85,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
   setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
+  setText(app, '#res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood))
   setText(app, '#res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))
   setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
 

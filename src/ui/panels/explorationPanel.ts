@@ -23,6 +23,12 @@ export function renderExplorationMap(state: GameState): string {
   return rows.join('\n')
 }
 
+function renderSyntheticFoodControl(state: GameState): string {
+  const amount = state.resources.syntheticFood
+  const disabled = amount <= 0 || state.exploration.hp >= state.exploration.maxHp
+  return `<button id="exploration-use-synthetic-food" type="button" ${disabled ? 'disabled' : ''}>인조식량 사용 (${amount})</button>`
+}
+
 function renderExplorationBody(state: GameState, now = Date.now()): string {
   const isActive = state.exploration.mode === 'active'
   if (!isActive) {
@@ -31,7 +37,7 @@ function renderExplorationBody(state: GameState, now = Date.now()): string {
 
   const backpackUsed = state.exploration.backpack.reduce((sum, entry) => sum + entry.amount, 0)
   const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
-  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>`
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>${renderSyntheticFoodControl(state)}`
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
@@ -56,7 +62,14 @@ export function patchExplorationBody(app: ParentNode, state: GameState): void {
   const body = app.querySelector<HTMLElement>('#exploration-body')
   if (!panel || !body) return
   const signature = `${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}`
-  if (panel.dataset.mode === signature) return
-  panel.dataset.mode = signature
-  body.innerHTML = renderExplorationBody(state)
+  if (panel.dataset.mode !== signature) {
+    panel.dataset.mode = signature
+    body.innerHTML = renderExplorationBody(state)
+    return
+  }
+
+  const syntheticFoodButton = app.querySelector<HTMLButtonElement>('#exploration-use-synthetic-food')
+  if (!syntheticFoodButton) return
+  syntheticFoodButton.disabled = state.resources.syntheticFood <= 0 || state.exploration.hp >= state.exploration.maxHp
+  syntheticFoodButton.textContent = `인조식량 사용 (${state.resources.syntheticFood})`
 }
