@@ -368,7 +368,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
 document.addEventListener('keydown', (event) => {
   if (event.repeat || isTypingTarget(event.target)) return
 
-  if (event.key === ']') {
+  const isCodexCheatHotkey = event.code === 'BracketRight' || event.key === ']' || event.key === '}'
+  if (isCodexCheatHotkey) {
     event.preventDefault()
     syncState()
     unlockAllEnemyCodex(state)
