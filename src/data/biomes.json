@@ -6,6 +6,7 @@
       "emoji": "🟫",
       "encounterPool": [
         { "enemyId": "siliconBug", "weight": 5 },
+        { "enemyId": "wheelBug", "weight": 5 },
         { "enemyId": "siliconLifeform", "weight": 1 }
       ]
     },
@@ -15,6 +16,7 @@
       "emoji": "🪨",
       "encounterPool": [
         { "enemyId": "siliconBug", "weight": 4 },
+        { "enemyId": "wheelBug", "weight": 4 },
         { "enemyId": "siliconLifeform", "weight": 3 }
       ]
     },

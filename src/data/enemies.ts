@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'bareBonesMan'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -45,6 +45,18 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     drops: [
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.4 },
       { resource: 'scrap', minAmount: 1, maxAmount: 1, chance: 0.25 },
+    ],
+  },
+  wheelBug: {
+    id: 'wheelBug',
+    name: '🛞 바퀴 벌레',
+    tier: 1,
+    hp: 4,
+    damage: 1,
+    attackCooldownMs: 2000,
+    drops: [
+      { resource: 'scrap', minAmount: 10, maxAmount: 14, chance: 1 },
+      { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.2 },
     ],
   },
   bareBonesMan: {
