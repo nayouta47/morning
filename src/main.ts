@@ -22,6 +22,7 @@ import {
   toggleMinerProcessRun,
   unequipModuleFromSlot,
   useSmallHealPotion,
+  unlockAllEnemyCodex,
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
@@ -358,7 +359,17 @@ const moveByKey: Record<string, { dx: number; dy: number }> = {
 }
 
 document.addEventListener('keydown', (event) => {
-  if (event.repeat || state.exploration.mode !== 'active') return
+  if (event.repeat) return
+
+  if (event.key === ']') {
+    event.preventDefault()
+    syncState()
+    unlockAllEnemyCodex(state)
+    redraw()
+    return
+  }
+
+  if (state.exploration.mode !== 'active') return
   const move = moveByKey[event.key.toLowerCase()]
   if (!move) return
   event.preventDefault()

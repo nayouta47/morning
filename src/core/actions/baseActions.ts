@@ -1,4 +1,5 @@
 import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
+import { ENEMY_IDS } from '../../data/enemies.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../../data/buildings.ts'
 import type { GameState, MinerProcessKey, SmeltingProcessKey, TabKey } from '../state.ts'
 import { evaluateUnlocks } from '../unlocks.ts'
@@ -197,6 +198,23 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
   payCost(state.resources, cost)
   state.upgrades[key] = true
   pushLog(state, `연구 완료: ${def.name}`)
+}
+
+export function unlockAllEnemyCodex(state: GameState): void {
+  let changed = false
+  const now = Date.now()
+
+  ENEMY_IDS.forEach((enemyId) => {
+    const entry = state.enemyCodex[enemyId]
+    if (!entry) return
+    if (!entry.encountered) {
+      entry.encountered = true
+      if (entry.firstEncounteredAt == null) entry.firstEncounteredAt = now
+      changed = true
+    }
+  })
+
+  pushLog(state, changed ? '치트: 도감 전체 적 정보가 해제되었습니다.' : '치트: 도감은 이미 전체 해제 상태입니다.')
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {
