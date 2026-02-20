@@ -120,6 +120,7 @@ export type CraftProgress = {
 }
 
 export type GameState = {
+  codexRevealAll: boolean
   resources: Resources
   buildings: Buildings
   upgrades: Upgrades
@@ -147,6 +148,7 @@ export type GameState = {
 }
 
 export const initialState: GameState = {
+  codexRevealAll: false,
   resources: {
     wood: 0,
     scrap: 0,

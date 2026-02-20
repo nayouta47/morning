@@ -22,6 +22,7 @@ function renderDropCandidates(enemyId: (typeof ENEMY_IDS)[number]): string {
 }
 
 function getEncounteredEnemyIds(state: GameState): (typeof ENEMY_IDS)[number][] {
+  if (state.codexRevealAll) return [...ENEMY_IDS]
   return ENEMY_IDS.filter((enemyId) => state.enemyCodex[enemyId]?.encountered)
 }
 
@@ -47,10 +48,10 @@ function renderCodexRows(state: GameState): string {
 }
 
 function codexSignature(state: GameState): string {
-  return ENEMY_IDS.map((enemyId) => {
+  return `${state.codexRevealAll ? 1 : 0}|${ENEMY_IDS.map((enemyId) => {
     const codex = state.enemyCodex[enemyId]
     return `${enemyId}:${codex?.encountered ? 1 : 0}:${codex?.firstEncounteredAt ?? 0}:${codex?.defeatCount ?? 0}`
-  }).join('|')
+  }).join('|')}`
 }
 
 export function renderCodexPanel(state: GameState): string {

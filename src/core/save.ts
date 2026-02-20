@@ -46,6 +46,7 @@ function normalizeState(raw: unknown): GameState | null {
     exploration?: unknown
     enemyCodex?: unknown
     gatherScrapRewardRemainderSevenths?: unknown
+    codexRevealAll?: unknown
   }
 
   if (loaded.resources) {
@@ -91,6 +92,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.unlocks.lumberMill = Boolean(loaded.unlocks.lumberMill)
     base.unlocks.miner = Boolean(loaded.unlocks.miner)
   }
+
+  base.codexRevealAll = Boolean(loaded.codexRevealAll)
 
   base.productionProgress.lumberMill = clampProgress(loaded.productionProgress?.lumberMill)
   base.productionProgress.scavenger = clampProgress(loaded.productionProgress?.scavenger)
@@ -254,6 +257,16 @@ function normalizeState(raw: unknown): GameState | null {
       defeatCount: Math.max(0, Math.floor(Number(entry.defeatCount) || 0)),
     }
   })
+
+  if (base.codexRevealAll) {
+    const now = Date.now()
+    ENEMY_IDS.forEach((enemyId) => {
+      const entry = base.enemyCodex[enemyId]
+      if (!entry) return
+      entry.encountered = true
+      if (entry.firstEncounteredAt == null) entry.firstEncounteredAt = now
+    })
+  }
 
   if (loaded.exploration && typeof loaded.exploration === 'object') {
     const exploration = loaded.exploration as Partial<GameState['exploration']>

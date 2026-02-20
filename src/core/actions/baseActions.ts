@@ -201,7 +201,8 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 }
 
 export function unlockAllEnemyCodex(state: GameState): void {
-  let changed = false
+  let changed = !state.codexRevealAll
+  state.codexRevealAll = true
   const now = Date.now()
 
   ENEMY_IDS.forEach((enemyId) => {
@@ -209,12 +210,12 @@ export function unlockAllEnemyCodex(state: GameState): void {
     if (!entry) return
     if (!entry.encountered) {
       entry.encountered = true
-      if (entry.firstEncounteredAt == null) entry.firstEncounteredAt = now
       changed = true
     }
+    if (entry.firstEncounteredAt == null) entry.firstEncounteredAt = now
   })
 
-  pushLog(state, changed ? '치트: 도감 전체 적 정보가 해제되었습니다.' : '치트: 도감은 이미 전체 해제 상태입니다.')
+  if (changed) pushLog(state, '치트: 도감 전체 적 정보 해제')
 }
 
 export function setActiveTab(state: GameState, tab: TabKey): void {

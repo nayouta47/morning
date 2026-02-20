@@ -358,8 +358,15 @@ const moveByKey: Record<string, { dx: number; dy: number }> = {
   pagedown: { dx: 1, dy: 1 },
 }
 
+function isTypingTarget(target: EventTarget | null): boolean {
+  const element = target instanceof HTMLElement ? target : null
+  if (!element) return false
+  const tag = element.tagName.toLowerCase()
+  return element.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select'
+}
+
 document.addEventListener('keydown', (event) => {
-  if (event.repeat) return
+  if (event.repeat || isTypingTarget(event.target)) return
 
   if (event.key === ']') {
     event.preventDefault()
