@@ -25,7 +25,8 @@ export function renderExplorationMap(state: GameState): string {
 
 function renderSyntheticFoodControl(state: GameState): string {
   const amount = state.resources.syntheticFood
-  const disabled = amount <= 0 || state.exploration.hp >= state.exploration.maxHp
+  const blockedByCombat = state.exploration.phase === 'combat'
+  const disabled = blockedByCombat || amount <= 0 || state.exploration.hp >= state.exploration.maxHp
   return `<button id="exploration-use-synthetic-food" type="button" ${disabled ? 'disabled' : ''}>인조식량 사용 (${amount})</button>`
 }
 
@@ -70,6 +71,7 @@ export function patchExplorationBody(app: ParentNode, state: GameState): void {
 
   const syntheticFoodButton = app.querySelector<HTMLButtonElement>('#exploration-use-synthetic-food')
   if (!syntheticFoodButton) return
-  syntheticFoodButton.disabled = state.resources.syntheticFood <= 0 || state.exploration.hp >= state.exploration.maxHp
+  syntheticFoodButton.disabled =
+    state.exploration.phase === 'combat' || state.resources.syntheticFood <= 0 || state.exploration.hp >= state.exploration.maxHp
   syntheticFoodButton.textContent = `인조식량 사용 (${state.resources.syntheticFood})`
 }
