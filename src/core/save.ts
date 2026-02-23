@@ -10,6 +10,12 @@ const SAVE_KEY = 'morning-save-v4'
 const AUTOSAVE_MS = 5000
 const EXPLORATION_BACKPACK_CAPACITY = 10
 const EXPLORATION_BACKPACK_STACK_MAX = 16
+const EXPLORATION_BACKPACK_HEALING_STACK_MAX = 1
+const EXPLORATION_BACKPACK_SINGLE_STACK_RESOURCES = new Set(['smallHealPotion', 'syntheticFood'])
+
+function getExplorationBackpackStackMax(resourceId: string): number {
+  return EXPLORATION_BACKPACK_SINGLE_STACK_RESOURCES.has(resourceId) ? EXPLORATION_BACKPACK_HEALING_STACK_MAX : EXPLORATION_BACKPACK_STACK_MAX
+}
 
 function clampProgress(value: unknown): number {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0
@@ -42,8 +48,9 @@ function normalizeBackpackEntries(entries: unknown): GameState['exploration']['b
     if (typeof resource !== 'string' || typeof amount !== 'number' || amount <= 0) continue
 
     let remaining = Math.floor(amount)
+    const stackMax = getExplorationBackpackStackMax(resource)
     while (remaining > 0 && normalized.length < EXPLORATION_BACKPACK_CAPACITY) {
-      const add = Math.min(EXPLORATION_BACKPACK_STACK_MAX, remaining)
+      const add = Math.min(stackMax, remaining)
       normalized.push({ resource: resource as keyof GameState['resources'], amount: add })
       remaining -= add
     }

@@ -14,6 +14,12 @@ import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../dat
 import { addResourceWithCap } from '../resourceCaps.ts'
 
 const BACKPACK_STACK_MAX = 16
+const BACKPACK_HEALING_STACK_MAX = 1
+const BACKPACK_SINGLE_STACK_RESOURCES = new Set<ResourceId>(['smallHealPotion', 'syntheticFood'])
+
+function getBackpackStackMax(resourceId: ResourceId): number {
+  return BACKPACK_SINGLE_STACK_RESOURCES.has(resourceId) ? BACKPACK_HEALING_STACK_MAX : BACKPACK_STACK_MAX
+}
 
 function getBackpackUsedSlots(state: GameState): number {
   return state.exploration.backpack.length
@@ -23,9 +29,11 @@ function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: num
   let remaining = Math.max(0, Math.floor(amount))
   if (remaining <= 0) return 0
 
+  const stackMax = getBackpackStackMax(resourceId)
+
   state.exploration.backpack.forEach((entry) => {
     if (entry.resource !== resourceId || remaining <= 0) return
-    const space = Math.max(0, BACKPACK_STACK_MAX - entry.amount)
+    const space = Math.max(0, stackMax - entry.amount)
     if (space <= 0) return
     const add = Math.min(space, remaining)
     entry.amount += add
@@ -33,7 +41,7 @@ function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: num
   })
 
   while (remaining > 0 && getBackpackUsedSlots(state) < state.exploration.backpackCapacity) {
-    const add = Math.min(BACKPACK_STACK_MAX, remaining)
+    const add = Math.min(stackMax, remaining)
     state.exploration.backpack.push({ resource: resourceId, amount: add })
     remaining -= add
   }

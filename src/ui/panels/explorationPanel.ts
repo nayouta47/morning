@@ -40,7 +40,7 @@ function renderBackpackGrid(state: GameState): string {
     )
   }
 
-  return `<section class="exploration-backpack" aria-label="탐험 배낭"><p class="hint">배낭 슬롯 <strong>${usedSlots}/${state.exploration.backpackCapacity}</strong> · 스택 최대 16</p><ul class="backpack-grid">${slots.join('')}</ul></section>`
+  return `<section class="exploration-backpack" aria-label="탐험 배낭"><p class="hint">배낭 슬롯 <strong>${usedSlots}/${state.exploration.backpackCapacity}</strong> · 회복 아이템 스택 1 / 기타 16</p><ul class="backpack-grid">${slots.join('')}</ul></section>`
 }
 
 function renderSyntheticFoodControl(state: GameState): string {

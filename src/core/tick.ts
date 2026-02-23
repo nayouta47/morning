@@ -171,7 +171,7 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
   for (let i = 0; i < attempts; i += 1) {
     if (state.resources.siliconMass < 1) continue
     state.resources.siliconMass -= 1
-    if (Math.random() < 0.9) {
+    if (Math.random() < 0.75) {
       siliconIngot += 1
     } else {
       nickel += 1

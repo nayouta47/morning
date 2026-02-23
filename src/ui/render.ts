@@ -1,9 +1,10 @@
 import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
+import { isCappedResource, RESOURCE_STORAGE_CAP } from '../core/resourceCaps.ts'
 import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
-import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
+import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
 import type { ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
 import { setHidden, setText } from './view.ts'
@@ -68,6 +69,11 @@ function patchLogs(app: ParentNode, state: GameState): void {
   logList.dataset.signature = signature
 }
 
+function formatBaseResourceAmount(resourceId: ResourceId, amount: number): string {
+  const current = formatResourceValue(resourceId, amount)
+  return isCappedResource(resourceId) ? `${current}/${RESOURCE_STORAGE_CAP}` : current
+}
+
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
@@ -77,17 +83,22 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-scrap', actionUI.gatherScrap)
 
-  setText(app, '#res-wood', formatResourceValue('wood', state.resources.wood))
-  setText(app, '#res-scrap', formatResourceValue('scrap', state.resources.scrap))
-  setText(app, '#res-iron', formatResourceValue('iron', state.resources.iron))
-  setText(app, '#res-chromium', formatResourceValue('chromium', state.resources.chromium))
-  setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
-  setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
+  setText(app, '#res-wood', formatBaseResourceAmount('wood', state.resources.wood))
+  setText(app, '#res-scrap', formatBaseResourceAmount('scrap', state.resources.scrap))
+  setText(app, '#res-iron', formatBaseResourceAmount('iron', state.resources.iron))
+  setText(app, '#res-chromium', formatBaseResourceAmount('chromium', state.resources.chromium))
+  setText(app, '#res-molybdenum', formatBaseResourceAmount('molybdenum', state.resources.molybdenum))
+  setText(app, '#res-cobalt', formatBaseResourceAmount('cobalt', state.resources.cobalt))
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
-  setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
-  setText(app, '#res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood))
-  setText(app, '#res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))
-  setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
+  setText(app, '#res-scavenger-drone', formatBaseResourceAmount('scavengerDrone', state.resources.scavengerDrone))
+  setText(app, '#res-synthetic-food', formatBaseResourceAmount('syntheticFood', state.resources.syntheticFood))
+  setText(app, '#res-small-heal-potion', formatBaseResourceAmount('smallHealPotion', state.resources.smallHealPotion))
+  setText(app, '#res-silicon-mass', formatBaseResourceAmount('siliconMass', state.resources.siliconMass))
+  setText(app, '#res-carbon', formatBaseResourceAmount('carbon', state.resources.carbon))
+  setText(app, '#res-silicon-ingot', formatBaseResourceAmount('siliconIngot', state.resources.siliconIngot))
+  setText(app, '#res-nickel', formatBaseResourceAmount('nickel', state.resources.nickel))
+  setText(app, '#res-low-alloy-steel', formatBaseResourceAmount('lowAlloySteel', state.resources.lowAlloySteel))
+  setText(app, '#res-high-alloy-steel', formatBaseResourceAmount('highAlloySteel', state.resources.highAlloySteel))
 
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`)
