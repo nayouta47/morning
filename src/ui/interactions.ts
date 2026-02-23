@@ -4,6 +4,7 @@ import type { ResourceId } from '../data/resources.ts'
 import type { Handlers, InteractionIntent } from './types.ts'
 import { getEventTargetElement } from './view.ts'
 import { patchModuleDetail, patchModuleInventory, setSelectedModuleType } from './panels/assemblyPanel.ts'
+import { patchCodexPanel, setCodexSubTab } from './panels/codexPanel.ts'
 
 export function dispatchInteractionIntent(handlers: Handlers, intent: InteractionIntent): void {
   switch (intent.type) {
@@ -98,6 +99,16 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
     if (!target) return
+
+    const codexSubTabButton = target.closest<HTMLButtonElement>('[data-codex-subtab]')
+    if (codexSubTabButton) {
+      const subTab = codexSubTabButton.getAttribute('data-codex-subtab')
+      if (subTab === 'enemy' || subTab === 'chip') {
+        setCodexSubTab(subTab)
+        patchCodexPanel(app, state)
+      }
+      return
+    }
 
     const codexToggle = target.closest<HTMLButtonElement>('[data-codex-toggle]')
     if (codexToggle) {

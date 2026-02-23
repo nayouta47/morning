@@ -1,7 +1,28 @@
-import type { GameState } from '../../core/state.ts'
+import type { GameState, ModuleType } from '../../core/state.ts'
 import { ENEMY_IDS, getEnemyDef } from '../../data/enemies.ts'
 import { getResourceDisplay } from '../../data/resources.ts'
 import { getBiomesForEnemy } from '../../data/maps/index.ts'
+
+type CodexSubTab = 'enemy' | 'chip'
+
+type ChipCodexEntry = {
+  type: ModuleType
+  name: string
+  icon: string
+  effect: string
+}
+
+const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
+  { type: 'damage', name: '공격력 칩', icon: '💥', effect: '무기 최종 공격력 +1' },
+  { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '무기 가속 +10 (쿨다운 단축)' },
+  { type: 'amplifier', name: '증폭 칩', icon: '📡', effect: '왼쪽 칩의 효과 +1중첩' },
+]
+
+let selectedCodexSubTab: CodexSubTab = 'enemy'
+
+export function setCodexSubTab(tab: CodexSubTab): void {
+  selectedCodexSubTab = tab
+}
 
 function formatEncounterText(timestamp: number | null): string {
   if (timestamp == null) return '아니오'
@@ -32,7 +53,7 @@ function renderEnemyBiomes(enemyId: (typeof ENEMY_IDS)[number]): string {
   return biomes.map((biome) => `${biome.emoji} ${biome.name}`).join(', ')
 }
 
-function renderCodexRows(state: GameState): string {
+function renderEnemyRows(state: GameState): string {
   const encounteredEnemyIds = getEncounteredEnemyIds(state)
   if (encounteredEnemyIds.length === 0) {
     return '<p class="codex-empty">아직 조우한 적이 없습니다. 탐험에서 적을 만나면 도감에 기록됩니다.</p>'
@@ -47,22 +68,65 @@ function renderCodexRows(state: GameState): string {
   }).join('')
 }
 
+function renderChipRows(state: GameState): string {
+  return CHIP_CODEX_ENTRIES
+    .map((chip) => {
+      const owned = state.modules[chip.type]
+      const isOwned = owned > 0
+      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p></article>`
+    })
+    .join('')
+}
+
 function codexSignature(state: GameState): string {
-  return `${state.codexRevealAll ? 1 : 0}|${ENEMY_IDS.map((enemyId) => {
+  const enemySig = ENEMY_IDS.map((enemyId) => {
     const codex = state.enemyCodex[enemyId]
     return `${enemyId}:${codex?.encountered ? 1 : 0}:${codex?.firstEncounteredAt ?? 0}:${codex?.defeatCount ?? 0}`
-  }).join('|')}`
+  }).join('|')
+
+  const chipSig = CHIP_CODEX_ENTRIES.map((chip) => `${chip.type}:${state.modules[chip.type]}`).join('|')
+  return `${selectedCodexSubTab}|${state.codexRevealAll ? 1 : 0}|${enemySig}|${chipSig}`
+}
+
+function renderCodexBody(state: GameState): string {
+  if (selectedCodexSubTab === 'chip') return `<div class="codex-list" id="codex-chip-list">${renderChipRows(state)}</div>`
+  return `<div class="codex-list" id="codex-list">${renderEnemyRows(state)}</div>`
+}
+
+function renderCodexHint(): string {
+  if (selectedCodexSubTab === 'chip') return '모든 칩을 표시합니다. 미보유 칩도 잠김 상태로 확인할 수 있습니다.'
+  return '조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.'
+}
+
+function renderSubTabs(): string {
+  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button></div>`
 }
 
 export function renderCodexPanel(state: GameState): string {
-  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2><p class="hint">조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.</p><div class="codex-list" id="codex-list" data-signature="${codexSignature(state)}">${renderCodexRows(state)}</div></section>`
+  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2>${renderSubTabs()}<p class="hint" id="codex-hint">${renderCodexHint()}</p><div id="codex-content" data-signature="${codexSignature(state)}">${renderCodexBody(state)}</div></section>`
 }
 
 export function patchCodexPanel(app: ParentNode, state: GameState): void {
-  const list = app.querySelector<HTMLElement>('#codex-list')
-  if (!list) return
+  const content = app.querySelector<HTMLElement>('#codex-content')
+  if (!content) return
+
   const signature = codexSignature(state)
-  if (list.dataset.signature === signature) return
-  list.dataset.signature = signature
-  list.innerHTML = renderCodexRows(state)
+  if (content.dataset.signature === signature) return
+
+  content.dataset.signature = signature
+  content.innerHTML = renderCodexBody(state)
+
+  const hint = app.querySelector<HTMLElement>('#codex-hint')
+  if (hint) hint.textContent = renderCodexHint()
+
+  const enemyTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="enemy"]')
+  const chipTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="chip"]')
+  if (enemyTab) {
+    enemyTab.classList.toggle('active', selectedCodexSubTab === 'enemy')
+    enemyTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'enemy'))
+  }
+  if (chipTab) {
+    chipTab.classList.toggle('active', selectedCodexSubTab === 'chip')
+    chipTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'chip'))
+  }
 }

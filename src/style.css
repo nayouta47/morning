@@ -716,6 +716,34 @@ li {
   color: #d8be82;
 }
 
+.codex-subtabs {
+  margin: 0 0 10px;
+  display: inline-flex;
+  border: 1px solid #3a342a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.codex-subtab {
+  min-width: 56px;
+  border: 0;
+  border-right: 1px solid #3a342a;
+  background: #151412;
+  color: #bcb5a6;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.codex-subtab:last-child {
+  border-right: 0;
+}
+
+.codex-subtab.active {
+  background: #2a241b;
+  color: #ecd6a6;
+}
+
 .codex-list {
   display: grid;
   gap: 10px;
@@ -780,6 +808,47 @@ li {
 .codex-card-body li {
   border-bottom: 0;
   padding: 2px 0;
+}
+
+.codex-chip-card {
+  padding: 10px 12px;
+}
+
+.codex-chip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.codex-chip-name-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.codex-chip-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.codex-chip-lock {
+  border: 1px solid #534937;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #bfae88;
+}
+
+.codex-chip-effect {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #bdb6a7;
+}
+
+.codex-chip-locked {
+  opacity: 0.5;
+  filter: grayscale(0.25);
 }
 
 @media (max-width: 760px) {
