@@ -42,6 +42,8 @@ export const UPGRADE_DEFS = {
   },
 } as const
 
+export const RESEARCH_PANEL_UPGRADE_KEYS = ['moduleCraftingII'] as const
+
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
 export const SMALL_HEAL_POTION_HEAL = 8

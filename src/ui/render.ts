@@ -2,7 +2,7 @@ import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
 import { isCappedResource, RESOURCE_STORAGE_CAP } from '../core/resourceCaps.ts'
-import { UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
+import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
 import type { ActionUI, Handlers } from './types.ts'
@@ -160,9 +160,9 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchSmeltingPanel(app, state, now)
 
   setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
-  ;(Object.keys(UPGRADE_DEFS) as Array<keyof typeof UPGRADE_DEFS>).forEach((key) => {
+  RESEARCH_PANEL_UPGRADE_KEYS.forEach((key) => {
     const def = UPGRADE_DEFS[key]
-    const done = state.upgrades[key as keyof typeof state.upgrades]
+    const done = state.upgrades[key]
     const cost = getUpgradeCost(key)
     const upgradeButton = app.querySelector<HTMLButtonElement>(`button[data-upgrade="${key}"]`)
     if (upgradeButton) {
