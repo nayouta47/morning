@@ -2,6 +2,7 @@ import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
 import { DEFAULT_ENEMY_ID } from './combat.ts'
+import { clampResourceAmount, clampResourcesToStorageCaps } from './resourceCaps.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 
@@ -66,6 +67,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.resources.nickel = Math.max(0, Number(loaded.resources.nickel ?? base.resources.nickel) || 0)
     base.resources.lowAlloySteel = Math.max(0, Number(loaded.resources.lowAlloySteel ?? base.resources.lowAlloySteel) || 0)
     base.resources.highAlloySteel = Math.max(0, Number(loaded.resources.highAlloySteel ?? base.resources.highAlloySteel) || 0)
+    clampResourcesToStorageCaps(base.resources)
+    base.resources.shovel = Math.min(SHOVEL_MAX_STACK, clampResourceAmount('shovel', base.resources.shovel))
   }
   if (loaded.buildings) {
     const legacyBuildings = loaded.buildings as Partial<Record<string, unknown>>
@@ -373,6 +376,8 @@ function normalizeState(raw: unknown): GameState | null {
 }
 
 export function saveGame(state: GameState): void {
+  clampResourcesToStorageCaps(state.resources)
+  state.resources.shovel = Math.min(SHOVEL_MAX_STACK, clampResourceAmount('shovel', state.resources.shovel))
   localStorage.setItem(SAVE_KEY, JSON.stringify(state))
 }
 

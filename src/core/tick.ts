@@ -6,6 +6,7 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
+import { addResourceWithCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
@@ -13,6 +14,11 @@ const CHROMIUM_CHANCE_PER_SCRAP = 0.008
 const MOLYBDENUM_CHANCE_PER_SCRAP = 0.0015
 
 type ProductionBuildingKey = 'lumberMill' | 'scavenger'
+
+function logDiscardedOverflow(state: GameState, resourceId: keyof GameState['resources'], discarded: number): void {
+  if (discarded <= 0) return
+  appendLog(state, `${getResourceDisplay(resourceId)} 저장 한도 도달: +${discarded} 손실`)
+}
 
 function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number): void {
   const count = key === 'scavenger' ? 1 : state.buildings[key]
@@ -32,13 +38,15 @@ function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, el
   const capacity = cycles * count
 
   if (key === 'scavenger') {
-    state.resources.scrap += capacity
-    appendLog(state, `스캐빈저 가동: 🗑️ 고물 +${capacity}`)
+    const { added, discarded } = addResourceWithCap(state.resources, 'scrap', capacity)
+    appendLog(state, `스캐빈저 가동: 🗑️ 고물 +${added}`)
+    logDiscardedOverflow(state, 'scrap', discarded)
     return
   }
 
-  state.resources.wood += capacity
-  appendLog(state, `벌목기 생산: 🪵 뗄감 +${capacity}`)
+  const { added, discarded } = addResourceWithCap(state.resources, 'wood', capacity)
+  appendLog(state, `벌목기 생산: 🪵 뗄감 +${added}`)
+  logDiscardedOverflow(state, 'wood', discarded)
 }
 
 function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSiliconMass', elapsedMs: number): void {
@@ -66,7 +74,7 @@ function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSilicon
     if (processed <= 0) return
 
     state.resources.scrap -= processed
-    state.resources.iron += processed
+    const ironGain = addResourceWithCap(state.resources, 'iron', processed)
 
     let chromium = 0
     let molybdenum = 0
@@ -75,23 +83,28 @@ function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSilicon
       if (Math.random() < MOLYBDENUM_CHANCE_PER_SCRAP) molybdenum += 1
     }
 
-    if (chromium > 0) state.resources.chromium += chromium
-    if (molybdenum > 0) state.resources.molybdenum += molybdenum
+    const chromiumGain = chromium > 0 ? addResourceWithCap(state.resources, 'chromium', chromium) : { added: 0, discarded: 0 }
+    const molybdenumGain =
+      molybdenum > 0 ? addResourceWithCap(state.resources, 'molybdenum', molybdenum) : { added: 0, discarded: 0 }
 
     const bonusParts: string[] = []
-    if (chromium > 0) bonusParts.push(`🟢 +${chromium}`)
-    if (molybdenum > 0) bonusParts.push(`🔵 +${molybdenum}`)
+    if (chromiumGain.added > 0) bonusParts.push(`🟢 +${chromiumGain.added}`)
+    if (molybdenumGain.added > 0) bonusParts.push(`🔵 +${molybdenumGain.added}`)
 
     const bonusText = bonusParts.length > 0 ? ` (${bonusParts.join(', ')})` : ''
-    appendLog(state, `고물 분쇄: 🗑️ 고물 -${processed}, ⛓️ 철 +${processed}${bonusText}`)
+    appendLog(state, `고물 분쇄: 🗑️ 고물 -${processed}, ⛓️ 철 +${ironGain.added}${bonusText}`)
+    logDiscardedOverflow(state, 'iron', ironGain.discarded)
+    logDiscardedOverflow(state, 'chromium', chromiumGain.discarded)
+    logDiscardedOverflow(state, 'molybdenum', molybdenumGain.discarded)
     return
   }
 
   const processed = Math.min(attempts, Math.floor(state.resources.siliconMass))
   if (processed > 0) {
     state.resources.siliconMass -= processed
-    state.resources.cobalt += processed
-    appendLog(state, `규소 덩어리 분쇄: 🧱 규소 덩어리 -${processed}, 🟣 코발트 +${processed}`)
+    const cobaltGain = addResourceWithCap(state.resources, 'cobalt', processed)
+    appendLog(state, `규소 덩어리 분쇄: 🧱 규소 덩어리 -${processed}, 🟣 코발트 +${cobaltGain.added}`)
+    logDiscardedOverflow(state, 'cobalt', cobaltGain.discarded)
   }
 }
 
@@ -113,8 +126,9 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
     const possible = Math.min(attempts, Math.floor(state.resources.wood / 1000))
     if (possible > 0) {
       state.resources.wood -= possible * 1000
-      state.resources.carbon += possible
-      appendLog(state, `땔감 태우기: 🪵 뗄감 -${possible * 1000}, ⚫탄소 +${possible}`)
+      const carbonGain = addResourceWithCap(state.resources, 'carbon', possible)
+      appendLog(state, `땔감 태우기: 🪵 뗄감 -${possible * 1000}, ⚫탄소 +${carbonGain.added}`)
+      logDiscardedOverflow(state, 'carbon', carbonGain.discarded)
     }
     return
   }
@@ -126,10 +140,13 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
       state.resources.scrap -= 1000
       state.resources.chromium -= 3
       state.resources.molybdenum -= 1
-      state.resources.lowAlloySteel += 1
       produced += 1
     }
-    if (produced > 0) appendLog(state, `고물 녹이기: 🔗저합금강 +${produced}`)
+    if (produced > 0) {
+      const lowAlloyGain = addResourceWithCap(state.resources, 'lowAlloySteel', produced)
+      appendLog(state, `고물 녹이기: 🔗저합금강 +${lowAlloyGain.added}`)
+      logDiscardedOverflow(state, 'lowAlloySteel', lowAlloyGain.discarded)
+    }
     return
   }
 
@@ -139,10 +156,13 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
       if (state.resources.iron < 1000 || state.resources.nickel < 8) continue
       state.resources.iron -= 1000
       state.resources.nickel -= 8
-      state.resources.highAlloySteel += 1
       produced += 1
     }
-    if (produced > 0) appendLog(state, `철 녹이기: 🖇️고합금강 +${produced}`)
+    if (produced > 0) {
+      const highAlloyGain = addResourceWithCap(state.resources, 'highAlloySteel', produced)
+      appendLog(state, `철 녹이기: 🖇️고합금강 +${highAlloyGain.added}`)
+      logDiscardedOverflow(state, 'highAlloySteel', highAlloyGain.discarded)
+    }
     return
   }
 
@@ -152,19 +172,22 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
     if (state.resources.siliconMass < 1) continue
     state.resources.siliconMass -= 1
     if (Math.random() < 0.9) {
-      state.resources.siliconIngot += 1
       siliconIngot += 1
     } else {
-      state.resources.nickel += 1
       nickel += 1
     }
   }
 
   if (siliconIngot > 0 || nickel > 0) {
+    const siliconIngotGain = siliconIngot > 0 ? addResourceWithCap(state.resources, 'siliconIngot', siliconIngot) : { added: 0, discarded: 0 }
+    const nickelGain = nickel > 0 ? addResourceWithCap(state.resources, 'nickel', nickel) : { added: 0, discarded: 0 }
+
     const parts: string[] = []
-    if (siliconIngot > 0) parts.push(`🗞️규소 주괴 +${siliconIngot}`)
-    if (nickel > 0) parts.push(`🟡니켈 +${nickel}`)
-    appendLog(state, `규소 덩어리 녹이기: ${parts.join(', ')}`)
+    if (siliconIngotGain.added > 0) parts.push(`🗞️규소 주괴 +${siliconIngotGain.added}`)
+    if (nickelGain.added > 0) parts.push(`🟡니켈 +${nickelGain.added}`)
+    appendLog(state, parts.length > 0 ? `규소 덩어리 녹이기: ${parts.join(', ')}` : '규소 덩어리 녹이기: 산출물 저장 공간 부족')
+    logDiscardedOverflow(state, 'siliconIngot', siliconIngotGain.discarded)
+    logDiscardedOverflow(state, 'nickel', nickelGain.discarded)
   }
 }
 
@@ -205,8 +228,9 @@ function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
         return
       }
 
-      state.resources[output.resource] += output.amount
-      appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${output.amount}`)
+      const gain = addResourceWithCap(state.resources, output.resource, output.amount)
+      appendLog(state, `제작 완료: ${getResourceDisplay(output.resource)} +${gain.added}`)
+      logDiscardedOverflow(state, output.resource, gain.discarded)
       return
     }
 
@@ -232,14 +256,16 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
 function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap'): void {
   if (key === 'gatherWood') {
     const amount = getGatherWoodReward(state)
-    state.resources.wood += amount
-    appendLog(state, `🪵 뗄감 +${amount}`)
+    const gain = addResourceWithCap(state.resources, 'wood', amount)
+    appendLog(state, `🪵 뗄감 +${gain.added}`)
+    logDiscardedOverflow(state, 'wood', gain.discarded)
     return
   }
 
   const amount = resolveGatherScrapReward(state)
-  state.resources.scrap += amount
-  appendLog(state, `🗑️ 고물 +${amount}`)
+  const gain = addResourceWithCap(state.resources, 'scrap', amount)
+  appendLog(state, `🗑️ 고물 +${gain.added}`)
+  logDiscardedOverflow(state, 'scrap', gain.discarded)
 }
 
 function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap', elapsedMs: number): void {
