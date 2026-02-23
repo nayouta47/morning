@@ -1,4 +1,4 @@
-import type { CraftProgress, GameState, ModuleType, WeaponType } from '../core/state.ts'
+import type { CraftProgress, GameState, ModuleType, ModuleCraftTier, WeaponType } from '../core/state.ts'
 import { SHOVEL_MAX_STACK, getShovelCount } from '../core/rewards.ts'
 import type { ResourceCost } from './resources.ts'
 import { getMissingRequirementFromList, areRequirementsMet, type Requirement } from '../core/requirements.ts'
@@ -39,7 +39,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
   },
   module: {
     id: 'module',
-    label: '모듈',
+    label: '모듈 제작 I',
     durationMs: WEAPON_CRAFT_DURATION_MS,
     costs: { iron: 200, molybdenum: 1 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
@@ -92,7 +92,28 @@ const SCAVENGER_DRONE_BASE_IRON_COST = 500
 const SCAVENGER_DRONE_COBALT_COST = 2
 const SCAVENGER_DRONE_IRON_COST_GROWTH = 1.15
 
+export function getSelectedModuleCraftTier(state: GameState): ModuleCraftTier {
+  return state.selectedModuleCraftTier === 2 ? 2 : 1
+}
+
+export function getActiveModuleCraftTier(state: GameState): ModuleCraftTier {
+  return state.moduleCraftTierInProgress ?? getSelectedModuleCraftTier(state)
+}
+
+export function getModuleCraftTierLabel(tier: ModuleCraftTier): string {
+  return tier === 2 ? '모듈 제작 II' : '모듈 제작 I'
+}
+
+export function getModuleCraftPoolByTier(tier: ModuleCraftTier): ModuleType[] {
+  return tier === 2 ? ['preheater'] : ['damage', 'cooldown', 'amplifier']
+}
+
 export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {
+  if (recipe === 'module') {
+    const base = CRAFT_RECIPE_DEFS.module.durationMs
+    return getActiveModuleCraftTier(state) === 2 ? base * 2 : base
+  }
+
   if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].durationMs
 
   const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
@@ -100,6 +121,13 @@ export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey)
 }
 
 export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): ResourceCost {
+  if (recipe === 'module') {
+    if (getActiveModuleCraftTier(state) === 2) {
+      return { iron: 200, chromium: 4, molybdenum: 2, cobalt: 1 }
+    }
+    return CRAFT_RECIPE_DEFS.module.costs
+  }
+
   if (recipe === 'shovel') {
     const shovelCount = Math.min(SHOVEL_MAX_STACK, getShovelCount(state))
     const woodCost = Math.ceil(SHOVEL_CRAFT_BASE_WOOD_COST * SHOVEL_CRAFT_COST_GROWTH ** shovelCount)
@@ -119,9 +147,16 @@ export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): Re
 }
 
 export function getCraftRecipeMissingRequirement(state: GameState, recipe: CraftRecipeKey): string | null {
-  return getMissingRequirementFromList(state, CRAFT_RECIPE_DEFS[recipe].requirements)
+  const missing = getMissingRequirementFromList(state, CRAFT_RECIPE_DEFS[recipe].requirements)
+  if (missing) return missing
+  if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) {
+    return '연구 필요: 모듈 제작 II'
+  }
+  return null
 }
 
 export function isCraftRecipeUnlocked(state: GameState, recipe: CraftRecipeKey): boolean {
-  return areRequirementsMet(state, CRAFT_RECIPE_DEFS[recipe].requirements)
+  if (!areRequirementsMet(state, CRAFT_RECIPE_DEFS[recipe].requirements)) return false
+  if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) return false
+  return true
 }

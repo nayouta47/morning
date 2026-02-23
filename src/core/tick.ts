@@ -4,7 +4,7 @@ import { appendLog, handleExplorationDeath } from './actions.ts'
 import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
-import { CRAFT_RECIPE_DEFS, type CraftRecipeKey } from '../data/crafting.ts'
+import { CRAFT_RECIPE_DEFS, getModuleCraftPoolByTier, getModuleCraftTierLabel, type CraftRecipeKey } from '../data/crafting.ts'
 import { getResourceDisplay } from '../data/resources.ts'
 import { addResourceWithCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
@@ -202,12 +202,20 @@ function makeWeapon(state: GameState, type: WeaponType): void {
 
 function makeModule(state: GameState, type: ModuleType): void {
   state.modules[type] += 1
-  const label = type === 'damage' ? '💥 공격력(+1)' : type === 'cooldown' ? '⏱️ 쿨다운 가속(+10)' : '📡 증폭자(왼쪽 모듈 증폭)'
+  const label =
+    type === 'damage'
+      ? '💥 공격력(+1)'
+      : type === 'cooldown'
+        ? '⏱️ 쿨다운 가속(+10)'
+        : type === 'amplifier'
+          ? '📡 증폭자(왼쪽 모듈 증폭)'
+          : '🔥 예열기(전투 시작 즉시 발사)'
   appendLog(state, `모듈 제작 완료: ${label}`)
 }
 
 function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
   const recipe = CRAFT_RECIPE_DEFS[key]
+  const moduleTier = key === 'module' ? (state.moduleCraftTierInProgress ?? 1) : null
 
   recipe.outputs.forEach((output) => {
     if (output.kind === 'weapon') {
@@ -234,12 +242,18 @@ function resolveCraftCompletion(state: GameState, key: CraftRecipeKey): void {
       return
     }
 
+    const pool = key === 'module' && moduleTier ? getModuleCraftPoolByTier(moduleTier) : output.pool
     for (let i = 0; i < output.count; i += 1) {
-      const index = Math.floor(Math.random() * output.pool.length)
-      const picked = output.pool[index] ?? output.pool[0]
+      const index = Math.floor(Math.random() * pool.length)
+      const picked = pool[index] ?? pool[0]
       if (picked) makeModule(state, picked)
     }
   })
+
+  if (key === 'module' && moduleTier) {
+    appendLog(state, `${getModuleCraftTierLabel(moduleTier)} 제작 완료`)
+    state.moduleCraftTierInProgress = null
+  }
 }
 
 function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: number): void {

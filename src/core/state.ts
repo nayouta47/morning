@@ -12,6 +12,7 @@ export type Upgrades = {
   sortingWork: boolean
   sharpSaw: boolean
   drillBoost: boolean
+  moduleCraftingII: boolean
 }
 
 export type Unlocks = {
@@ -100,7 +101,8 @@ export type ExplorationState = {
 }
 
 export type WeaponType = 'pistol' | 'rifle'
-export type ModuleType = 'damage' | 'cooldown' | 'amplifier'
+export type ModuleType = 'damage' | 'cooldown' | 'amplifier' | 'preheater'
+export type ModuleCraftTier = 1 | 2
 
 export type WeaponInstance = {
   id: string
@@ -146,6 +148,8 @@ export type GameState = {
   gatherScrapRewardRemainderSevenths: number
   exploration: ExplorationState
   enemyCodex: Record<EnemyId, EnemyCodexEntry>
+  selectedModuleCraftTier: ModuleCraftTier
+  moduleCraftTierInProgress: ModuleCraftTier | null
 }
 
 export const initialState: GameState = {
@@ -182,6 +186,7 @@ export const initialState: GameState = {
     sortingWork: false,
     sharpSaw: false,
     drillBoost: false,
+    moduleCraftingII: false,
   },
   unlocks: {
     scrapAction: false,
@@ -239,6 +244,7 @@ export const initialState: GameState = {
     damage: 0,
     cooldown: 0,
     amplifier: 0,
+    preheater: 0,
   },
   craftProgress: {
     pistol: 0,
@@ -271,4 +277,6 @@ export const initialState: GameState = {
   enemyCodex: Object.fromEntries(
     ENEMY_IDS.map((enemyId) => [enemyId, { encountered: false, firstEncounteredAt: null, defeatCount: 0 }]),
   ) as Record<EnemyId, EnemyCodexEntry>,
+  selectedModuleCraftTier: 1,
+  moduleCraftTierInProgress: null,
 }

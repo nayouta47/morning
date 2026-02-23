@@ -21,11 +21,12 @@ function toWeaponType(value: unknown): WeaponType {
 }
 
 function inferModuleType(value: unknown): ModuleType {
-  if (value === 'damage' || value === 'cooldown' || value === 'amplifier') return value
+  if (value === 'damage' || value === 'cooldown' || value === 'amplifier' || value === 'preheater') return value
   if (typeof value === 'string') {
     if (value.startsWith('DMG-')) return 'damage'
     if (value.startsWith('CDN-')) return 'cooldown'
     if (value.startsWith('AMP-')) return 'amplifier'
+    if (value.startsWith('PRE-')) return 'preheater'
   }
   return 'cooldown'
 }
@@ -73,6 +74,8 @@ function normalizeState(raw: unknown): GameState | null {
     enemyCodex?: unknown
     gatherScrapRewardRemainderSevenths?: unknown
     codexRevealAll?: unknown
+    selectedModuleCraftTier?: unknown
+    moduleCraftTierInProgress?: unknown
   }
 
   if (loaded.resources) {
@@ -115,6 +118,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.upgrades.sortingWork = Boolean(loaded.upgrades.sortingWork)
     base.upgrades.sharpSaw = Boolean(loaded.upgrades.sharpSaw)
     base.upgrades.drillBoost = Boolean(loaded.upgrades.drillBoost)
+    base.upgrades.moduleCraftingII = Boolean(loaded.upgrades.moduleCraftingII)
   }
   if (loaded.unlocks) {
     base.unlocks.scrapAction = Boolean(loaded.unlocks.scrapAction)
@@ -219,6 +223,12 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.syntheticFood = clampProgress(loaded.craftProgress?.syntheticFood)
   base.craftProgress.smallHealPotion = clampProgress(loaded.craftProgress?.smallHealPotion)
 
+  base.selectedModuleCraftTier = loaded.selectedModuleCraftTier === 2 ? 2 : 1
+  base.moduleCraftTierInProgress = loaded.moduleCraftTierInProgress === 2 ? 2 : loaded.moduleCraftTierInProgress === 1 ? 1 : null
+  if (base.craftProgress.module > 0 && base.moduleCraftTierInProgress == null) {
+    base.moduleCraftTierInProgress = base.selectedModuleCraftTier
+  }
+
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
@@ -249,6 +259,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.modules.damage = Math.max(0, Number(modules.damage ?? 0) || 0)
     base.modules.cooldown = Math.max(0, Number(modules.cooldown ?? 0) || 0)
     base.modules.amplifier = Math.max(0, Number(modules.amplifier ?? 0) || 0)
+    base.modules.preheater = Math.max(0, Number(modules.preheater ?? 0) || 0)
   }
 
   if (Array.isArray(loaded.modules)) {

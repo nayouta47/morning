@@ -21,6 +21,7 @@ export type ModuleLayerStats = {
   finalDamage: number
   finalCooldownSec: number
   slotAmplification: number[]
+  hasPreheater: boolean
 }
 
 function isSameRowAdjacentLeft(leftIndex: number, rightIndex: number): boolean {
@@ -78,6 +79,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   let damageAmplified = 0
   let cooldownBase = 0
   let cooldownAmplified = 0
+  let hasPreheater = false
 
   weapon.slots.forEach((moduleType, index) => {
     if (!moduleType || !activeSlots.has(index)) return
@@ -92,6 +94,11 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     if (moduleType === 'cooldown') {
       cooldownBase += 1
       cooldownAmplified += amplified
+      return
+    }
+
+    if (moduleType === 'preheater') {
+      hasPreheater = true
     }
   })
 
@@ -111,9 +118,10 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalDamage,
     finalCooldownSec,
     slotAmplification,
+    hasPreheater,
   }
 }
 
 export function isModuleType(value: string | null | undefined): value is ModuleType {
-  return value === 'damage' || value === 'cooldown' || value === 'amplifier'
+  return value === 'damage' || value === 'cooldown' || value === 'amplifier' || value === 'preheater'
 }

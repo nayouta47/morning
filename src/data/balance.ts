@@ -35,6 +35,11 @@ export const UPGRADE_DEFS = {
     baseCost: { wood: 160, iron: 50 },
     effectText: '분쇄기 처리량 +25%',
   },
+  moduleCraftingII: {
+    name: '모듈 제작 II',
+    baseCost: { wood: 240, iron: 120 },
+    effectText: '모듈 제작 II 해금',
+  },
 } as const
 
 export const WEAPON_CRAFT_DURATION_MS = 30000

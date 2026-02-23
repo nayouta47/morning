@@ -5,7 +5,8 @@ import { pushLog } from './logging.ts'
 function moduleName(type: ModuleType): string {
   if (type === 'damage') return '공격력 모듈(+1)'
   if (type === 'cooldown') return '쿨다운 모듈(가속 +10)'
-  return '증폭자(왼쪽 모듈 증폭)'
+  if (type === 'amplifier') return '증폭자(왼쪽 모듈 증폭)'
+  return '예열기(전투 시작 즉시 발사)'
 }
 
 export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {

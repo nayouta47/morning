@@ -2,11 +2,12 @@ import { getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
 import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
 
-const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️', amplifier: '📡' }
+const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️', amplifier: '📡', preheater: '🔥' }
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '공격력 +1',
   cooldown: '쿨다운 가속 +10',
   amplifier: '증폭자 (왼쪽 모듈 효과 +1중첩)',
+  preheater: '예열기 (전투 시작 즉시 발사, 중복 비중첩)',
 }
 
 let selectedModuleType: ModuleType | null = null
@@ -83,7 +84,7 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${selectedModuleType ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${state.modules.preheater}:${selectedModuleType ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])

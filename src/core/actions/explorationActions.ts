@@ -2,6 +2,8 @@ import {
   createEnemyCombatState,
   ENCOUNTER_FIGHT_CHANCE,
   ENCOUNTER_FIGHT_DELAY,
+  getSelectedWeapon,
+  getWeaponCombatStats,
   selectEncounterEnemyId,
 } from '../combat.ts'
 import type { GameState } from '../state.ts'
@@ -150,7 +152,8 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
 
     const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
     const enemyId = selectEncounterEnemyId(biome.id)
-    const combatState = createEnemyCombatState(enemyId)
+    const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
+    const combatState = createEnemyCombatState(enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
     state.exploration.combat = combatState
 
     const codex = state.enemyCodex[enemyId]

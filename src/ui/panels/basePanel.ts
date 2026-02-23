@@ -2,7 +2,15 @@ import type { GameState, MinerProcessKey, SmeltingProcessKey } from '../../core/
 import { getBuildingCost } from '../../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward, getShovelCount } from '../../core/rewards.ts'
 import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
-import { CRAFT_RECIPE_DEFS, getCraftRecipeCost, getCraftRecipeDuration, getCraftRecipeMissingRequirement, type CraftRecipeKey } from '../../data/crafting.ts'
+import {
+  CRAFT_RECIPE_DEFS,
+  getCraftRecipeCost,
+  getCraftRecipeDuration,
+  getCraftRecipeMissingRequirement,
+  getModuleCraftTierLabel,
+  getSelectedModuleCraftTier,
+  type CraftRecipeKey,
+} from '../../data/crafting.ts'
 import { getBuildingLabel } from '../../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, getResourceDisplay } from '../../data/resources.ts'
 import type { ActionGaugeView, ActionUI } from '../types.ts'
@@ -217,6 +225,14 @@ function renderResourceRow(resource: keyof GameState['resources'], id: string, v
   return `<p>${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
 }
 
+function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
+  const tier = getSelectedModuleCraftTier(state)
+  const canSelectTierII = state.upgrades.moduleCraftingII
+  const tierLabel = getModuleCraftTierLabel(tier)
+  const lockedHint = !canSelectTierII ? '<p class="hint" id="module-craft-tier-hint">모듈 제작 II는 연구에서 해금됩니다.</p>' : ''
+  return `<div class="module-craft-row"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>◀</button><span id="module-craft-tier-label" class="module-craft-tier-label">${tierLabel}</span><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>▶</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
+}
+
 export function renderCraftActions(state: GameState): string {
   const pistolView = craftViewByRecipe(state, 'pistol')
   const rifleView = craftViewByRecipe(state, 'rifle')
@@ -230,7 +246,7 @@ export function renderCraftActions(state: GameState): string {
       ${renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView)}
       ${renderGaugeButton('craft-pistol', `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(getCraftRecipeCost(state, 'pistol'))})`, '권총 제작', pistolView)}
       ${renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(getCraftRecipeCost(state, 'rifle'))})`, '소총 제작', rifleView)}
-      ${renderGaugeButton('craft-module', `${CRAFT_RECIPE_DEFS.module.label} 제작 (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}
+      ${renderModuleCraftControl(state, moduleView)}
       ${renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`, '🛸 스캐빈저 드론 제작', scavengerDroneView)}
       ${renderGaugeButton('craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`, '인조식량 제작', syntheticFoodView)}
       ${renderGaugeButton('craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`, '회복약(소) 제작', smallHealPotionView)}
@@ -393,7 +409,19 @@ export function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-small-heal-potion', craftViewByRecipe(state, 'smallHealPotion'))
 
   patchGaugeTitle(app, 'craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`)
+  patchGaugeTitle(app, 'craft-module', `${getModuleCraftTierLabel(getSelectedModuleCraftTier(state))} (${formatCost(getCraftRecipeCost(state, 'module'))})`)
   patchGaugeTitle(app, 'craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`)
   patchGaugeTitle(app, 'craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`)
   patchGaugeTitle(app, 'craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`)
+
+  const tier = getSelectedModuleCraftTier(state)
+  const tierLabel = app.querySelector<HTMLElement>('#module-craft-tier-label')
+  if (tierLabel) tierLabel.textContent = getModuleCraftTierLabel(tier)
+  const prev = app.querySelector<HTMLButtonElement>('#module-craft-tier-prev')
+  if (prev) prev.disabled = tier <= 1
+  const next = app.querySelector<HTMLButtonElement>('#module-craft-tier-next')
+  if (next) next.disabled = tier >= 2 || !state.upgrades.moduleCraftingII
+
+  const hint = app.querySelector<HTMLElement>('#module-craft-tier-hint')
+  if (hint) hint.hidden = state.upgrades.moduleCraftingII
 }

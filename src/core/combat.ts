@@ -27,7 +27,7 @@ export function selectEncounterEnemyId(biomeId?: BiomeId): EnemyId {
   return ENEMY_IDS[index] ?? DEFAULT_ENEMY_ID
 }
 
-export function createEnemyCombatState(enemyId: EnemyId): CombatState {
+export function createEnemyCombatState(enemyId: EnemyId, playerAttackElapsedMs = 0): CombatState {
   const enemy = getEnemyDef(enemyId)
   return {
     enemyId,
@@ -37,7 +37,7 @@ export function createEnemyCombatState(enemyId: EnemyId): CombatState {
     enemyDamage: enemy.damage,
     enemyAttackCooldownMs: enemy.attackCooldownMs,
     enemyAttackElapsedMs: 0,
-    playerAttackElapsedMs: 0,
+    playerAttackElapsedMs,
     fleeGaugeDurationMs: FLEE_GAUGE_DURATION_MS,
     fleeGaugeElapsedMs: 0,
     fleeGaugeRunning: false,
@@ -50,13 +50,14 @@ export function getSelectedWeapon(state: GameState): WeaponInstance | null {
   return state.weapons.find((weapon) => weapon.id === state.selectedWeaponId) ?? null
 }
 
-export function getWeaponCombatStats(weapon: WeaponInstance | null): { damage: number; cooldownMs: number } {
-  if (!weapon) return { damage: 1, cooldownMs: 2500 }
+export function getWeaponCombatStats(weapon: WeaponInstance | null): { damage: number; cooldownMs: number; startsPreloaded: boolean } {
+  if (!weapon) return { damage: 1, cooldownMs: 2500, startsPreloaded: false }
 
   const stats = getWeaponModuleLayerStats(weapon)
   return {
     damage: stats.finalDamage,
     cooldownMs: stats.finalCooldownSec * 1000,
+    startsPreloaded: stats.hasPreheater,
   }
 }
 

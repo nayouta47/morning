@@ -14,6 +14,7 @@ import {
   setSmeltingAllocation,
   setMinerAllocation,
   startCraft,
+  cycleModuleCraftTier,
   startExploration,
   startExplorationFlee,
   takeExplorationLoot,
@@ -247,6 +248,16 @@ function redraw(nowOverride?: number): void {
         onCraftModule: () => {
           syncState()
           startCraft(state, 'module')
+          redraw()
+        },
+        onModuleCraftTierPrev: () => {
+          syncState()
+          cycleModuleCraftTier(state, -1)
+          redraw()
+        },
+        onModuleCraftTierNext: () => {
+          syncState()
+          cycleModuleCraftTier(state, 1)
           redraw()
         },
         onCraftShovel: () => {

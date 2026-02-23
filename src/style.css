@@ -147,6 +147,34 @@ h1 {
   gap: 6px;
 }
 
+.module-craft-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.module-craft-tier-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border: 1px solid #2f2b26;
+  border-radius: 6px;
+  background: #1a1713;
+}
+
+.craft-tier-btn {
+  min-width: 28px;
+  padding: 6px 4px;
+}
+
+.module-craft-tier-label {
+  min-width: 92px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .upgrades {
   grid-column: 1;
   grid-row: 3;
