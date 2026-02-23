@@ -33,7 +33,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     id: 'rifle',
     label: '소총',
     durationMs: WEAPON_CRAFT_DURATION_MS,
-    costs: { iron: 200, highAlloySteel: 2 },
+    costs: { iron: 200, lowAlloySteel: 2 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
     outputs: [{ kind: 'weapon', weaponType: 'rifle', count: 1 }],
   },
