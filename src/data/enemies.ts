@@ -78,3 +78,9 @@ export const ENEMY_IDS = Object.keys(ENEMY_DEFS) as EnemyId[]
 export function getEnemyDef(enemyId: EnemyId): EnemyDef {
   return ENEMY_DEFS[enemyId]
 }
+
+export function getEnemyDisplayEmoji(enemyId: EnemyId): string {
+  const enemy = getEnemyDef(enemyId)
+  const [leadingToken] = enemy.name.trim().split(/\s+/, 1)
+  return leadingToken || '👾'
+}
