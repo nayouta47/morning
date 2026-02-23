@@ -31,7 +31,6 @@ export type Handlers = {
   onToggleScavengerRun: () => void
   onBuyUpgrade: (key: UpgradeKey) => void
   onSelectTab: (tab: 'base' | 'assembly' | 'exploration' | 'codex') => void
-  onUnlockAllEnemyCodex: () => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
   onFleeExplorationCombat: () => void

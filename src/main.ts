@@ -193,11 +193,6 @@ function redraw(nowOverride?: number): void {
           setActiveTab(state, tab)
           redraw()
         },
-        onUnlockAllEnemyCodex: () => {
-          syncState()
-          unlockAllEnemyCodex(state)
-          redraw()
-        },
         onStartExploration: () => {
           syncState()
           if (!state.selectedWeaponId) {
@@ -384,8 +379,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
 document.addEventListener('keydown', (event) => {
   if (event.repeat || isTypingTarget(event.target)) return
 
-  const isCodexCheatHotkey = event.code === 'BracketRight' || event.key === ']' || event.key === '}'
-  if (isCodexCheatHotkey) {
+  const isCodexRevealHotkey = event.key.toLowerCase() === 'p'
+  if (isCodexRevealHotkey) {
     event.preventDefault()
     syncState()
     unlockAllEnemyCodex(state)
