@@ -236,7 +236,7 @@ function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView)
   const canSelectTierII = state.upgrades.moduleCraftingII
   const tierLabel = getModuleCraftTierLabel(tier)
   const lockedHint = !canSelectTierII ? '<p class="hint" id="module-craft-tier-hint">모듈 제작 II는 연구에서 해금됩니다.</p>' : ''
-  return `<div class="module-craft-row"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>좌</button><span id="module-craft-tier-label" class="module-craft-tier-label">${tierLabel}</span><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>우</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
+  return `<div class="module-craft-row"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>◀</button><span id="module-craft-tier-label" class="module-craft-tier-label">${tierLabel}</span><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>▶</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
 }
 
 export function renderCraftActions(state: GameState): string {
