@@ -40,6 +40,15 @@ function commitExplorationBackpack(state: GameState): void {
   state.exploration.backpack = []
 }
 
+function endExplorationToLoadout(state: GameState): void {
+  state.exploration.mode = 'loadout'
+  state.exploration.phase = 'moving'
+  state.exploration.hp = state.exploration.maxHp
+  state.exploration.pendingLoot = []
+  state.exploration.combat = null
+  state.exploration.carriedWeaponId = null
+}
+
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
   if (state.buildings.laikaRepair <= 0) {
     pushLog(state, '🐶 라이카 수리를 완료해야 탐험을 시작할 수 있다.')
@@ -97,11 +106,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
 
   if (atStart) {
     commitExplorationBackpack(state)
-    state.exploration.mode = 'loadout'
-    state.exploration.phase = 'moving'
-    state.exploration.pendingLoot = []
-    state.exploration.combat = null
-    state.exploration.carriedWeaponId = null
+    endExplorationToLoadout(state)
     state.activeTab = 'exploration'
     pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
     return true
@@ -224,13 +229,8 @@ export function handleExplorationDeath(state: GameState): void {
     }
   }
 
-  state.exploration.mode = 'loadout'
-  state.exploration.phase = 'moving'
-  state.exploration.hp = state.exploration.maxHp
-  state.exploration.pendingLoot = []
+  endExplorationToLoadout(state)
   state.exploration.backpack = []
-  state.exploration.combat = null
-  state.exploration.carriedWeaponId = null
   state.activeTab = 'base'
 
   pushLog(state, '시야가 꺼졌다. 거점에서 정신을 차렸다.')
@@ -248,11 +248,7 @@ export function tryReturnFromExploration(state: GameState): boolean {
   }
 
   commitExplorationBackpack(state)
-  state.exploration.mode = 'loadout'
-  state.exploration.phase = 'moving'
-  state.exploration.pendingLoot = []
-  state.exploration.combat = null
-  state.exploration.carriedWeaponId = null
+  endExplorationToLoadout(state)
   state.activeTab = 'exploration'
   pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
   return true

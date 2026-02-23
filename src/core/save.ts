@@ -338,6 +338,14 @@ function normalizeState(raw: unknown): GameState | null {
     if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
   }
 
+  if (base.exploration.mode !== 'active') {
+    base.exploration.phase = 'moving'
+    base.exploration.hp = base.exploration.maxHp
+    base.exploration.pendingLoot = []
+    base.exploration.combat = null
+    base.exploration.carriedWeaponId = null
+  }
+
   if (base.buildings.workbench <= 0 && base.activeTab === 'assembly') {
     base.activeTab = 'base'
   }
@@ -351,6 +359,7 @@ function normalizeState(raw: unknown): GameState | null {
     if (base.exploration.mode === 'active') {
       base.exploration.mode = 'loadout'
       base.exploration.phase = 'moving'
+      base.exploration.hp = base.exploration.maxHp
       base.exploration.pendingLoot = []
       base.exploration.backpack = []
       base.exploration.combat = null
