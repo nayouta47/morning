@@ -24,7 +24,7 @@ export type EnemyDef = {
 export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   siliconLifeform: {
     id: 'siliconLifeform',
-    name: '벌벌떠는 기인',
+    name: '🧏‍♀️ 벌벌떠는 기인',
     tier: 2,
     hp: 20,
     damage: 2,
@@ -53,7 +53,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     tier: 1,
     hp: 4,
     damage: 1,
-    attackCooldownMs: 2000,
+    attackCooldownMs: 4500,
     drops: [
       { resource: 'scrap', minAmount: 10, maxAmount: 14, chance: 1 },
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.2 },
@@ -61,7 +61,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   bareBonesMan: {
     id: 'bareBonesMan',
-    name: '뼈만 남은 사내',
+    name: '🩻 앙상한 사내',
     tier: 3,
     hp: 10,
     damage: 3,

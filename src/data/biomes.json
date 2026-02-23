@@ -16,7 +16,6 @@
       "emoji": "🪨",
       "encounterPool": [
         { "enemyId": "siliconBug", "weight": 4 },
-        { "enemyId": "wheelBug", "weight": 4 },
         { "enemyId": "siliconLifeform", "weight": 3 }
       ]
     },
