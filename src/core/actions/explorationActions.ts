@@ -11,6 +11,34 @@ import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap } from '../resourceCaps.ts'
 
+const BACKPACK_STACK_MAX = 16
+
+function getBackpackUsedSlots(state: GameState): number {
+  return state.exploration.backpack.length
+}
+
+function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: number): number {
+  let remaining = Math.max(0, Math.floor(amount))
+  if (remaining <= 0) return 0
+
+  state.exploration.backpack.forEach((entry) => {
+    if (entry.resource !== resourceId || remaining <= 0) return
+    const space = Math.max(0, BACKPACK_STACK_MAX - entry.amount)
+    if (space <= 0) return
+    const add = Math.min(space, remaining)
+    entry.amount += add
+    remaining -= add
+  })
+
+  while (remaining > 0 && getBackpackUsedSlots(state) < state.exploration.backpackCapacity) {
+    const add = Math.min(BACKPACK_STACK_MAX, remaining)
+    state.exploration.backpack.push({ resource: resourceId, amount: add })
+    remaining -= add
+  }
+
+  return remaining
+}
+
 function positionKey(x: number, y: number): string {
   return `${x},${y}`
 }
@@ -198,20 +226,26 @@ export function takeExplorationLoot(state: GameState, resourceId: ResourceId): b
   const lootIndex = state.exploration.pendingLoot.findIndex((entry) => entry.resource === resourceId)
   if (lootIndex < 0) return false
 
-  const usedSlots = state.exploration.backpack.reduce((sum, entry) => sum + entry.amount, 0)
   const loot = state.exploration.pendingLoot[lootIndex]
   if (!loot) return false
-  if (usedSlots + loot.amount > state.exploration.backpackCapacity) {
-    pushLog(state, '배낭이 꽉 찼다.')
+
+  const before = loot.amount
+  const remaining = addLootToBackpack(state, resourceId, loot.amount)
+  const collected = before - remaining
+
+  if (collected <= 0) {
+    pushLog(state, '배낭에 빈 칸이 없다.')
     return false
   }
 
-  state.exploration.pendingLoot.splice(lootIndex, 1)
-  const backpackEntry = state.exploration.backpack.find((entry) => entry.resource === resourceId)
-  if (backpackEntry) backpackEntry.amount += loot.amount
-  else state.exploration.backpack.push({ ...loot })
+  if (remaining > 0) {
+    loot.amount = remaining
+    pushLog(state, `전리품 일부 확보: ${getResourceDisplay(resourceId)} +${collected} (남음 ${remaining})`)
+    return true
+  }
 
-  pushLog(state, `전리품 확보: ${getResourceDisplay(resourceId)} +${loot.amount}`)
+  state.exploration.pendingLoot.splice(lootIndex, 1)
+  pushLog(state, `전리품 확보: ${getResourceDisplay(resourceId)} +${collected}`)
   return true
 }
 

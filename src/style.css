@@ -415,6 +415,56 @@ li {
   padding: 10px;
 }
 
+.exploration-backpack {
+  width: 100%;
+  max-width: 520px;
+}
+
+.backpack-grid {
+  margin: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  max-height: none;
+  overflow: visible;
+}
+
+.backpack-slot {
+  position: relative;
+  min-height: 54px;
+  border: 1px solid #4a4337;
+  border-radius: 6px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backpack-slot.empty {
+  border-style: dashed;
+  opacity: 0.45;
+}
+
+.backpack-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.backpack-count {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  min-width: 20px;
+  padding: 1px 4px;
+  border-radius: 10px;
+  font-size: 11px;
+  text-align: center;
+  color: #f2e6cf;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid #5c503b;
+}
+
 .exploration-map-stage {
   position: relative;
   width: fit-content;

@@ -1,5 +1,5 @@
 import type { GameState } from '../../core/state.ts'
-import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
+import { RESOURCE_DEFS, getResourceDisplay, type ResourceId } from '../../data/resources.ts'
 import { renderExplorationCombatOverlay } from './combatOverlay.ts'
 import { getBiomeAt } from '../../data/maps/index.ts'
 
@@ -23,6 +23,26 @@ export function renderExplorationMap(state: GameState): string {
   return rows.join('\n')
 }
 
+function renderBackpackGrid(state: GameState): string {
+  const usedSlots = state.exploration.backpack.length
+  const slots: string[] = []
+
+  for (let i = 0; i < state.exploration.backpackCapacity; i += 1) {
+    const entry = state.exploration.backpack[i]
+    if (!entry) {
+      slots.push('<li class="backpack-slot empty" aria-label="빈 슬롯"></li>')
+      continue
+    }
+
+    const def = RESOURCE_DEFS[entry.resource]
+    slots.push(
+      `<li class="backpack-slot filled" aria-label="${def.label} x${entry.amount}"><span class="backpack-icon" aria-hidden="true">${def.emoji}</span><span class="backpack-count">${entry.amount}</span></li>`,
+    )
+  }
+
+  return `<section class="exploration-backpack" aria-label="탐험 배낭"><p class="hint">배낭 슬롯 <strong>${usedSlots}/${state.exploration.backpackCapacity}</strong> · 스택 최대 16</p><ul class="backpack-grid">${slots.join('')}</ul></section>`
+}
+
 function renderSyntheticFoodControl(state: GameState): string {
   const amount = state.resources.syntheticFood
   const blockedByCombat = state.exploration.phase === 'combat'
@@ -36,9 +56,9 @@ function renderExplorationBody(state: GameState, now = Date.now()): string {
     return `<div class="exploration-loadout"><p class="hint">탐험 준비: 인벤토리/무기 조합을 확인한 뒤 수동으로 출발합니다.</p><p class="hint">선택 무기: <strong>${state.selectedWeaponId ?? '없음'}</strong></p><p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p><button id="exploration-start">탐험 출발</button></div>`
   }
 
-  const backpackUsed = state.exploration.backpack.reduce((sum, entry) => sum + entry.amount, 0)
+  const backpackUsed = state.exploration.backpack.length
   const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
-  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>${renderSyntheticFoodControl(state)}`
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 슬롯 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>${renderSyntheticFoodControl(state)}${renderBackpackGrid(state)}`
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
@@ -54,15 +74,21 @@ function renderExplorationBody(state: GameState, now = Date.now()): string {
   return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p></div>`
 }
 
+function getExplorationBodySignature(state: GameState): string {
+  const backpackSig = state.exploration.backpack.map((entry) => `${entry.resource}:${entry.amount}`).join('|')
+  const lootSig = state.exploration.pendingLoot.map((entry) => `${entry.resource}:${entry.amount}`).join('|')
+  return `${state.exploration.mode}:${state.exploration.phase}:${backpackSig}:${lootSig}`
+}
+
 export function renderExplorationPanel(state: GameState, now = Date.now()): string {
-  return `<section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, now)}</div></section>`
+  return `<section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${getExplorationBodySignature(state)}"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, now)}</div></section>`
 }
 
 export function patchExplorationBody(app: ParentNode, state: GameState): void {
   const panel = app.querySelector<HTMLElement>('#panel-exploration')
   const body = app.querySelector<HTMLElement>('#exploration-body')
   if (!panel || !body) return
-  const signature = `${state.exploration.mode}:${state.exploration.phase}:${state.exploration.pendingLoot.length}`
+  const signature = getExplorationBodySignature(state)
   if (panel.dataset.mode !== signature) {
     panel.dataset.mode = signature
     body.innerHTML = renderExplorationBody(state)

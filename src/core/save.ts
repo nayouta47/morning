@@ -8,6 +8,8 @@ import { EXPLORATION_MAP } from '../data/maps/index.ts'
 
 const SAVE_KEY = 'morning-save-v4'
 const AUTOSAVE_MS = 5000
+const EXPLORATION_BACKPACK_CAPACITY = 10
+const EXPLORATION_BACKPACK_STACK_MAX = 16
 
 function clampProgress(value: unknown): number {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0
@@ -26,6 +28,29 @@ function inferModuleType(value: unknown): ModuleType {
     if (value.startsWith('AMP-')) return 'amplifier'
   }
   return 'cooldown'
+}
+
+function normalizeBackpackEntries(entries: unknown): GameState['exploration']['backpack'] {
+  if (!Array.isArray(entries)) return []
+
+  const normalized: GameState['exploration']['backpack'] = []
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue
+    const resource = (entry as { resource?: unknown }).resource
+    const amount = (entry as { amount?: unknown }).amount
+    if (typeof resource !== 'string' || typeof amount !== 'number' || amount <= 0) continue
+
+    let remaining = Math.floor(amount)
+    while (remaining > 0 && normalized.length < EXPLORATION_BACKPACK_CAPACITY) {
+      const add = Math.min(EXPLORATION_BACKPACK_STACK_MAX, remaining)
+      normalized.push({ resource: resource as keyof GameState['resources'], amount: add })
+      remaining -= add
+    }
+
+    if (normalized.length >= EXPLORATION_BACKPACK_CAPACITY) break
+  }
+
+  return normalized
 }
 
 function normalizeState(raw: unknown): GameState | null {
@@ -283,14 +308,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
     base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
     base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
-    base.exploration.backpackCapacity = 10
-    if (Array.isArray(exploration.backpack)) {
-      base.exploration.backpack = exploration.backpack
-        .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
-          Boolean(entry && typeof entry.resource === 'string' && typeof entry.amount === 'number' && entry.amount > 0),
-        )
-        .map((entry) => ({ resource: entry.resource, amount: Math.floor(entry.amount) }))
-    }
+    base.exploration.backpackCapacity = EXPLORATION_BACKPACK_CAPACITY
+    base.exploration.backpack = normalizeBackpackEntries(exploration.backpack)
     if (Array.isArray(exploration.pendingLoot)) {
       base.exploration.pendingLoot = exploration.pendingLoot
         .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
