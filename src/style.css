@@ -215,18 +215,18 @@ h1 {
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module {
-  border-color: rgba(var(--module-rarity-rgb), 0.3);
-  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.06), rgba(var(--module-rarity-rgb), 0.02));
+  border-color: rgba(var(--module-rarity-rgb), 0.55);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.34), rgba(var(--module-rarity-rgb), 0.2));
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module:hover:not(:disabled) {
-  border-color: rgba(var(--module-rarity-rgb), 0.42);
-  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.09), rgba(var(--module-rarity-rgb), 0.03));
+  border-color: rgba(var(--module-rarity-rgb), 0.7);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.42), rgba(var(--module-rarity-rgb), 0.26));
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module:disabled {
-  border-color: rgba(var(--module-rarity-rgb), 0.18);
-  background: rgba(var(--module-rarity-rgb), 0.03);
+  border-color: rgba(var(--module-rarity-rgb), 0.24);
+  background: rgba(var(--module-rarity-rgb), 0.08);
 }
 
 .upgrades {
