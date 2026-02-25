@@ -1,4 +1,5 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
+import { MODULE_POWER_COST as SHARED_MODULE_POWER_COST, isKnownModuleType } from '../data/modules.ts'
 import type { ModuleType, WeaponInstance, WeaponType } from './state.ts'
 import { getBaseActiveWeaponSlots } from './weaponSlots.ts'
 
@@ -16,16 +17,7 @@ type Direction = 'left' | 'right' | 'up' | 'down'
 export const SLOT_PENALTY_MINOR = 5
 export const SLOT_PENALTY_MAJOR = 10
 
-export const MODULE_POWER_COST: Record<ModuleType, number> = {
-  damage: 5,
-  cooldown: 5,
-  blockAmplifierUp: 2,
-  blockAmplifierDown: 2,
-  preheater: 7,
-  heatAmplifierLeft: 4,
-  heatAmplifierRight: 4,
-  slotUnlocker: 6,
-}
+export const MODULE_POWER_COST: Record<ModuleType, number> = SHARED_MODULE_POWER_COST
 
 const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
   blockAmplifierUp: 'up',
@@ -375,12 +367,5 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
 }
 
 export function isModuleType(value: string | null | undefined): value is ModuleType {
-  return value === 'damage'
-    || value === 'cooldown'
-    || value === 'blockAmplifierUp'
-    || value === 'blockAmplifierDown'
-    || value === 'preheater'
-    || value === 'heatAmplifierLeft'
-    || value === 'heatAmplifierRight'
-    || value === 'slotUnlocker'
+  return isKnownModuleType(value)
 }

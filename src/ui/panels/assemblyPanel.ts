@@ -5,73 +5,8 @@ import {
   getEffectiveActiveWeaponSlots,
   getWeaponModuleLayerStats,
 } from '../../core/moduleEffects.ts'
+import { MODULE_EMOJI, MODULE_METADATA, MODULE_NAME_KR, MODULE_TYPES } from '../../data/modules.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
-
-const MODULE_EMOJI: Record<ModuleType, string> = {
-  damage: '💥',
-  cooldown: '⏱️',
-  blockAmplifierUp: '📡▲',
-  blockAmplifierDown: '📡▼',
-  preheater: '🔥',
-  heatAmplifierLeft: '♨️◀',
-  heatAmplifierRight: '♨️▶',
-  slotUnlocker: '🗝️',
-}
-const MODULE_NAME: Record<ModuleType, string> = {
-  damage: '공격력 칩',
-  cooldown: '가속 칩',
-  blockAmplifierUp: '차단 증폭기(상)',
-  blockAmplifierDown: '차단 증폭기(하)',
-  preheater: '예열기 칩',
-  heatAmplifierLeft: '열 증폭기(좌)',
-  heatAmplifierRight: '열 증폭기(우)',
-  slotUnlocker: '해금기',
-}
-const MODULE_LABEL: Record<ModuleType, string> = {
-  damage: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
-  cooldown: '기본 가속 +10, 증폭 시 추가 +10 · 전력 ⚡5',
-  blockAmplifierUp: '전력 ⚡2',
-  blockAmplifierDown: '전력 ⚡2',
-  preheater: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
-  heatAmplifierLeft: '전력 ⚡4',
-  heatAmplifierRight: '전력 ⚡4',
-  slotUnlocker: '활성화 시 좌측 비활성 슬롯 2칸 해제 · 전력 ⚡6',
-}
-
-const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string }> = {
-  damage: {
-    base: '공격력 +1',
-    amplified: '공격력 +1',
-  },
-  cooldown: {
-    base: '가속 +10',
-    amplified: '가속 +10',
-  },
-  blockAmplifierUp: {
-    base: '증폭(중첩) + 차단 패널티 부여',
-    amplified: '해당 없음',
-  },
-  blockAmplifierDown: {
-    base: '증폭(중첩) + 차단 패널티 부여',
-    amplified: '해당 없음',
-  },
-  preheater: {
-    base: '전투 시작 즉시 발사 준비',
-    amplified: '해당 없음',
-  },
-  heatAmplifierLeft: {
-    base: '즉시 증폭 +2 + 열기 패널티 부여',
-    amplified: '해당 없음',
-  },
-  heatAmplifierRight: {
-    base: '즉시 증폭 +2 + 열기 패널티 부여',
-    amplified: '해당 없음',
-  },
-  slotUnlocker: {
-    base: '작동 중 좌측 슬롯 2칸 임시 해제',
-    amplified: '해당 없음',
-  },
-}
 
 type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'heatMinor' | 'heatMajor' | 'blockMajor'
 
@@ -150,16 +85,16 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
 function renderModuleDetail(moduleType: ModuleType | null): string {
   if (!moduleType) return '<p id="module-detail-effect" class="module-effect hint">모듈을 선택하세요.</p>'
   const miniGrid = renderInfluenceMiniGrid(moduleType)
-  const detail = MODULE_EFFECT_DETAIL[moduleType]
+  const detail = MODULE_METADATA[moduleType]
 
   return `<div id="module-detail-effect" class="module-effect-cards" aria-label="모듈 효과 상세">
     <article class="module-effect-card module-effect-base" aria-label="기본효과">
       <h4>기본효과</h4>
-      <p class="hint">${detail.base}</p>
+      <p class="hint">${detail.baseDescription}</p>
     </article>
     <article class="module-effect-card module-effect-amp" aria-label="증폭효과">
       <h4>증폭효과</h4>
-      <p class="hint">${detail.amplified}</p>
+      <p class="hint">${detail.amplifiedDescription}</p>
     </article>
   </div>${miniGrid}`
 }
@@ -260,7 +195,7 @@ function syncSelectedModuleType(state: GameState): void {
     if (isModuleTypeEquipped(state, selectedModuleType)) return
   }
 
-  selectedModuleType = (Object.keys(state.modules) as ModuleType[]).find((type) => state.modules[type] > 0) ?? null
+  selectedModuleType = MODULE_TYPES.find((type) => state.modules[type] > 0) ?? null
   selectedModuleSelectionSource = selectedModuleType ? 'auto' : null
 }
 
@@ -321,14 +256,15 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${state.modules.heatAmplifierLeft}:${state.modules.heatAmplifierRight}:${state.modules.slotUnlocker}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
+  const moduleSig = MODULE_TYPES.map((type) => state.modules[type]).join(':')
+  const sig = `${moduleSig}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
   if (root.dataset.signature === sig) return
 
-  const entries = (Object.keys(state.modules) as ModuleType[])
+  const entries = MODULE_TYPES
     .filter((type) => state.modules[type] > 0)
     .map((type) => {
       const isInventorySelected = selectedModuleType === type && selectedModuleSelectionSource === 'inventory'
-      return `<div class="module-item ${isInventorySelected ? 'selected' : ''}" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개"><span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span><span class="module-name">${MODULE_NAME[type]} ⚡${MODULE_POWER_COST[type]}</span><span class="module-count">x${state.modules[type]}</span></div>`
+      return `<div class="module-item ${isInventorySelected ? 'selected' : ''}" draggable="true" data-module-type="${type}" aria-label="${MODULE_METADATA[type].shortLabel} 모듈 ${state.modules[type]}개"><span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span><span class="module-name">${MODULE_NAME_KR[type]} ⚡${MODULE_POWER_COST[type]}</span><span class="module-count">x${state.modules[type]}</span></div>`
     })
 
   root.innerHTML = entries.join('')
@@ -372,7 +308,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const penaltyOverlay = renderSlotPenaltyOverlay(penaltyHeat, penaltyBlock)
     const disableOverlay = activePenaltyStopped ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType
-      ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 증폭 감소 -${penaltyReduction}` : ''}`
+      ? `${MODULE_METADATA[moduleType].shortLabel} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 증폭 감소 -${penaltyReduction}` : ''}`
       : '비어 있음'
     const slotStatus = baseInactive ? '기본 차단' : activePenaltyStopped ? '총 패널티로 일시 정지' : '활성'
     const previewClass = powerPreview?.slotIndex === index && isActive ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''

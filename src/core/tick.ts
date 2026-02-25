@@ -5,6 +5,7 @@ import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeapon
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, getModuleCraftPoolByTier, getModuleCraftTierLabel, type CraftRecipeKey } from '../data/crafting.ts'
+import { MODULE_METADATA } from '../data/modules.ts'
 import { getResourceDisplay } from '../data/resources.ts'
 import { addResourceWithCap, getResourceStorageCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
@@ -202,23 +203,7 @@ function makeWeapon(state: GameState, type: WeaponType): void {
 
 function makeModule(state: GameState, type: ModuleType): void {
   state.modules[type] += 1
-  const label =
-    type === 'damage'
-      ? '💥 공격력(+1)'
-      : type === 'cooldown'
-        ? '⏱️ 쿨다운 가속(+10)'
-        : type === 'blockAmplifierUp'
-          ? '📡▲ 차단 증폭기(상)'
-          : type === 'blockAmplifierDown'
-            ? '📡▼ 차단 증폭기(하)'
-            : type === 'heatAmplifierLeft'
-              ? '♨️◀ 열 증폭기(좌)'
-              : type === 'heatAmplifierRight'
-                ? '♨️▶ 열 증폭기(우)'
-                : type === 'slotUnlocker'
-                  ? '🗝️ 해금기(좌측 슬롯 2칸 해제)'
-                  : '🔥 예열기(전투 시작 즉시 발사)'
-  appendLog(state, `모듈 제작 완료: ${label}`)
+  appendLog(state, `모듈 제작 완료: ${MODULE_METADATA[type].craftLogLabel}`)
 }
 
 function resolveCraftCompletion(state: GameState, key: CraftRecipeKey, storageCap: number): void {

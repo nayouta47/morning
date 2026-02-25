@@ -1,16 +1,10 @@
+import { MODULE_METADATA } from '../../data/modules.ts'
 import type { GameState, ModuleType } from '../state.ts'
 import { getEffectiveActiveWeaponSlots } from '../moduleEffects.ts'
 import { pushLog } from './logging.ts'
 
 function moduleName(type: ModuleType): string {
-  if (type === 'damage') return '공격력 모듈(+1)'
-  if (type === 'cooldown') return '쿨다운 모듈(가속 +10)'
-  if (type === 'blockAmplifierUp') return '차단 증폭기(상)'
-  if (type === 'blockAmplifierDown') return '차단 증폭기(하)'
-  if (type === 'heatAmplifierLeft') return '열 증폭기(좌)'
-  if (type === 'heatAmplifierRight') return '열 증폭기(우)'
-  if (type === 'slotUnlocker') return '해금기(좌측 슬롯 해제)'
-  return '예열기(전투 시작 즉시 발사)'
+  return MODULE_METADATA[type].equipmentLogName
 }
 
 export function equipModuleToSlot(state: GameState, weaponId: string, moduleType: ModuleType, slotIndex: number): boolean {

@@ -5,6 +5,7 @@ import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { clampResourceAmount, clampResourcesToStorageCaps, getResourceStorageCap } from './resourceCaps.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
+import { inferModuleTypeFromAlias } from '../data/modules.ts'
 
 const SAVE_KEY = 'morning-save-v4'
 const AUTOSAVE_MS = 5000
@@ -27,30 +28,7 @@ function toWeaponType(value: unknown): WeaponType {
 }
 
 function inferModuleType(value: unknown): ModuleType | null {
-  if (
-    value === 'damage'
-    || value === 'cooldown'
-    || value === 'blockAmplifierUp'
-    || value === 'blockAmplifierDown'
-    || value === 'preheater'
-    || value === 'heatAmplifierLeft'
-    || value === 'heatAmplifierRight'
-    || value === 'slotUnlocker'
-  ) return value
-  if (value === 'amplifierUp') return 'blockAmplifierUp'
-  if (value === 'amplifierDown') return 'blockAmplifierDown'
-  if (value === 'heatAmplifier') return 'heatAmplifierLeft'
-  if (typeof value === 'string') {
-    if (value.startsWith('DMG-')) return 'damage'
-    if (value.startsWith('CDN-')) return 'cooldown'
-    if (value.startsWith('AMP-U-')) return 'blockAmplifierUp'
-    if (value.startsWith('AMP-D-')) return 'blockAmplifierDown'
-    if (value.startsWith('PRE-')) return 'preheater'
-    if (value.startsWith('HEAT-R-')) return 'heatAmplifierRight'
-    if (value.startsWith('HEAT-L-') || value.startsWith('HEAT-')) return 'heatAmplifierLeft'
-    if (value.startsWith('UNL-')) return 'slotUnlocker'
-  }
-  return null
+  return inferModuleTypeFromAlias(value)
 }
 
 function normalizeBackpackEntries(entries: unknown): GameState['exploration']['backpack'] {
@@ -295,17 +273,12 @@ function normalizeState(raw: unknown): GameState | null {
 
   if (loaded.modules && typeof loaded.modules === 'object' && !Array.isArray(loaded.modules)) {
     const modules = loaded.modules as Partial<Record<string, unknown>>
-    base.modules.damage = Math.max(0, Number(modules.damage ?? 0) || 0)
-    base.modules.cooldown = Math.max(0, Number(modules.cooldown ?? 0) || 0)
-    const legacyAmplifierUp = Math.max(0, Number(modules.amplifierUp ?? 0) || 0)
-    const legacyAmplifierDown = Math.max(0, Number(modules.amplifierDown ?? 0) || 0)
-    base.modules.blockAmplifierUp = Math.max(0, Number(modules.blockAmplifierUp ?? 0) || 0) + legacyAmplifierUp
-    base.modules.blockAmplifierDown = Math.max(0, Number(modules.blockAmplifierDown ?? 0) || 0) + legacyAmplifierDown
-    base.modules.preheater = Math.max(0, Number(modules.preheater ?? 0) || 0)
-    const legacyHeatAmplifier = Math.max(0, Number(modules.heatAmplifier ?? 0) || 0)
-    base.modules.heatAmplifierLeft = Math.max(0, Number(modules.heatAmplifierLeft ?? 0) || 0) + legacyHeatAmplifier
-    base.modules.heatAmplifierRight = Math.max(0, Number(modules.heatAmplifierRight ?? 0) || 0)
-    base.modules.slotUnlocker = Math.max(0, Number(modules.slotUnlocker ?? 0) || 0)
+    Object.entries(modules).forEach(([rawType, rawCount]) => {
+      const type = inferModuleType(rawType)
+      if (!type) return
+      const count = Math.max(0, Number(rawCount ?? 0) || 0)
+      base.modules[type] += count
+    })
   }
 
   if (Array.isArray(loaded.modules)) {

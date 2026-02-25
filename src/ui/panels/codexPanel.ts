@@ -1,28 +1,12 @@
-import type { GameState, ModuleType } from '../../core/state.ts'
+import type { GameState } from '../../core/state.ts'
 import { ENEMY_IDS, getEnemyDef } from '../../data/enemies.ts'
-import { getResourceDisplay } from '../../data/resources.ts'
 import { getBiomesForEnemy } from '../../data/maps/index.ts'
+import { MODULE_CODEX_ENTRIES } from '../../data/modules.ts'
+import { getResourceDisplay } from '../../data/resources.ts'
 
 type CodexSubTab = 'enemy' | 'chip'
 
-type ChipCodexEntry = {
-  type: ModuleType
-  name: string
-  icon: string
-  effect: string
-  powerCost: number
-}
-
-const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
-  { type: 'damage', name: '공격력 칩', icon: '💥', effect: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1', powerCost: 5 },
-  { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '기본효과: 가속 +10 / 증폭효과: 가속 +10', powerCost: 5 },
-  { type: 'blockAmplifierUp', name: '차단 증폭기(상)', icon: '📡▲', effect: '기본효과: 위쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음', powerCost: 2 },
-  { type: 'blockAmplifierDown', name: '차단 증폭기(하)', icon: '📡▼', effect: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음', powerCost: 2 },
-  { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음', powerCost: 7 },
-  { type: 'heatAmplifierLeft', name: '열 증폭기(좌)', icon: '♨️◀', effect: '기본효과: 즉시 왼쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 오른쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
-  { type: 'heatAmplifierRight', name: '열 증폭기(우)', icon: '♨️▶', effect: '기본효과: 즉시 오른쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 왼쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
-  { type: 'slotUnlocker', name: '해금기', icon: '🗝️', effect: '기본효과: 작동 중 좌측 비활성 슬롯 2칸 임시 해제 / 증폭효과: 해당 없음', powerCost: 6 },
-]
+const CHIP_CODEX_ENTRIES = MODULE_CODEX_ENTRIES
 
 let selectedCodexSubTab: CodexSubTab = 'enemy'
 
