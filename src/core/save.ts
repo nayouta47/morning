@@ -451,6 +451,10 @@ export function loadGame(): GameState | null {
   }
 }
 
+export function clearGameSave(): void {
+  localStorage.removeItem(SAVE_KEY)
+}
+
 export function startAutosave(getState: () => GameState): number {
   return window.setInterval(() => {
     saveGame(getState())

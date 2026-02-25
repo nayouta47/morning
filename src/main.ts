@@ -27,7 +27,7 @@ import {
   useSyntheticFood,
   unlockAllEnemyCodex,
 } from './core/actions.ts'
-import { loadGame, saveGame, startAutosave } from './core/save.ts'
+import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
@@ -207,6 +207,12 @@ function redraw(nowOverride?: number): void {
           }
           simulationLastTickAt = Date.now()
           redraw()
+        },
+        onDeleteData: () => {
+          const confirmed = window.confirm('저장된 게임 데이터를 삭제하고 초기 상태로 되돌릴까요?')
+          if (!confirmed) return
+          clearGameSave()
+          window.location.reload()
         },
         onCheatGrantCodexChip: (moduleType) => {
           syncState()
