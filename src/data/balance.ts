@@ -35,6 +35,11 @@ export const UPGRADE_DEFS = {
     baseCost: { wood: 160, iron: 50 },
     effectText: '분쇄기 처리량 +25%',
   },
+  organicFilament: {
+    name: '유기물 필라멘트',
+    baseCost: { wood: 180, iron: 70 },
+    effectText: '유기 합성 라인 복구: 인조식량·회복약(소) 제작 해금',
+  },
   moduleCraftingII: {
     name: '모듈 제작 II',
     baseCost: { wood: 240, iron: 120 },
@@ -42,7 +47,7 @@ export const UPGRADE_DEFS = {
   },
 } as const
 
-export const RESEARCH_PANEL_UPGRADE_KEYS = ['moduleCraftingII'] as const
+export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII'] as const
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 

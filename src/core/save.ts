@@ -125,6 +125,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.upgrades.sortingWork = Boolean(loaded.upgrades.sortingWork)
     base.upgrades.sharpSaw = Boolean(loaded.upgrades.sharpSaw)
     base.upgrades.drillBoost = Boolean(loaded.upgrades.drillBoost)
+    base.upgrades.organicFilament = Boolean(loaded.upgrades.organicFilament)
     base.upgrades.moduleCraftingII = Boolean(loaded.upgrades.moduleCraftingII)
   }
   if (loaded.unlocks) {

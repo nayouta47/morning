@@ -149,6 +149,9 @@ export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): Re
 export function getCraftRecipeMissingRequirement(state: GameState, recipe: CraftRecipeKey): string | null {
   const missing = getMissingRequirementFromList(state, CRAFT_RECIPE_DEFS[recipe].requirements)
   if (missing) return missing
+  if ((recipe === 'syntheticFood' || recipe === 'smallHealPotion') && !state.upgrades.organicFilament) {
+    return '연구 필요: 유기물 필라멘트'
+  }
   if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) {
     return '연구 필요: 모듈 제작 II'
   }
@@ -157,6 +160,7 @@ export function getCraftRecipeMissingRequirement(state: GameState, recipe: Craft
 
 export function isCraftRecipeUnlocked(state: GameState, recipe: CraftRecipeKey): boolean {
   if (!areRequirementsMet(state, CRAFT_RECIPE_DEFS[recipe].requirements)) return false
+  if ((recipe === 'syntheticFood' || recipe === 'smallHealPotion') && !state.upgrades.organicFilament) return false
   if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) return false
   return true
 }

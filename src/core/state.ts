@@ -12,6 +12,7 @@ export type Upgrades = {
   sortingWork: boolean
   sharpSaw: boolean
   drillBoost: boolean
+  organicFilament: boolean
   moduleCraftingII: boolean
 }
 
@@ -186,6 +187,7 @@ export const initialState: GameState = {
     sortingWork: false,
     sharpSaw: false,
     drillBoost: false,
+    organicFilament: false,
     moduleCraftingII: false,
   },
   unlocks: {
