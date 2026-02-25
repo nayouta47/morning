@@ -40,24 +40,24 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
     amplified: '가속 +10',
   },
   blockAmplifierUp: {
-    base: `위쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 ${SLOT_PENALTY_MAJOR}`,
-    amplified: `차단 패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: '증폭(중첩) + 차단 패널티 부여',
+    amplified: '차단 패널티 누적 시 슬롯 정지',
   },
   blockAmplifierDown: {
-    base: `아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 ${SLOT_PENALTY_MAJOR}`,
-    amplified: `차단 패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: '증폭(중첩) + 차단 패널티 부여',
+    amplified: '차단 패널티 누적 시 슬롯 정지',
   },
   preheater: {
     base: '전투 시작 즉시 발사 준비',
     amplified: '해당 없음',
   },
   heatAmplifierLeft: {
-    base: '즉시 왼쪽 1칸 증폭 +2',
-    amplified: `고열 패널티: 오른쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: '즉시 증폭 +2',
+    amplified: '총 고열 패널티에 비례해 증폭 감소, 누적 시 슬롯 정지',
   },
   heatAmplifierRight: {
-    base: '즉시 오른쪽 1칸 증폭 +2',
-    amplified: `고열 패널티: 왼쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: '즉시 증폭 +2',
+    amplified: '총 고열 패널티에 비례해 증폭 감소, 누적 시 슬롯 정지',
   },
 }
 
