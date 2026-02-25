@@ -207,9 +207,15 @@ function makeModule(state: GameState, type: ModuleType): void {
       ? '💥 공격력(+1)'
       : type === 'cooldown'
         ? '⏱️ 쿨다운 가속(+10)'
-        : type === 'amplifier'
-          ? '📡 증폭자(왼쪽 모듈 증폭)'
-          : '🔥 예열기(전투 시작 즉시 발사)'
+        : type === 'blockAmplifierLeft'
+          ? '📡◀ 차단 증폭기(좌)'
+          : type === 'blockAmplifierRight'
+            ? '📡▶ 차단 증폭기(우)'
+            : type === 'blockAmplifierUp'
+              ? '📡▲ 차단 증폭기(상)'
+              : type === 'blockAmplifierDown'
+                ? '📡▼ 차단 증폭기(하)'
+                : '🔥 예열기(전투 시작 즉시 발사)'
   appendLog(state, `모듈 제작 완료: ${label}`)
 }
 

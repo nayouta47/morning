@@ -5,7 +5,10 @@ import { pushLog } from './logging.ts'
 function moduleName(type: ModuleType): string {
   if (type === 'damage') return '공격력 모듈(+1)'
   if (type === 'cooldown') return '쿨다운 모듈(가속 +10)'
-  if (type === 'amplifier') return '증폭자(왼쪽 모듈 증폭)'
+  if (type === 'blockAmplifierLeft') return '차단 증폭기(좌)'
+  if (type === 'blockAmplifierRight') return '차단 증폭기(우)'
+  if (type === 'blockAmplifierUp') return '차단 증폭기(상)'
+  if (type === 'blockAmplifierDown') return '차단 증폭기(하)'
   return '예열기(전투 시작 즉시 발사)'
 }
 

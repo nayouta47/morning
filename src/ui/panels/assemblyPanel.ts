@@ -2,17 +2,31 @@ import { MODULE_POWER_COST, getWeaponModuleLayerStats } from '../../core/moduleE
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
 import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
 
-const MODULE_EMOJI: Record<ModuleType, string> = { damage: '💥', cooldown: '⏱️', amplifier: '📡', preheater: '🔥' }
+const MODULE_EMOJI: Record<ModuleType, string> = {
+  damage: '💥',
+  cooldown: '⏱️',
+  blockAmplifierLeft: '📡◀',
+  blockAmplifierRight: '📡▶',
+  blockAmplifierUp: '📡▲',
+  blockAmplifierDown: '📡▼',
+  preheater: '🔥',
+}
 const MODULE_NAME: Record<ModuleType, string> = {
   damage: '공격력 칩',
   cooldown: '가속 칩',
-  amplifier: '증폭 칩',
+  blockAmplifierLeft: '차단 증폭기(좌)',
+  blockAmplifierRight: '차단 증폭기(우)',
+  blockAmplifierUp: '차단 증폭기(상)',
+  blockAmplifierDown: '차단 증폭기(하)',
   preheater: '예열기 칩',
 }
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
   cooldown: '기본효과: 가속 +10 / 증폭효과: 가속 +10 · 전력 ⚡5',
-  amplifier: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierLeft: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierRight: '기본효과: 오른쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierUp: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierDown: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
   preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음 · 전력 ⚡7',
 }
 
@@ -135,7 +149,7 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${state.modules.preheater}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierLeft}:${state.modules.blockAmplifierRight}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])

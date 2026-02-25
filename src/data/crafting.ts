@@ -43,7 +43,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     durationMs: WEAPON_CRAFT_DURATION_MS,
     costs: { iron: 200, molybdenum: 1 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
-    outputs: [{ kind: 'moduleRandom', pool: ['damage', 'cooldown', 'amplifier'], count: 1 }],
+    outputs: [{ kind: 'moduleRandom', pool: ['damage', 'cooldown', 'blockAmplifierLeft', 'blockAmplifierRight', 'blockAmplifierUp', 'blockAmplifierDown'], count: 1 }],
   },
   shovel: {
     id: 'shovel',
@@ -105,7 +105,7 @@ export function getModuleCraftTierLabel(tier: ModuleCraftTier): string {
 }
 
 export function getModuleCraftPoolByTier(tier: ModuleCraftTier): ModuleType[] {
-  return tier === 2 ? ['preheater'] : ['damage', 'cooldown', 'amplifier']
+  return tier === 2 ? ['preheater'] : ['damage', 'cooldown', 'blockAmplifierLeft', 'blockAmplifierRight', 'blockAmplifierUp', 'blockAmplifierDown']
 }
 
 export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {

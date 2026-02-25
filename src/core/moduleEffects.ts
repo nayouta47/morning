@@ -14,8 +14,24 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
   cooldown: 5,
-  amplifier: 2,
+  blockAmplifierLeft: 2,
+  blockAmplifierRight: 2,
+  blockAmplifierUp: 2,
+  blockAmplifierDown: 2,
   preheater: 7,
+}
+
+type Direction = 'left' | 'right' | 'up' | 'down'
+
+const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
+  blockAmplifierLeft: 'left',
+  blockAmplifierRight: 'right',
+  blockAmplifierUp: 'up',
+  blockAmplifierDown: 'down',
+}
+
+function isAmplifierModule(type: ModuleType | null | undefined): type is keyof typeof AMPLIFIER_DIRECTION {
+  return type === 'blockAmplifierLeft' || type === 'blockAmplifierRight' || type === 'blockAmplifierUp' || type === 'blockAmplifierDown'
 }
 
 function applyHasteToCooldown(baseCooldownSec: number, totalHaste: number): number {
@@ -45,63 +61,62 @@ export type ModuleLayerStats = {
   power: WeaponPowerStatus
 }
 
-function isSameRowAdjacentLeft(leftIndex: number, rightIndex: number): boolean {
+function isSameRowAdjacent(leftIndex: number, rightIndex: number): boolean {
   return rightIndex - leftIndex === 1 && Math.floor(leftIndex / SLOT_COLUMNS) === Math.floor(rightIndex / SLOT_COLUMNS)
+}
+
+function getNeighborIndex(index: number, direction: Direction, maxSlots: number): number | null {
+  if (direction === 'left') {
+    const left = index - 1
+    return left >= 0 && isSameRowAdjacent(left, index) ? left : null
+  }
+  if (direction === 'right') {
+    const right = index + 1
+    return isSameRowAdjacent(index, right) ? right : null
+  }
+  if (direction === 'up') {
+    const up = index - SLOT_COLUMNS
+    return up >= 0 ? up : null
+  }
+  const down = index + SLOT_COLUMNS
+  return down < maxSlots ? down : null
+}
+
+function getPenaltyDirections(direction: Direction): Direction[] {
+  if (direction === 'left' || direction === 'right') return ['up', 'down']
+  return ['left', 'right']
 }
 
 function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): boolean[] {
   const disabled = Array.from({ length: weapon.slots.length }, () => false)
 
   weapon.slots.forEach((moduleType, index) => {
-    if (moduleType !== 'amplifier' || !activeSlots.has(index)) return
+    if (!isAmplifierModule(moduleType) || !activeSlots.has(index)) return
+    const direction = AMPLIFIER_DIRECTION[moduleType]
+    if (!direction) return
 
-    const upIndex = index - SLOT_COLUMNS
-    const downIndex = index + SLOT_COLUMNS
-
-    if (upIndex >= 0 && activeSlots.has(upIndex)) disabled[upIndex] = true
-    if (downIndex < weapon.slots.length && activeSlots.has(downIndex)) disabled[downIndex] = true
+    getPenaltyDirections(direction).forEach((penaltyDirection) => {
+      const penaltyIndex = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
+      if (penaltyIndex != null && activeSlots.has(penaltyIndex)) disabled[penaltyIndex] = true
+    })
   })
 
   return disabled
 }
 
-function getAmplifierPowerBySlot(weapon: WeaponInstance, enabledSlots: Set<number>): number[] {
-  const power = Array.from({ length: weapon.slots.length }, () => 0)
-
-  for (let index = weapon.slots.length - 1; index >= 0; index -= 1) {
-    if (!enabledSlots.has(index) || weapon.slots[index] !== 'amplifier') continue
-
-    const rightIndex = index + 1
-    if (
-      rightIndex < weapon.slots.length
-      && enabledSlots.has(rightIndex)
-      && weapon.slots[rightIndex] === 'amplifier'
-      && isSameRowAdjacentLeft(index, rightIndex)
-    ) {
-      power[index] = 1 + power[rightIndex]
-      continue
-    }
-
-    power[index] = 1
-  }
-
-  return power
-}
-
-function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, enabledSlots: Set<number>, amplifierPower: number[]): number {
+function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, enabledSlots: Set<number>): number {
   if (!enabledSlots.has(index) || !weapon.slots[index]) return 0
 
-  const rightIndex = index + 1
-  if (
-    rightIndex < weapon.slots.length
-    && enabledSlots.has(rightIndex)
-    && weapon.slots[rightIndex] === 'amplifier'
-    && isSameRowAdjacentLeft(index, rightIndex)
-  ) {
-    return amplifierPower[rightIndex] ?? 0
-  }
+  return weapon.slots.reduce((count, moduleType, ampIndex) => {
+    if (!enabledSlots.has(ampIndex) || !isAmplifierModule(moduleType)) return count
 
-  return 0
+    const direction = AMPLIFIER_DIRECTION[moduleType]
+    if (!direction) return count
+
+    const targetIndex = getNeighborIndex(ampIndex, direction, weapon.slots.length)
+    if (targetIndex === index && enabledSlots.has(targetIndex)) return count + 1
+    return count
+  }, 0)
 }
 
 export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus {
@@ -147,10 +162,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     }
   }
 
-  const amplifierPower = getAmplifierPowerBySlot(weapon, enabledSlots)
-  const slotAmplification = weapon.slots.map((_, index) =>
-    getAmplificationCountForSlot(index, weapon, enabledSlots, amplifierPower),
-  )
+  const slotAmplification = weapon.slots.map((_, index) => getAmplificationCountForSlot(index, weapon, enabledSlots))
 
   let damageBase = 0
   let damageAmplified = 0
@@ -203,5 +215,11 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
 }
 
 export function isModuleType(value: string | null | undefined): value is ModuleType {
-  return value === 'damage' || value === 'cooldown' || value === 'amplifier' || value === 'preheater'
+  return value === 'damage'
+    || value === 'cooldown'
+    || value === 'blockAmplifierLeft'
+    || value === 'blockAmplifierRight'
+    || value === 'blockAmplifierUp'
+    || value === 'blockAmplifierDown'
+    || value === 'preheater'
 }
