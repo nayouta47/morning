@@ -7,6 +7,23 @@
   --gauge-state-size: 11px;
   --gauge-time-size: 10px;
   --gauge-line-height: 1.2;
+
+  /* Rarity palette foundation: white -> green -> blue -> purple -> yellow -> orange -> red */
+  --rarity-white: #c8c1b3;
+  --rarity-green: #79b875;
+  --rarity-blue: #6b97cf;
+  --rarity-purple: #9a77c4;
+  --rarity-yellow: #c9b05a;
+  --rarity-orange: #c68c57;
+  --rarity-red: #bb645f;
+
+  --rarity-white-rgb: 200, 193, 179;
+  --rarity-green-rgb: 121, 184, 117;
+  --rarity-blue-rgb: 107, 151, 207;
+  --rarity-purple-rgb: 154, 119, 196;
+  --rarity-yellow-rgb: 201, 176, 90;
+  --rarity-orange-rgb: 198, 140, 87;
+  --rarity-red-rgb: 187, 100, 95;
 }
 
 * {
@@ -168,6 +185,8 @@ h1 {
 }
 
 .module-craft-row {
+  --module-rarity-color: transparent;
+  --module-rarity-rgb: 0, 0, 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 6px;
@@ -187,6 +206,45 @@ h1 {
   padding: 2px 0;
   font-size: 9px;
   line-height: 1;
+}
+
+/* Module I stays neutral; Module II gets restrained rarity accent. */
+.module-craft-row[data-module-rarity='green'] {
+  --module-rarity-color: var(--rarity-green);
+  --module-rarity-rgb: var(--rarity-green-rgb);
+}
+
+.module-craft-row[data-module-rarity='green'] .module-craft-tier-switch {
+  border: 1px solid rgba(var(--module-rarity-rgb), 0.25);
+  border-radius: 4px;
+  background: rgba(var(--module-rarity-rgb), 0.06);
+  padding: 1px;
+}
+
+.module-craft-row[data-module-rarity='green'] .craft-tier-btn {
+  border-color: rgba(var(--module-rarity-rgb), 0.32);
+  background: rgba(var(--module-rarity-rgb), 0.08);
+}
+
+.module-craft-row[data-module-rarity='green'] .craft-tier-btn:hover:not(:disabled) {
+  border-color: rgba(var(--module-rarity-rgb), 0.42);
+  background: rgba(var(--module-rarity-rgb), 0.12);
+}
+
+.module-craft-row[data-module-rarity='green'] #craft-module {
+  border-color: rgba(var(--module-rarity-rgb), 0.3);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.06), rgba(var(--module-rarity-rgb), 0.02));
+}
+
+.module-craft-row[data-module-rarity='green'] #craft-module:hover:not(:disabled) {
+  border-color: rgba(var(--module-rarity-rgb), 0.42);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.09), rgba(var(--module-rarity-rgb), 0.03));
+}
+
+.module-craft-row[data-module-rarity='green'] #craft-module:disabled,
+.module-craft-row[data-module-rarity='green'] .craft-tier-btn:disabled {
+  border-color: rgba(var(--module-rarity-rgb), 0.18);
+  background: rgba(var(--module-rarity-rgb), 0.03);
 }
 
 .upgrades {

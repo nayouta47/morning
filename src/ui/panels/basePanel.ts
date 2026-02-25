@@ -233,10 +233,12 @@ function renderResourceRow(resource: keyof GameState['resources'], id: string, v
 
 function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
   const tier = getSelectedModuleCraftTier(state)
+  const activeTier = getActiveModuleCraftTier(state)
   const canSelectTierII = state.upgrades.moduleCraftingII
-  const tierLabel = getModuleCraftTierLabel(getActiveModuleCraftTier(state))
+  const tierLabel = getModuleCraftTierLabel(activeTier)
+  const rarityToken = activeTier >= 2 ? 'green' : 'white'
   const lockedHint = !canSelectTierII ? '<p class="hint" id="module-craft-tier-hint">모듈 제작 II는 연구에서 해금됩니다.</p>' : ''
-  return `<div class="module-craft-row"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>◀</button><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>▶</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
+  return `<div class="module-craft-row" data-module-rarity="${rarityToken}"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>◀</button><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>▶</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
 }
 
 export function renderCraftActions(state: GameState): string {
@@ -427,4 +429,10 @@ export function patchCraftButtons(app: ParentNode, state: GameState): void {
 
   const hint = app.querySelector<HTMLElement>('#module-craft-tier-hint')
   if (hint) hint.hidden = state.upgrades.moduleCraftingII
+
+  const moduleCraftRow = app.querySelector<HTMLElement>('.module-craft-row')
+  if (moduleCraftRow) {
+    const activeTier = getActiveModuleCraftTier(state)
+    moduleCraftRow.dataset.moduleRarity = activeTier >= 2 ? 'green' : 'white'
+  }
 }
