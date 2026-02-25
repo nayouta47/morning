@@ -111,7 +111,8 @@ function renderExplorationBody(state: GameState, now = Date.now()): string {
 function getExplorationBodySignature(state: GameState): string {
   const backpackSig = state.exploration.backpack.map((entry) => `${entry.resource}:${entry.amount}`).join('|')
   const lootSig = state.exploration.pendingLoot.map((entry) => `${entry.resource}:${entry.amount}`).join('|')
-  return `${state.exploration.mode}:${state.exploration.phase}:${state.selectedWeaponId ?? 'none'}:${backpackSig}:${lootSig}:${state.resources.syntheticFood}:${state.resources.smallHealPotion}`
+  const weaponsSig = state.weapons.map((weapon) => `${weapon.id}:${weapon.type}`).join('|')
+  return `${state.exploration.mode}:${state.exploration.phase}:${state.selectedWeaponId ?? 'none'}:${weaponsSig}:${backpackSig}:${lootSig}:${state.resources.syntheticFood}:${state.resources.smallHealPotion}`
 }
 
 export function renderExplorationPanel(state: GameState, now = Date.now()): string {
