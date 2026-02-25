@@ -10,10 +10,10 @@ const MODULE_NAME: Record<ModuleType, string> = {
   preheater: '예열기 칩',
 }
 const MODULE_LABEL: Record<ModuleType, string> = {
-  damage: '공격력 +1 · 전력 ⚡5',
-  cooldown: '쿨다운 가속 +10 · 전력 ⚡5',
-  amplifier: '증폭자 (왼쪽 모듈 효과 +1중첩) · 전력 ⚡2',
-  preheater: '예열기 (전투 시작 즉시 발사, 중복 비중첩) · 전력 ⚡7',
+  damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
+  cooldown: '기본효과: 가속 +10 / 증폭효과: 가속 +10 · 전력 ⚡5',
+  amplifier: '기본효과: 왼쪽 1칸 증폭(+1중첩) / 증폭효과: 없음 · 전력 ⚡2',
+  preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 없음 · 전력 ⚡7',
 }
 
 type PowerPreview = {
