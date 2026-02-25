@@ -1,6 +1,6 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
 import type { ModuleType, WeaponInstance, WeaponType } from './state.ts'
-import { getBaseActiveWeaponSlots, getLeftUnlockableWeaponSlots } from './weaponSlots.ts'
+import { getBaseActiveWeaponSlots } from './weaponSlots.ts'
 
 const MIN_COOLDOWN_SEC = 0.5
 const SLOT_COLUMNS = 10
@@ -199,9 +199,28 @@ function getPowerUsage(weapon: WeaponInstance, activeSlots: Set<number>, slotPen
   }, 0)
 }
 
-function isSlotUnlockerEnabled(weapon: WeaponInstance, activeSlots: Set<number>, slotPenaltyDisabled: boolean[], overloaded: boolean): boolean {
-  if (overloaded) return false
-  return weapon.slots.some((moduleType, index) => moduleType === 'slotUnlocker' && activeSlots.has(index) && !slotPenaltyDisabled[index])
+function getSlotUnlockerUnlockedSlots(
+  weapon: WeaponInstance,
+  activeSlots: Set<number>,
+  slotPenaltyDisabled: boolean[],
+  overloaded: boolean,
+): Set<number> {
+  if (overloaded) return new Set<number>()
+
+  const unlocked = new Set<number>()
+  weapon.slots.forEach((moduleType, index) => {
+    if (moduleType !== 'slotUnlocker') return
+    if (!activeSlots.has(index) || slotPenaltyDisabled[index]) return
+
+    const left1 = getNeighborIndex(index, 'left', weapon.slots.length)
+    if (left1 == null) return
+    unlocked.add(left1)
+
+    const left2 = getNeighborIndex(left1, 'left', weapon.slots.length)
+    if (left2 != null) unlocked.add(left2)
+  })
+
+  return unlocked
 }
 
 function areSlotSetsEqual(left: Set<number>, right: Set<number>): boolean {
@@ -214,7 +233,6 @@ function areSlotSetsEqual(left: Set<number>, right: Set<number>): boolean {
 
 function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Set<number>; slotPenaltyDisabled: boolean[]; usage: number; overloaded: boolean } {
   const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
-  const unlockableSlots = getLeftUnlockableWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
   let activeSlots = new Set(baseActiveSlots)
@@ -223,8 +241,8 @@ function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Se
     const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
     const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
     const overloaded = usage > capacity
-    const unlockEnabled = isSlotUnlockerEnabled(weapon, activeSlots, slotPenaltyDisabled, overloaded)
-    const nextActiveSlots = unlockEnabled ? new Set([...baseActiveSlots, ...unlockableSlots]) : new Set(baseActiveSlots)
+    const unlockedBySlotUnlocker = getSlotUnlockerUnlockedSlots(weapon, activeSlots, slotPenaltyDisabled, overloaded)
+    const nextActiveSlots = new Set([...baseActiveSlots, ...unlockedBySlotUnlocker])
 
     if (areSlotSetsEqual(activeSlots, nextActiveSlots)) {
       return { activeSlots, slotPenaltyDisabled, usage, overloaded }
