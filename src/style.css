@@ -918,25 +918,12 @@ li {
 
 .slot-penalty.heat {
   --heat-penalty-fill-amount: 0;
-  background-image:
-    linear-gradient(
-      to top,
-      var(--heat-penalty-fill) 0,
-      var(--heat-penalty-fill) calc(var(--heat-penalty-fill-amount) * 100%),
-      transparent calc(var(--heat-penalty-fill-amount) * 100%),
-      transparent 100%
-    );
+  background-image: var(--heat-penalty-fill);
+  clip-path: inset(calc((1 - var(--heat-penalty-fill-amount)) * 100%) 0 0 0);
 }
 
 .slot-penalty.heat.major {
-  background-image:
-    linear-gradient(
-      to top,
-      var(--heat-penalty-fill-strong) 0,
-      var(--heat-penalty-fill-strong) calc(var(--heat-penalty-fill-amount) * 100%),
-      transparent calc(var(--heat-penalty-fill-amount) * 100%),
-      transparent 100%
-    );
+  background-image: var(--heat-penalty-fill-strong);
 }
 
 .slot-penalty.block {
@@ -945,25 +932,12 @@ li {
   border-radius: 3px;
   z-index: 2;
   opacity: calc(var(--slot-penalty-visibility) * 0.88);
-  background-image:
-    linear-gradient(
-      to bottom,
-      var(--block-penalty-fill) 0,
-      var(--block-penalty-fill) calc(var(--block-penalty-fill-amount) * 100%),
-      transparent calc(var(--block-penalty-fill-amount) * 100%),
-      transparent 100%
-    );
+  background-image: var(--block-penalty-fill);
+  clip-path: inset(0 0 calc((1 - var(--block-penalty-fill-amount)) * 100%) 0);
 }
 
 .slot-penalty.block.major {
-  background-image:
-    linear-gradient(
-      to bottom,
-      var(--block-penalty-fill-strong) 0,
-      var(--block-penalty-fill-strong) calc(var(--block-penalty-fill-amount) * 100%),
-      transparent calc(var(--block-penalty-fill-amount) * 100%),
-      transparent 100%
-    );
+  background-image: var(--block-penalty-fill-strong);
 }
 
 .slot.active {
