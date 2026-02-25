@@ -8,6 +8,8 @@ import {
   gatherWood,
   moveEquippedModuleBetweenSlots,
   continueExplorationAfterLoot,
+  addLoadoutResource,
+  removeLoadoutResource,
   moveExplorationStep,
   reorderWeapons,
   selectWeapon,
@@ -221,13 +223,7 @@ function redraw(nowOverride?: number): void {
         },
         onStartExploration: () => {
           syncState()
-          if (!state.selectedWeaponId) {
-            const proceed = window.confirm('무기를 선택하지 않았습니다. 그대로 출발할까요?')
-            if (!proceed) return
-            startExploration(state, true)
-          } else {
-            startExploration(state, false)
-          }
+          startExploration(state, false)
           redraw()
         },
         onMoveExploration: (dx, dy) => {
@@ -258,6 +254,16 @@ function redraw(nowOverride?: number): void {
         onContinueAfterLoot: () => {
           syncState()
           continueExplorationAfterLoot(state)
+          redraw()
+        },
+        onLoadoutAddItem: (resourceId) => {
+          syncState()
+          addLoadoutResource(state, resourceId)
+          redraw()
+        },
+        onLoadoutRemoveItem: (resourceId) => {
+          syncState()
+          removeLoadoutResource(state, resourceId)
           redraw()
         },
         onCraftPistol: () => {

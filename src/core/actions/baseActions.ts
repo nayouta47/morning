@@ -244,5 +244,9 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
 }
 
 export function selectWeapon(state: GameState, weaponId: string | null): void {
+  if (state.exploration.mode === 'active') {
+    pushLog(state, '탐험 중에는 무기를 변경할 수 없다.')
+    return
+  }
   state.selectedWeaponId = weaponId
 }

@@ -16,6 +16,7 @@ import { addResourceWithCap } from '../resourceCaps.ts'
 const BACKPACK_STACK_MAX = 16
 const BACKPACK_HEALING_STACK_MAX = 1
 const BACKPACK_SINGLE_STACK_RESOURCES = new Set<ResourceId>(['smallHealPotion', 'syntheticFood'])
+const LOADOUT_ALLOWED_RESOURCES = new Set<ResourceId>(['syntheticFood', 'smallHealPotion'])
 
 function getBackpackStackMax(resourceId: ResourceId): number {
   return BACKPACK_SINGLE_STACK_RESOURCES.has(resourceId) ? BACKPACK_HEALING_STACK_MAX : BACKPACK_STACK_MAX
@@ -23,6 +24,10 @@ function getBackpackStackMax(resourceId: ResourceId): number {
 
 function getBackpackUsedSlots(state: GameState): number {
   return state.exploration.backpack.length
+}
+
+function getBackpackResourceAmount(state: GameState, resourceId: ResourceId): number {
+  return state.exploration.backpack.reduce((sum, entry) => (entry.resource === resourceId ? sum + entry.amount : sum), 0)
 }
 
 function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: number): number {
@@ -47,6 +52,25 @@ function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: num
   }
 
   return remaining
+}
+
+function removeBackpackResource(state: GameState, resourceId: ResourceId, amount: number): boolean {
+  let remaining = Math.max(0, Math.floor(amount))
+  if (remaining <= 0) return true
+
+  for (let i = state.exploration.backpack.length - 1; i >= 0 && remaining > 0; i -= 1) {
+    const entry = state.exploration.backpack[i]
+    if (!entry || entry.resource !== resourceId) continue
+
+    const removed = Math.min(entry.amount, remaining)
+    entry.amount -= removed
+    remaining -= removed
+    if (entry.amount <= 0) {
+      state.exploration.backpack.splice(i, 1)
+    }
+  }
+
+  return remaining === 0
 }
 
 function positionKey(x: number, y: number): string {
@@ -102,7 +126,8 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
     return false
   }
 
-  if (!state.selectedWeaponId && !proceedWithoutWeapon) {
+  if (!state.selectedWeaponId) {
+    if (proceedWithoutWeapon) pushLog(state, '무기 선택 없이 출발할 수 없다.')
     return false
   }
 
@@ -116,7 +141,6 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.steps = 0
   state.exploration.visited = [positionKey(start.x, start.y)]
   state.exploration.movesSinceEncounter = 0
-  state.exploration.backpack = []
   state.exploration.pendingLoot = []
   state.exploration.carriedWeaponId = state.selectedWeaponId
   state.exploration.combat = null
@@ -178,17 +202,16 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   return true
 }
 
-
-
 export function useSyntheticFood(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase === 'combat') return false
 
-  if (state.resources.syntheticFood <= 0) {
+  const backpackAmount = getBackpackResourceAmount(state, 'syntheticFood')
+  if (backpackAmount <= 0) {
     pushLog(state, '인조식량이 없다.')
     return false
   }
 
-  state.resources.syntheticFood -= 1
+  removeBackpackResource(state, 'syntheticFood', 1)
   const prevHp = state.exploration.hp
   state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + 5)
   const healed = state.exploration.hp - prevHp
@@ -201,7 +224,8 @@ export function useSmallHealPotion(state: GameState): boolean {
   const combat = state.exploration.combat
   if (!combat) return false
 
-  if (state.resources.smallHealPotion <= 0) {
+  const backpackAmount = getBackpackResourceAmount(state, 'smallHealPotion')
+  if (backpackAmount <= 0) {
     pushLog(state, '회복약(소)이 없다.')
     return false
   }
@@ -211,7 +235,7 @@ export function useSmallHealPotion(state: GameState): boolean {
     return false
   }
 
-  state.resources.smallHealPotion -= 1
+  removeBackpackResource(state, 'smallHealPotion', 1)
   const prevHp = state.exploration.hp
   state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + SMALL_HEAL_POTION_HEAL)
   const healed = state.exploration.hp - prevHp
@@ -300,5 +324,43 @@ export function tryReturnFromExploration(state: GameState): boolean {
   endExplorationToLoadout(state)
   state.activeTab = 'exploration'
   pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
+  return true
+}
+
+export function addLoadoutResource(state: GameState, resourceId: ResourceId, amount = 1): boolean {
+  if (state.exploration.mode !== 'loadout') return false
+  if (!LOADOUT_ALLOWED_RESOURCES.has(resourceId)) return false
+
+  const addAmount = Math.max(1, Math.floor(amount))
+  if (state.resources[resourceId] < addAmount) {
+    pushLog(state, `${getResourceDisplay(resourceId)} 보유량이 부족하다.`)
+    return false
+  }
+
+  const remaining = addLootToBackpack(state, resourceId, addAmount)
+  const loaded = addAmount - remaining
+  if (loaded <= 0) {
+    pushLog(state, '배낭에 빈 칸이 없다.')
+    return false
+  }
+
+  state.resources[resourceId] -= loaded
+  if (remaining > 0) {
+    pushLog(state, `${getResourceDisplay(resourceId)} +${loaded} 적재 (배낭 가득)`)
+  }
+  return true
+}
+
+export function removeLoadoutResource(state: GameState, resourceId: ResourceId, amount = 1): boolean {
+  if (state.exploration.mode !== 'loadout') return false
+  if (!LOADOUT_ALLOWED_RESOURCES.has(resourceId)) return false
+
+  const removeAmount = Math.max(1, Math.floor(amount))
+  if (!removeBackpackResource(state, resourceId, removeAmount)) {
+    pushLog(state, `${getResourceDisplay(resourceId)} 적재 수량이 부족하다.`)
+    return false
+  }
+
+  state.resources[resourceId] += removeAmount
   return true
 }

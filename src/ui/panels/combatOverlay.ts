@@ -8,6 +8,10 @@ const ATTACK_NUDGE_MS = 170
 
 let trackedCombatRef: GameState['exploration']['combat'] | null = null
 let trackedPlayerHp = 0
+
+function getBackpackResourceAmount(state: GameState, resourceId: 'smallHealPotion'): number {
+  return state.exploration.backpack.reduce((sum, entry) => (entry.resource === resourceId ? sum + entry.amount : sum), 0)
+}
 let trackedEnemyHp = 0
 let playerNudgeUntil = 0
 let enemyNudgeUntil = 0
@@ -89,7 +93,7 @@ export function renderExplorationCombatOverlay(state: GameState, now = Date.now(
 
   const { playerAttackPercent, enemyAttackPercent, fleePercent, potionCooldownPercent } = getCombatGaugeView(state, now)
   const potionReady = combat.smallHealPotionCooldownRemainingMs <= 0
-  const potionAmount = state.resources.smallHealPotion
+  const potionAmount = getBackpackResourceAmount(state, 'smallHealPotion')
   const nudgeClasses = getNudgeClasses(now)
   const enemyEmoji = getEnemyDisplayEmoji(combat.enemyId)
 
@@ -138,8 +142,9 @@ export function patchExplorationCombatOverlay(app: ParentNode, state: GameState,
 
   const potionButton = app.querySelector<HTMLButtonElement>('#exploration-use-small-heal-potion')
   if (potionButton) {
-    potionButton.disabled = combat.smallHealPotionCooldownRemainingMs > 0 || state.resources.smallHealPotion <= 0
-    potionButton.textContent = `사용 (${state.resources.smallHealPotion})`
+    const potionAmount = getBackpackResourceAmount(state, 'smallHealPotion')
+    potionButton.disabled = combat.smallHealPotionCooldownRemainingMs > 0 || potionAmount <= 0
+    potionButton.textContent = `사용 (${potionAmount})`
   }
 
   const fleeMeter = app.querySelector<HTMLElement>('#combat-flee-gauge')

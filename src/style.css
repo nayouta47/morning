@@ -542,6 +542,41 @@ li {
   max-width: 520px;
 }
 
+.exploration-loadout-weapons,
+.exploration-loadout-items {
+  width: 100%;
+  max-width: 520px;
+}
+
+#exploration-loadout-weapon-list {
+  display: grid;
+  gap: 6px;
+}
+
+.exploration-loadout-items ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.exploration-loadout-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #4a4337;
+  border-radius: 6px;
+  background: #111;
+  padding: 6px 8px;
+}
+
+.exploration-loadout-item-controls {
+  display: inline-flex;
+  gap: 6px;
+}
+
 .backpack-grid {
   margin: 0;
   list-style: none;

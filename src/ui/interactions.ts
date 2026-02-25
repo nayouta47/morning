@@ -240,6 +240,20 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
       return
     }
 
+    const loadoutAddButton = target.closest<HTMLElement>('[data-loadout-add]')
+    if (loadoutAddButton) {
+      const resourceId = loadoutAddButton.getAttribute('data-loadout-add') as ResourceId | null
+      if (resourceId) handlers.onLoadoutAddItem(resourceId)
+      return
+    }
+
+    const loadoutRemoveButton = target.closest<HTMLElement>('[data-loadout-remove]')
+    if (loadoutRemoveButton) {
+      const resourceId = loadoutRemoveButton.getAttribute('data-loadout-remove') as ResourceId | null
+      if (resourceId) handlers.onLoadoutRemoveItem(resourceId)
+      return
+    }
+
     const button = target.closest<HTMLElement>('[data-weapon-id]')
     const id = button?.getAttribute('data-weapon-id')
     if (id) dispatchInteractionIntent(handlers, { type: 'weapon/select', weaponId: id })
