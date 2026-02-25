@@ -848,6 +848,37 @@ li {
   border-color: #d7b168;
 }
 
+.weapon-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.weapon-board-header h3 {
+  margin: 0;
+}
+
+.chip-state-copy-btn {
+  border: 1px solid #3f4b52;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #11171b;
+  color: #b9ccd7;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.chip-state-copy-btn:hover:not(:disabled) {
+  border-color: #5a7688;
+  color: #d2e4ee;
+}
+
+.chip-state-copy-btn:disabled {
+  opacity: 0.5;
+}
+
 .weapon-board {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
