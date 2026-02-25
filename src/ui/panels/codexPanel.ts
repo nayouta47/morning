@@ -16,8 +16,8 @@ type ChipCodexEntry = {
 const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
   { type: 'damage', name: '공격력 칩', icon: '💥', effect: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1', powerCost: 5 },
   { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '기본효과: 가속 +10 / 증폭효과: 가속 +10', powerCost: 5 },
-  { type: 'amplifier', name: '증폭 칩', icon: '📡', effect: '기본효과: 왼쪽 1칸 증폭(+1중첩) / 증폭효과: 없음', powerCost: 2 },
-  { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 없음', powerCost: 7 },
+  { type: 'amplifier', name: '증폭 칩', icon: '📡', effect: '기본효과: 왼쪽 1칸 증폭(중첩) / 증폭효과: 해당 없음', powerCost: 2 },
+  { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음', powerCost: 7 },
 ]
 
 let selectedCodexSubTab: CodexSubTab = 'enemy'
