@@ -791,6 +791,60 @@ li {
   justify-content: center;
   color: #b5ad9c;
   position: relative;
+  overflow: hidden;
+  --slot-heat-intensity: 0;
+}
+
+.slot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: min(0.78, calc(var(--slot-heat-intensity) * 0.8));
+  z-index: 0;
+}
+
+.slot > * {
+  position: relative;
+  z-index: 1;
+}
+
+.slot.heat-high::before {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 148, 92, 0.24) 0,
+    rgba(255, 148, 92, 0.24) 2px,
+    rgba(255, 148, 92, 0) 2px,
+    rgba(255, 148, 92, 0) 7px
+  );
+}
+
+.slot.heat-warm::before {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 201, 122, 0.18) 0,
+    rgba(255, 201, 122, 0.18) 1px,
+    rgba(255, 201, 122, 0) 1px,
+    rgba(255, 201, 122, 0) 8px
+  );
+}
+
+.slot.heat-high.heat-warm::before {
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 148, 92, 0.24) 0,
+      rgba(255, 148, 92, 0.24) 2px,
+      rgba(255, 148, 92, 0) 2px,
+      rgba(255, 148, 92, 0) 7px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 201, 122, 0.16) 0,
+      rgba(255, 201, 122, 0.16) 1px,
+      rgba(255, 201, 122, 0) 1px,
+      rgba(255, 201, 122, 0) 8px
+    );
 }
 
 .slot-amplify {
@@ -847,6 +901,7 @@ li {
   color: rgba(255, 110, 110, 0.82);
   text-shadow: 0 0 4px rgba(48, 10, 10, 0.8);
   pointer-events: none;
+  z-index: 2;
 }
 
 .slot.preview-safe {

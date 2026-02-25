@@ -215,7 +215,9 @@ function makeModule(state: GameState, type: ModuleType): void {
               ? '📡▲ 차단 증폭기(상)'
               : type === 'blockAmplifierDown'
                 ? '📡▼ 차단 증폭기(하)'
-                : '🔥 예열기(전투 시작 즉시 발사)'
+                : type === 'heatAmplifier'
+                  ? '♨️ 열 증폭기(왼쪽 +2, 열장 페널티)'
+                  : '🔥 예열기(전투 시작 즉시 발사)'
   appendLog(state, `모듈 제작 완료: ${label}`)
 }
 

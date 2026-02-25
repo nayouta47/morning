@@ -35,6 +35,7 @@ function inferModuleType(value: unknown): ModuleType {
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'
+    || value === 'heatAmplifier'
   ) return value
   if (value === 'amplifier' || value === 'amplifierLeft') return 'blockAmplifierLeft'
   if (value === 'amplifierRight') return 'blockAmplifierRight'
@@ -49,6 +50,7 @@ function inferModuleType(value: unknown): ModuleType {
     if (value.startsWith('AMP-D-')) return 'blockAmplifierDown'
     if (value.startsWith('AMP-')) return 'blockAmplifierLeft'
     if (value.startsWith('PRE-')) return 'preheater'
+    if (value.startsWith('HEAT-')) return 'heatAmplifier'
   }
   return 'cooldown'
 }
@@ -292,6 +294,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.modules.blockAmplifierUp = Math.max(0, Number(modules.blockAmplifierUp ?? 0) || 0) + legacyAmplifierUp
     base.modules.blockAmplifierDown = Math.max(0, Number(modules.blockAmplifierDown ?? 0) || 0) + legacyAmplifierDown
     base.modules.preheater = Math.max(0, Number(modules.preheater ?? 0) || 0)
+    base.modules.heatAmplifier = Math.max(0, Number(modules.heatAmplifier ?? 0) || 0)
   }
 
   if (Array.isArray(loaded.modules)) {

@@ -11,6 +11,18 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
   rifle: 20,
 }
 
+const HEAT_AMPLIFIER_HIGH_HEAT_OFFSETS = [
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 1, y: -1 },
+] as const
+
+const HEAT_AMPLIFIER_WARM_HEAT_OFFSETS = [
+  { x: 2, y: 0 },
+  { x: 2, y: 1 },
+  { x: 2, y: -1 },
+] as const
+
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
   cooldown: 5,
@@ -19,6 +31,7 @@ export const MODULE_POWER_COST: Record<ModuleType, number> = {
   blockAmplifierUp: 2,
   blockAmplifierDown: 2,
   preheater: 7,
+  heatAmplifier: 4,
 }
 
 type Direction = 'left' | 'right' | 'up' | 'down'
@@ -55,6 +68,10 @@ export type ModuleLayerStats = {
   finalDamage: number
   finalCooldownSec: number
   slotAmplification: number[]
+  slotAmplificationReduction: number[]
+  slotHeat: number[]
+  slotHeatHigh: number[]
+  slotHeatWarm: number[]
   slotPenaltyDisabled: boolean[]
   slotDisabled: boolean[]
   hasPreheater: boolean
@@ -87,6 +104,43 @@ function getPenaltyDirections(direction: Direction): Direction[] {
   return ['left', 'right']
 }
 
+function toGridPosition(index: number): { x: number; y: number } {
+  return { x: index % SLOT_COLUMNS, y: Math.floor(index / SLOT_COLUMNS) }
+}
+
+function toGridIndex(x: number, y: number, maxSlots: number): number | null {
+  if (x < 0 || x >= SLOT_COLUMNS || y < 0) return null
+  const index = y * SLOT_COLUMNS + x
+  if (index < 0 || index >= maxSlots) return null
+  return index
+}
+
+function getHeatFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): { high: number[]; warm: number[]; total: number[] } {
+  const high = Array.from({ length: weapon.slots.length }, () => 0)
+  const warm = Array.from({ length: weapon.slots.length }, () => 0)
+
+  weapon.slots.forEach((moduleType, index) => {
+    if (moduleType !== 'heatAmplifier' || !activeSlots.has(index)) return
+
+    const origin = toGridPosition(index)
+
+    HEAT_AMPLIFIER_HIGH_HEAT_OFFSETS.forEach((offset) => {
+      const target = toGridIndex(origin.x + offset.x, origin.y + offset.y, weapon.slots.length)
+      if (target == null || !activeSlots.has(target)) return
+      high[target] += 1
+    })
+
+    HEAT_AMPLIFIER_WARM_HEAT_OFFSETS.forEach((offset) => {
+      const target = toGridIndex(origin.x + offset.x, origin.y + offset.y, weapon.slots.length)
+      if (target == null || !activeSlots.has(target)) return
+      warm[target] += 0.5
+    })
+  })
+
+  const total = high.map((value, index) => value + warm[index])
+  return { high, warm, total }
+}
+
 function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): boolean[] {
   const disabled = Array.from({ length: weapon.slots.length }, () => false)
 
@@ -101,6 +155,12 @@ function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<
     })
   })
 
+  const heatField = getHeatFieldByAmplifier(weapon, activeSlots)
+  heatField.total.forEach((heat, slotIndex) => {
+    const reduction = Math.floor(heat)
+    if (reduction > 0 && activeSlots.has(slotIndex)) disabled[slotIndex] = true
+  })
+
   return disabled
 }
 
@@ -108,7 +168,15 @@ function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, ena
   if (!enabledSlots.has(index) || !weapon.slots[index]) return 0
 
   return weapon.slots.reduce((count, moduleType, ampIndex) => {
-    if (!enabledSlots.has(ampIndex) || !isAmplifierModule(moduleType)) return count
+    if (!enabledSlots.has(ampIndex)) return count
+
+    if (moduleType === 'heatAmplifier') {
+      const targetIndex = getNeighborIndex(ampIndex, 'left', weapon.slots.length)
+      if (targetIndex === index && enabledSlots.has(targetIndex)) return count + 2
+      return count
+    }
+
+    if (!isAmplifierModule(moduleType)) return count
 
     const direction = AMPLIFIER_DIRECTION[moduleType]
     if (!direction) return count
@@ -138,6 +206,8 @@ export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus 
 export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerStats {
   const base = WEAPON_BASE_STATS[weapon.type]
   const activeSlots = getActiveWeaponSlots(weapon.type)
+  const heatField = getHeatFieldByAmplifier(weapon, activeSlots)
+  const slotAmplificationReduction = heatField.total.map((heat) => Math.floor(heat))
   const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
   const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
@@ -155,6 +225,10 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       finalDamage: base.damage,
       finalCooldownSec: base.cooldown,
       slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
+      slotAmplificationReduction,
+      slotHeat: heatField.total,
+      slotHeatHigh: heatField.high,
+      slotHeatWarm: heatField.warm,
       slotPenaltyDisabled,
       slotDisabled,
       hasPreheater: false,
@@ -162,7 +236,11 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     }
   }
 
-  const slotAmplification = weapon.slots.map((_, index) => getAmplificationCountForSlot(index, weapon, enabledSlots))
+  const slotAmplification = weapon.slots.map((_, index) => {
+    const raw = getAmplificationCountForSlot(index, weapon, enabledSlots)
+    const reduced = raw - (slotAmplificationReduction[index] ?? 0)
+    return Math.max(0, reduced)
+  })
 
   let damageBase = 0
   let damageAmplified = 0
@@ -207,6 +285,10 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalDamage,
     finalCooldownSec,
     slotAmplification,
+    slotAmplificationReduction,
+    slotHeat: heatField.total,
+    slotHeatHigh: heatField.high,
+    slotHeatWarm: heatField.warm,
     slotPenaltyDisabled,
     slotDisabled,
     hasPreheater,
@@ -222,4 +304,5 @@ export function isModuleType(value: string | null | undefined): value is ModuleT
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'
+    || value === 'heatAmplifier'
 }

@@ -10,6 +10,7 @@ const MODULE_EMOJI: Record<ModuleType, string> = {
   blockAmplifierUp: '📡▲',
   blockAmplifierDown: '📡▼',
   preheater: '🔥',
+  heatAmplifier: '♨️',
 }
 const MODULE_NAME: Record<ModuleType, string> = {
   damage: '공격력 칩',
@@ -19,6 +20,7 @@ const MODULE_NAME: Record<ModuleType, string> = {
   blockAmplifierUp: '차단 증폭기(상)',
   blockAmplifierDown: '차단 증폭기(하)',
   preheater: '예열기 칩',
+  heatAmplifier: '열 증폭기',
 }
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
@@ -28,6 +30,7 @@ const MODULE_LABEL: Record<ModuleType, string> = {
   blockAmplifierUp: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
   blockAmplifierDown: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
   preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음 · 전력 ⚡7',
+  heatAmplifier: '기본효과: 즉시 왼쪽 1칸 증폭 +2 / 열장 페널티: 오른쪽 고열(+1.0), 온열(+0.5) 누적 ⌊열⌋만큼 증폭 감소 및 슬롯 정지 · 전력 ⚡4',
 }
 
 type PowerPreview = {
@@ -149,7 +152,7 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierLeft}:${state.modules.blockAmplifierRight}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierLeft}:${state.modules.blockAmplifierRight}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${state.modules.heatAmplifier}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])
@@ -176,7 +179,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const active = getActiveSlots(selected)
   const stats = getWeaponStats(selected)
   const previewSig = powerPreview ? `${powerPreview.slotIndex}:${powerPreview.usage}:${powerPreview.capacity}:${powerPreview.overloaded ? 1 : 0}` : 'none'
-  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.slotHeatHigh.join('|')}:${stats.slotHeatWarm.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
@@ -186,12 +189,20 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const isDisabled = stats.slotDisabled[index] ?? !isActive
     const isFilled = Boolean(moduleType)
     const amplificationCount = stats.slotAmplification[index] ?? 0
+    const heatHigh = stats.slotHeatHigh[index] ?? 0
+    const heatWarm = stats.slotHeatWarm[index] ?? 0
+    const heatReduction = stats.slotAmplificationReduction[index] ?? 0
+    const heatIntensity = Math.min(1, Math.max(0, heatHigh * 0.5 + heatWarm * 0.35))
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
     const disableOverlay = isPenaltyDisabled ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
-    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}` : '비어 있음'
+    const slotState = moduleType
+      ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${heatReduction > 0 ? `, 열 페널티 -${heatReduction}` : ''}`
+      : '비어 있음'
     const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '증폭 페널티로 차단' : '활성'
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
+    const heatClasses = `${heatHigh > 0 ? ' heat-high' : ''}${heatWarm > 0 ? ' heat-warm' : ''}`
+    const heatStyle = `--slot-heat-intensity:${heatIntensity.toFixed(2)}`
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''}${heatClasses} ${previewClass}" style="${heatStyle}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig
