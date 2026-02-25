@@ -219,6 +219,37 @@ function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string 
   return `${overloadLine}<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="${finalClass}">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
 }
 
+function renderSlotPenaltyOverlay(penaltyHeat: number, penaltyBlock: number): string {
+  const heat = Math.max(0, penaltyHeat)
+  const block = Math.max(0, penaltyBlock)
+  const total = heat + block
+  if (total <= 0) return ''
+
+  const occupiedRatio = total > SLOT_PENALTY_MAJOR ? 1 : total / SLOT_PENALTY_MAJOR
+  const compositionBase = total > SLOT_PENALTY_MAJOR ? total : Math.max(total, 1)
+  const heatShare = heat / compositionBase
+  const blockShare = block / compositionBase
+
+  const heatWidth = occupiedRatio * heatShare
+  const blockWidth = occupiedRatio * blockShare
+
+  const heatPenaltyClass = heat >= SLOT_PENALTY_MAJOR ? 'major' : heat >= SLOT_PENALTY_MINOR ? 'minor' : ''
+  const blockPenaltyClass = block >= SLOT_PENALTY_MAJOR ? 'major' : ''
+
+  let cursor = 0
+  const segments: string[] = []
+  if (heatWidth > 0) {
+    segments.push(`<span class="slot-penalty-segment heat ${heatPenaltyClass}" style="--slot-penalty-segment-left:${cursor};--slot-penalty-segment-width:${heatWidth}" aria-hidden="true"></span>`)
+    cursor += heatWidth
+  }
+
+  if (blockWidth > 0) {
+    segments.push(`<span class="slot-penalty-segment block ${blockPenaltyClass}" style="--slot-penalty-segment-left:${cursor};--slot-penalty-segment-width:${blockWidth}" aria-hidden="true"></span>`)
+  }
+
+  return `<span class="slot-penalty-composite" aria-hidden="true">${segments.join('')}</span>`
+}
+
 function isModuleTypeEquipped(state: GameState, moduleType: ModuleType): boolean {
   return state.weapons.some((weapon) => weapon.slots.some((slot) => slot === moduleType))
 }
@@ -334,11 +365,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const penaltyHeat = Math.max(0, stats.heatPenalty[index] ?? 0)
     const penaltyBlock = Math.max(0, stats.blockPenalty[index] ?? 0)
     const penaltyReduction = stats.slotAmplificationReduction[index] ?? 0
-    const heatPenaltyClass = penaltyHeat >= SLOT_PENALTY_MAJOR ? 'major' : penaltyHeat >= SLOT_PENALTY_MINOR ? 'minor' : ''
-    const blockPenaltyClass = penaltyBlock >= SLOT_PENALTY_MAJOR ? 'major' : ''
-    const heatPenaltyFillRatio = Math.max(0, Math.min(1, penaltyHeat / SLOT_PENALTY_MAJOR))
-    const blockPenaltyFillRatio = Math.max(0, Math.min(1, penaltyBlock / SLOT_PENALTY_MAJOR))
-    const penaltyOverlay = `${penaltyHeat > 0 ? `<span class="slot-penalty heat ${heatPenaltyClass}" style="--heat-penalty-fill-amount:${heatPenaltyFillRatio}" aria-hidden="true"></span>` : ''}${penaltyBlock > 0 ? `<span class="slot-penalty block ${blockPenaltyClass}" style="--block-penalty-fill-amount:${blockPenaltyFillRatio}" aria-hidden="true"></span>` : ''}`
+    const penaltyOverlay = renderSlotPenaltyOverlay(penaltyHeat, penaltyBlock)
     const disableOverlay = activePenaltyStopped ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType
       ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 증폭 감소 -${penaltyReduction}` : ''}`

@@ -940,7 +940,7 @@ li {
   z-index: 2;
 }
 
-.slot-penalty {
+.slot-penalty-composite {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -948,27 +948,30 @@ li {
   opacity: var(--slot-penalty-visibility);
 }
 
-.slot-penalty.heat {
-  --heat-penalty-fill-amount: 0;
-  background-image: var(--heat-penalty-fill);
-  clip-path: inset(calc((1 - var(--heat-penalty-fill-amount)) * 100%) 0 0 0);
+.slot-penalty-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--slot-penalty-segment-left, 0) * 100%);
+  width: calc(var(--slot-penalty-segment-width, 0) * 100%);
 }
 
-.slot-penalty.heat.major {
+.slot-penalty-segment.heat {
+  background-image: var(--heat-penalty-fill);
+}
+
+.slot-penalty-segment.heat.major {
   background-image: var(--heat-penalty-fill-strong);
 }
 
-.slot-penalty.block {
-  --block-penalty-fill-amount: 0;
-  inset-inline: 2px;
+.slot-penalty-segment.block {
+  inset-block: 1px;
   border-radius: 3px;
-  z-index: 1;
-  opacity: calc(var(--slot-penalty-visibility) * 0.88);
+  opacity: 0.92;
   background-image: var(--block-penalty-fill);
-  clip-path: inset(0 0 calc((1 - var(--block-penalty-fill-amount)) * 100%) 0);
 }
 
-.slot-penalty.block.major {
+.slot-penalty-segment.block.major {
   background-image: var(--block-penalty-fill-strong);
 }
 
