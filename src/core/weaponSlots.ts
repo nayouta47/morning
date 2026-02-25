@@ -2,7 +2,7 @@ import type { WeaponType } from './state.ts'
 
 const ACTIVE_SLOT_INDEXES_BY_WEAPON_TYPE: Record<WeaponType, number[]> = {
   pistol: [23, 24, 33],
-  rifle: [13, 14, 15, 16, 23, 24, 25, 26],
+  rifle: [13, 16, 22, 23, 24, 25, 26, 27],
 }
 
 export function getActiveWeaponSlots(type: WeaponType): Set<number> {

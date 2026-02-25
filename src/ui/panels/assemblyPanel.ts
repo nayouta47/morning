@@ -23,11 +23,11 @@ const MODULE_NAME: Record<ModuleType, string> = {
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
   cooldown: '기본 가속 +10, 증폭 시 추가 +10 · 전력 ⚡5',
-  blockAmplifierUp: '증폭/차단 영향은 지도 참조 · 전력 ⚡2',
-  blockAmplifierDown: '증폭/차단 영향은 지도 참조 · 전력 ⚡2',
+  blockAmplifierUp: '전력 ⚡2',
+  blockAmplifierDown: '전력 ⚡2',
   preheater: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
-  heatAmplifierLeft: '증폭/열 영향은 지도 참조 · 전력 ⚡4',
-  heatAmplifierRight: '증폭/열 영향은 지도 참조 · 전력 ⚡4',
+  heatAmplifierLeft: '전력 ⚡4',
+  heatAmplifierRight: '전력 ⚡4',
 }
 
 const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string }> = {
