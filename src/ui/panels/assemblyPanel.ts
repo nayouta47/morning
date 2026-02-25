@@ -1,103 +1,8 @@
-import {
-  MODULE_POWER_COST,
-  SLOT_PENALTY_MAJOR,
-  SLOT_PENALTY_MINOR,
-  getEffectiveActiveWeaponSlots,
-  getWeaponModuleLayerStats,
-} from '../../core/moduleEffects.ts'
+import { MODULE_POWER_COST, SLOT_PENALTY_MAJOR, getEffectiveActiveWeaponSlots, getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
 import { MODULE_EMOJI, MODULE_METADATA, MODULE_NAME_KR, MODULE_TYPES } from '../../data/modules.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
-
-type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'heatMinor' | 'heatMajor' | 'blockMajor'
-
-type InfluenceCell = {
-  x: number
-  y: number
-  kind: InfluenceCellKind
-}
-
-const MINI_GRID_SIZE = 5
-const MINI_GRID_CENTER = Math.floor(MINI_GRID_SIZE / 2)
-
-function setInfluenceCell(grid: InfluenceCellKind[][], dx: number, dy: number, kind: InfluenceCellKind): void {
-  const x = MINI_GRID_CENTER + dx
-  const y = MINI_GRID_CENTER + dy
-  if (x < 0 || x >= MINI_GRID_SIZE || y < 0 || y >= MINI_GRID_SIZE) return
-  grid[y][x] = kind
-}
-
-function getAmplifierMiniGrid(moduleType: ModuleType): InfluenceCell[] | null {
-  if (
-    moduleType !== 'blockAmplifierUp'
-    && moduleType !== 'blockAmplifierDown'
-    && moduleType !== 'heatAmplifierLeft'
-    && moduleType !== 'heatAmplifierRight'
-  ) {
-    return null
-  }
-
-  const grid = Array.from({ length: MINI_GRID_SIZE }, () => Array.from({ length: MINI_GRID_SIZE }, () => 'empty' as InfluenceCellKind))
-  setInfluenceCell(grid, 0, 0, 'center')
-
-  if (moduleType === 'blockAmplifierUp') {
-    setInfluenceCell(grid, 0, -1, 'amp')
-    setInfluenceCell(grid, -1, 0, 'blockMajor')
-    setInfluenceCell(grid, 1, 0, 'blockMajor')
-  } else if (moduleType === 'blockAmplifierDown') {
-    setInfluenceCell(grid, 0, 1, 'amp')
-    setInfluenceCell(grid, -1, 0, 'blockMajor')
-    setInfluenceCell(grid, 1, 0, 'blockMajor')
-  } else if (moduleType === 'heatAmplifierLeft') {
-    setInfluenceCell(grid, -1, 0, 'amp')
-    setInfluenceCell(grid, 1, 0, 'heatMajor')
-    setInfluenceCell(grid, 0, -1, 'heatMinor')
-    setInfluenceCell(grid, 0, 1, 'heatMinor')
-  } else if (moduleType === 'heatAmplifierRight') {
-    setInfluenceCell(grid, 1, 0, 'amp')
-    setInfluenceCell(grid, -1, 0, 'heatMajor')
-    setInfluenceCell(grid, 0, -1, 'heatMinor')
-    setInfluenceCell(grid, 0, 1, 'heatMinor')
-  }
-
-  return grid.flatMap((row, y) => row.map((kind, x) => ({ x, y, kind })))
-}
-
-function renderInfluenceMiniGrid(moduleType: ModuleType): string {
-  const cells = getAmplifierMiniGrid(moduleType)
-  if (!cells) return ''
-
-  const cellLabel: Record<InfluenceCellKind, string> = {
-    empty: '',
-    center: '●',
-    amp: '+',
-    heatMinor: `열${SLOT_PENALTY_MINOR}`,
-    heatMajor: `열${SLOT_PENALTY_MAJOR}`,
-    blockMajor: `차${SLOT_PENALTY_MAJOR}`,
-  }
-
-  const gridCells = cells
-    .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
-    .join('')
-
-  return `<article class="module-effect-card module-effect-map" aria-label="영향 맵"><h4>영향 맵</h4><div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 열/차단 패널티는 타입별로 표시되며 총 패널티 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch heat"></span>열기</span><span class="legend-item"><span class="swatch block"></span>차단</span></div></div></article>`
-}
-
-function renderModuleDetail(moduleType: ModuleType | null): string {
-  if (!moduleType) return '<p id="module-detail-effect" class="module-effect hint">모듈을 선택하세요.</p>'
-  const miniGrid = renderInfluenceMiniGrid(moduleType)
-  const detail = MODULE_METADATA[moduleType]
-
-  return `<div id="module-detail-effect" class="module-effect-cards" aria-label="모듈 효과 상세">
-    <article class="module-effect-card module-effect-base" aria-label="기본효과">
-      <h4>기본효과</h4>
-      <p class="hint">${detail.baseDescription}</p>
-    </article>
-    <article class="module-effect-card module-effect-amp" aria-label="증폭효과">
-      <h4>증폭효과</h4>
-      <p class="hint">${detail.amplifiedDescription}</p>
-    </article>
-  </div>${miniGrid}`
-}
+import { renderModuleDetail } from './assembly/moduleDetailView.ts'
+import { renderSlotPenaltyOverlay } from './assembly/slotPenaltyView.ts'
 
 type PowerPreview = {
   usage: number
@@ -152,37 +57,6 @@ function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string 
     : '<span class="stat-warning normal">모듈 효과 정상 적용 중</span>'
 
   return `${overloadLine}<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="${finalClass}">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
-}
-
-function renderSlotPenaltyOverlay(penaltyHeat: number, penaltyBlock: number): string {
-  const heat = Math.max(0, penaltyHeat)
-  const block = Math.max(0, penaltyBlock)
-  const total = heat + block
-  if (total <= 0) return ''
-
-  const occupiedRatio = total > SLOT_PENALTY_MAJOR ? 1 : total / SLOT_PENALTY_MAJOR
-  const compositionBase = total > SLOT_PENALTY_MAJOR ? total : Math.max(total, 1)
-  const heatShare = heat / compositionBase
-  const blockShare = block / compositionBase
-
-  const heatWidth = occupiedRatio * heatShare
-  const blockWidth = occupiedRatio * blockShare
-
-  const heatPenaltyClass = heat >= SLOT_PENALTY_MAJOR ? 'major' : heat >= SLOT_PENALTY_MINOR ? 'minor' : ''
-  const blockPenaltyClass = block >= SLOT_PENALTY_MAJOR ? 'major' : ''
-
-  let cursor = 0
-  const segments: string[] = []
-  if (heatWidth > 0) {
-    segments.push(`<span class="slot-penalty-segment heat ${heatPenaltyClass}" style="--slot-penalty-segment-left:${cursor};--slot-penalty-segment-width:${heatWidth}" aria-hidden="true"></span>`)
-    cursor += heatWidth
-  }
-
-  if (blockWidth > 0) {
-    segments.push(`<span class="slot-penalty-segment block ${blockPenaltyClass}" style="--slot-penalty-segment-left:${cursor};--slot-penalty-segment-width:${blockWidth}" aria-hidden="true"></span>`)
-  }
-
-  return `<span class="slot-penalty-composite" aria-hidden="true">${segments.join('')}</span>`
 }
 
 function isModuleTypeEquipped(state: GameState, moduleType: ModuleType): boolean {
