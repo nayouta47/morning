@@ -208,25 +208,29 @@ h1 {
   line-height: 1;
 }
 
-/* Module I stays neutral; Module II gets restrained rarity accent on craft button only. */
+/* Module I stays neutral; Module II gets clear but minimal green craft-button base. */
 .module-craft-row[data-module-rarity='green'] {
   --module-rarity-color: var(--rarity-green);
   --module-rarity-rgb: var(--rarity-green-rgb);
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module {
-  border-color: rgba(var(--module-rarity-rgb), 0.55);
-  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.34), rgba(var(--module-rarity-rgb), 0.2));
+  border-color: rgba(var(--module-rarity-rgb), 0.68);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.26), rgba(var(--module-rarity-rgb), 0.15));
+}
+
+.module-craft-row[data-module-rarity='green'] #craft-module .gauge-fill {
+  background: linear-gradient(90deg, rgba(var(--module-rarity-rgb), 0.46), rgba(var(--module-rarity-rgb), 0.18));
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module:hover:not(:disabled) {
-  border-color: rgba(var(--module-rarity-rgb), 0.7);
-  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.42), rgba(var(--module-rarity-rgb), 0.26));
+  border-color: rgba(var(--module-rarity-rgb), 0.8);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.32), rgba(var(--module-rarity-rgb), 0.19));
 }
 
 .module-craft-row[data-module-rarity='green'] #craft-module:disabled {
-  border-color: rgba(var(--module-rarity-rgb), 0.24);
-  background: rgba(var(--module-rarity-rgb), 0.08);
+  border-color: rgba(var(--module-rarity-rgb), 0.34);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.12), rgba(var(--module-rarity-rgb), 0.07));
 }
 
 .upgrades {
