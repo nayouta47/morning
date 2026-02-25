@@ -8,7 +8,7 @@ const HASTE_PER_COOLDOWN_MODULE = 10
 
 const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
   pistol: 12,
-  rifle: 20,
+  rifle: 30,
 }
 
 type Direction = 'left' | 'right' | 'up' | 'down'
