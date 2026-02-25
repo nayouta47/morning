@@ -119,21 +119,21 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
   const cells = getAmplifierMiniGrid(moduleType)
   if (!cells) return ''
 
-  const cellEmoji: Record<InfluenceCellKind, string> = {
+  const cellLabel: Record<InfluenceCellKind, string> = {
     empty: '',
     center: '●',
     amp: '+',
-    block: '✕',
-    heatWarm: 'w',
-    heatHigh: 'h',
-    ampHeatHigh: '+',
+    block: '10',
+    heatWarm: '5',
+    heatHigh: '10',
+    ampHeatHigh: '10',
   }
 
   const gridCells = cells
-    .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellEmoji[cell.kind]}</span>`)
+    .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
     .join('')
 
-  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, ✕는 차단, w는 온열, h는 고열">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단</span><span class="legend-item"><span class="swatch warm"></span>온열</span><span class="legend-item"><span class="swatch high"></span>고열</span></div></div>`
+  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 5는 온열 패널티, 10은 고열/차단 패널티">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단 10</span><span class="legend-item"><span class="swatch warm"></span>온열 5</span><span class="legend-item"><span class="swatch high"></span>고열 10</span></div></div>`
 }
 
 function renderModuleDetail(moduleType: ModuleType | null): string {
