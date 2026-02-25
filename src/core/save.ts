@@ -35,6 +35,7 @@ function inferModuleType(value: unknown): ModuleType | null {
     || value === 'preheater'
     || value === 'heatAmplifierLeft'
     || value === 'heatAmplifierRight'
+    || value === 'slotUnlocker'
   ) return value
   if (value === 'amplifierUp') return 'blockAmplifierUp'
   if (value === 'amplifierDown') return 'blockAmplifierDown'
@@ -47,6 +48,7 @@ function inferModuleType(value: unknown): ModuleType | null {
     if (value.startsWith('PRE-')) return 'preheater'
     if (value.startsWith('HEAT-R-')) return 'heatAmplifierRight'
     if (value.startsWith('HEAT-L-') || value.startsWith('HEAT-')) return 'heatAmplifierLeft'
+    if (value.startsWith('UNL-')) return 'slotUnlocker'
   }
   return null
 }
@@ -297,6 +299,7 @@ function normalizeState(raw: unknown): GameState | null {
     const legacyHeatAmplifier = Math.max(0, Number(modules.heatAmplifier ?? 0) || 0)
     base.modules.heatAmplifierLeft = Math.max(0, Number(modules.heatAmplifierLeft ?? 0) || 0) + legacyHeatAmplifier
     base.modules.heatAmplifierRight = Math.max(0, Number(modules.heatAmplifierRight ?? 0) || 0)
+    base.modules.slotUnlocker = Math.max(0, Number(modules.slotUnlocker ?? 0) || 0)
   }
 
   if (Array.isArray(loaded.modules)) {

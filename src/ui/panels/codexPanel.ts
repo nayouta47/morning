@@ -21,6 +21,7 @@ const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
   { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음', powerCost: 7 },
   { type: 'heatAmplifierLeft', name: '열 증폭기(좌)', icon: '♨️◀', effect: '기본효과: 즉시 왼쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 오른쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
   { type: 'heatAmplifierRight', name: '열 증폭기(우)', icon: '♨️▶', effect: '기본효과: 즉시 오른쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 왼쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
+  { type: 'slotUnlocker', name: '해금기', icon: '🗝️', effect: '기본효과: 작동 중 좌측 비활성 슬롯 2칸 임시 해제 / 증폭효과: 해당 없음', powerCost: 6 },
 ]
 
 let selectedCodexSubTab: CodexSubTab = 'enemy'

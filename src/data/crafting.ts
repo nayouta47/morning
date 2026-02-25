@@ -109,9 +109,9 @@ export function getModuleCraftTierLabel(tier: ModuleCraftTier): string {
 }
 
 export function getModuleCraftPoolByTier(tier: ModuleCraftTier): ModuleType[] {
-  return tier >= 2
-    ? ['preheater', 'heatAmplifierLeft', 'heatAmplifierRight']
-    : ['damage', 'cooldown', 'blockAmplifierUp', 'blockAmplifierDown']
+  if (tier >= 3) return ['preheater', 'heatAmplifierLeft', 'heatAmplifierRight', 'slotUnlocker']
+  if (tier >= 2) return ['preheater', 'heatAmplifierLeft', 'heatAmplifierRight']
+  return ['damage', 'cooldown', 'blockAmplifierUp', 'blockAmplifierDown']
 }
 
 export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {

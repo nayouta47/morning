@@ -215,7 +215,9 @@ function makeModule(state: GameState, type: ModuleType): void {
               ? '♨️◀ 열 증폭기(좌)'
               : type === 'heatAmplifierRight'
                 ? '♨️▶ 열 증폭기(우)'
-                : '🔥 예열기(전투 시작 즉시 발사)'
+                : type === 'slotUnlocker'
+                  ? '🗝️ 해금기(좌측 슬롯 2칸 해제)'
+                  : '🔥 예열기(전투 시작 즉시 발사)'
   appendLog(state, `모듈 제작 완료: ${label}`)
 }
 

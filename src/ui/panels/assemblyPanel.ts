@@ -1,6 +1,11 @@
-import { MODULE_POWER_COST, SLOT_PENALTY_MAJOR, SLOT_PENALTY_MINOR, getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
+import {
+  MODULE_POWER_COST,
+  SLOT_PENALTY_MAJOR,
+  SLOT_PENALTY_MINOR,
+  getEffectiveActiveWeaponSlots,
+  getWeaponModuleLayerStats,
+} from '../../core/moduleEffects.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
-import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
 
 const MODULE_EMOJI: Record<ModuleType, string> = {
   damage: '💥',
@@ -10,6 +15,7 @@ const MODULE_EMOJI: Record<ModuleType, string> = {
   preheater: '🔥',
   heatAmplifierLeft: '♨️◀',
   heatAmplifierRight: '♨️▶',
+  slotUnlocker: '🗝️',
 }
 const MODULE_NAME: Record<ModuleType, string> = {
   damage: '공격력 칩',
@@ -19,6 +25,7 @@ const MODULE_NAME: Record<ModuleType, string> = {
   preheater: '예열기 칩',
   heatAmplifierLeft: '열 증폭기(좌)',
   heatAmplifierRight: '열 증폭기(우)',
+  slotUnlocker: '해금기',
 }
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
@@ -28,6 +35,7 @@ const MODULE_LABEL: Record<ModuleType, string> = {
   preheater: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
   heatAmplifierLeft: '전력 ⚡4',
   heatAmplifierRight: '전력 ⚡4',
+  slotUnlocker: '활성화 시 좌측 비활성 슬롯 2칸 해제 · 전력 ⚡6',
 }
 
 const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string }> = {
@@ -57,6 +65,10 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierRight: {
     base: '즉시 증폭 +2 + 열기 패널티 부여',
+    amplified: '해당 없음',
+  },
+  slotUnlocker: {
+    base: '작동 중 좌측 슬롯 2칸 임시 해제',
     amplified: '해당 없음',
   },
 }
@@ -164,7 +176,7 @@ let selectedModuleSelectionSource: 'inventory' | 'slot' | 'auto' | null = null
 let powerPreview: PowerPreview | null = null
 
 function getActiveSlots(weapon: WeaponInstance): Set<number> {
-  return getActiveWeaponSlots(weapon.type)
+  return getEffectiveActiveWeaponSlots(weapon)
 }
 
 function getSelectedWeapon(state: GameState): WeaponInstance | null {
@@ -273,7 +285,7 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${state.modules.heatAmplifierLeft}:${state.modules.heatAmplifierRight}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.blockAmplifierUp}:${state.modules.blockAmplifierDown}:${state.modules.preheater}:${state.modules.heatAmplifierLeft}:${state.modules.heatAmplifierRight}:${state.modules.slotUnlocker}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])

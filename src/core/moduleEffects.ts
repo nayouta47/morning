@@ -1,6 +1,6 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
 import type { ModuleType, WeaponInstance, WeaponType } from './state.ts'
-import { getActiveWeaponSlots } from './weaponSlots.ts'
+import { getBaseActiveWeaponSlots, getLeftUnlockableWeaponSlots } from './weaponSlots.ts'
 
 const MIN_COOLDOWN_SEC = 0.5
 const SLOT_COLUMNS = 10
@@ -24,6 +24,7 @@ export const MODULE_POWER_COST: Record<ModuleType, number> = {
   preheater: 7,
   heatAmplifierLeft: 4,
   heatAmplifierRight: 4,
+  slotUnlocker: 6,
 }
 
 const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
@@ -184,31 +185,79 @@ function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, ena
   }, 0)
 }
 
-export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus {
-  const activeSlots = getActiveWeaponSlots(weapon.type)
-  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
-  const usage = weapon.slots.reduce((sum, moduleType, index) => {
+function getPowerUsage(weapon: WeaponInstance, activeSlots: Set<number>, slotPenaltyDisabled: boolean[]): number {
+  return weapon.slots.reduce((sum, moduleType, index) => {
     if (!moduleType || !activeSlots.has(index) || slotPenaltyDisabled[index]) return sum
     return sum + MODULE_POWER_COST[moduleType]
   }, 0)
+}
+
+function isSlotUnlockerEnabled(weapon: WeaponInstance, activeSlots: Set<number>, slotPenaltyDisabled: boolean[], overloaded: boolean): boolean {
+  if (overloaded) return false
+  return weapon.slots.some((moduleType, index) => moduleType === 'slotUnlocker' && activeSlots.has(index) && !slotPenaltyDisabled[index])
+}
+
+function areSlotSetsEqual(left: Set<number>, right: Set<number>): boolean {
+  if (left.size !== right.size) return false
+  for (const index of left) {
+    if (!right.has(index)) return false
+  }
+  return true
+}
+
+function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Set<number>; slotPenaltyDisabled: boolean[]; usage: number; overloaded: boolean } {
+  const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
+  const unlockableSlots = getLeftUnlockableWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
+  let activeSlots = new Set(baseActiveSlots)
+
+  for (let i = 0; i < 6; i += 1) {
+    const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
+    const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
+    const overloaded = usage > capacity
+    const unlockEnabled = isSlotUnlockerEnabled(weapon, activeSlots, slotPenaltyDisabled, overloaded)
+    const nextActiveSlots = unlockEnabled ? new Set([...baseActiveSlots, ...unlockableSlots]) : new Set(baseActiveSlots)
+
+    if (areSlotSetsEqual(activeSlots, nextActiveSlots)) {
+      return { activeSlots, slotPenaltyDisabled, usage, overloaded }
+    }
+
+    activeSlots = nextActiveSlots
+  }
+
+  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
+  const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
+  return { activeSlots, slotPenaltyDisabled, usage, overloaded: usage > capacity }
+}
+
+export function getEffectiveActiveWeaponSlots(weapon: WeaponInstance): Set<number> {
+  return resolveWeaponActiveSlotState(weapon).activeSlots
+}
+
+export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus {
+  const resolved = resolveWeaponActiveSlotState(weapon)
   return {
-    usage,
-    capacity,
-    overloaded: usage > capacity,
+    usage: resolved.usage,
+    capacity: WEAPON_POWER_CAPACITY[weapon.type],
+    overloaded: resolved.overloaded,
   }
 }
 
 export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerStats {
   const base = WEAPON_BASE_STATS[weapon.type]
-  const activeSlots = getActiveWeaponSlots(weapon.type)
+  const resolved = resolveWeaponActiveSlotState(weapon)
+  const activeSlots = resolved.activeSlots
   const penaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots)
   const slotAmplificationReduction = penaltyField.total.map((penalty) => Math.floor(penalty / SLOT_PENALTY_MAJOR))
-  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
+  const slotPenaltyDisabled = resolved.slotPenaltyDisabled
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
   const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
-  const power = getWeaponPowerStatus(weapon)
+  const power: WeaponPowerStatus = {
+    usage: resolved.usage,
+    capacity: WEAPON_POWER_CAPACITY[weapon.type],
+    overloaded: resolved.overloaded,
+  }
 
   if (power.overloaded) {
     return {
@@ -301,4 +350,5 @@ export function isModuleType(value: string | null | undefined): value is ModuleT
     || value === 'preheater'
     || value === 'heatAmplifierLeft'
     || value === 'heatAmplifierRight'
+    || value === 'slotUnlocker'
 }
