@@ -25,13 +25,13 @@
   --rarity-orange-rgb: 198, 140, 87;
   --rarity-red-rgb: 187, 100, 95;
 
-  /* Heat penalty visuals (shared by board slots + module mini-map) */
-  --heat-high-fill:
-    linear-gradient(180deg, rgba(255, 185, 140, 0.36), rgba(255, 142, 88, 0.58)),
-    repeating-linear-gradient(135deg, rgba(255, 223, 182, 0.85) 0, rgba(255, 223, 182, 0.85) 2px, rgba(173, 67, 28, 0.26) 2px, rgba(173, 67, 28, 0.26) 5px);
-  --heat-warm-fill:
-    linear-gradient(180deg, rgba(255, 224, 151, 0.34), rgba(236, 170, 72, 0.52)),
-    repeating-linear-gradient(135deg, rgba(255, 239, 188, 0.78) 0, rgba(255, 239, 188, 0.78) 2px, rgba(148, 95, 21, 0.24) 2px, rgba(148, 95, 21, 0.24) 5px);
+  /* Shared penalty visuals (board slots + module mini-map) */
+  --penalty-fill:
+    linear-gradient(180deg, rgba(255, 140, 140, 0.4), rgba(205, 74, 74, 0.6)),
+    repeating-linear-gradient(135deg, rgba(255, 205, 205, 0.8) 0, rgba(255, 205, 205, 0.8) 2px, rgba(130, 36, 36, 0.26) 2px, rgba(130, 36, 36, 0.26) 5px);
+  --penalty-fill-strong:
+    linear-gradient(180deg, rgba(255, 128, 128, 0.52), rgba(196, 58, 58, 0.72)),
+    repeating-linear-gradient(135deg, rgba(255, 194, 194, 0.88) 0, rgba(255, 194, 194, 0.88) 2px, rgba(120, 24, 24, 0.3) 2px, rgba(120, 24, 24, 0.3) 5px);
 }
 
 * {
@@ -844,7 +844,7 @@ li {
   color: #b5ad9c;
   position: relative;
   overflow: hidden;
-  --slot-heat-visibility: 0.95;
+  --slot-penalty-visibility: 0.95;
 }
 
 .slot > * {
@@ -852,42 +852,25 @@ li {
   z-index: 2;
 }
 
-.slot-heat-gauge {
+.slot-penalty {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: rgba(255, 228, 228, 0.95);
+  text-shadow: 0 1px 4px rgba(29, 5, 5, 0.95);
   pointer-events: none;
   z-index: 1;
-  display: flex;
-  align-items: stretch;
+  background: var(--penalty-fill);
+  opacity: var(--slot-penalty-visibility);
 }
 
-.slot-heat-fill {
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.28);
-}
-
-.slot-heat-segment {
-  height: 100%;
-  min-width: 1px;
-}
-
-.slot-heat-segment.high {
-  background: var(--heat-high-fill);
-  opacity: var(--slot-heat-visibility);
-}
-
-.slot-heat-segment.warm {
-  background: var(--heat-warm-fill);
-  opacity: var(--slot-heat-visibility);
-}
-
-.slot-heat-segment.cold {
-  background:
-    linear-gradient(180deg, rgba(173, 230, 255, 0.34), rgba(87, 166, 222, 0.5)),
-    repeating-linear-gradient(135deg, rgba(210, 241, 255, 0.75) 0, rgba(210, 241, 255, 0.75) 2px, rgba(34, 82, 138, 0.24) 2px, rgba(34, 82, 138, 0.24) 5px);
-  opacity: var(--slot-heat-visibility);
+.slot-penalty.major {
+  background: var(--penalty-fill-strong);
+  font-size: 17px;
 }
 
 .slot-amplify {
@@ -913,7 +896,7 @@ li {
 
 /* Inactive-by-topology slots stay dark, but still expose heat/block penalties when present. */
 .slot.inactive {
-  --slot-heat-visibility: 0.62;
+  --slot-penalty-visibility: 0.62;
 }
 
 .slot.disabled:not(.penalty-disabled) {
@@ -921,7 +904,7 @@ li {
 }
 
 .slot.inactive.disabled {
-  --slot-heat-visibility: 0.5;
+  --slot-penalty-visibility: 0.5;
   filter: saturate(0.74) brightness(0.78);
 }
 
@@ -1109,37 +1092,16 @@ li {
   color: #9fdfb0;
 }
 
-.influence-cell.block {
-  border-color: #7d4f4f;
-  color: #efb4b4;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      rgba(140, 73, 73, 0.45) 0,
-      rgba(140, 73, 73, 0.45) 1px,
-      rgba(140, 73, 73, 0) 1px,
-      rgba(140, 73, 73, 0) 4px
-    ),
-    #211516;
+.influence-cell.penaltyMinor,
+.influence-cell.penaltyMajor {
+  border-color: #8a4b4b;
+  background: var(--penalty-fill);
+  color: #ffdcdc;
 }
 
-.influence-cell.heatWarm {
-  border-color: #926a3b;
-  background: var(--heat-warm-fill);
-  color: #f4d5a8;
-}
-
-.influence-cell.heatHigh {
-  border-color: #af5f43;
-  background: var(--heat-high-fill);
-  color: #ffd2bf;
-}
-
-.influence-cell.ampHeatHigh {
-  border-color: #6f6c3f;
-  color: #ffdfae;
-  background: var(--heat-high-fill);
-  box-shadow: inset 0 0 0 1px rgba(97, 160, 113, 0.55);
+.influence-cell.penaltyMajor {
+  border-color: #a75353;
+  background: var(--penalty-fill-strong);
 }
 
 .influence-legend {
@@ -1173,27 +1135,9 @@ li {
   border-color: #4f7c5f;
 }
 
-.swatch.block {
-  border-color: #7d4f4f;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      rgba(140, 73, 73, 0.5) 0,
-      rgba(140, 73, 73, 0.5) 1px,
-      rgba(140, 73, 73, 0) 1px,
-      rgba(140, 73, 73, 0) 4px
-    ),
-    #211516;
-}
-
-.swatch.warm {
-  background: var(--heat-warm-fill);
-  border-color: #926a3b;
-}
-
-.swatch.high {
-  background: var(--heat-high-fill);
-  border-color: #af5f43;
+.swatch.penalty {
+  background: var(--penalty-fill);
+  border-color: #8a4b4b;
 }
 
 .module-list {

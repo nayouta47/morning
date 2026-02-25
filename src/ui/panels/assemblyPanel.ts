@@ -1,4 +1,4 @@
-import { MODULE_POWER_COST, getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
+import { MODULE_POWER_COST, SLOT_PENALTY_MAJOR, SLOT_PENALTY_MINOR, getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
 import { getActiveWeaponSlots } from '../../core/weaponSlots.ts'
 
@@ -40,12 +40,12 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
     amplified: '가속 +10',
   },
   blockAmplifierUp: {
-    base: '위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단',
-    amplified: '해당 없음',
+    base: `위쪽 1칸 증폭(중첩) + 좌/우 슬롯 패널티 ${SLOT_PENALTY_MAJOR}`,
+    amplified: `패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   blockAmplifierDown: {
-    base: '아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단',
-    amplified: '해당 없음',
+    base: `아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 패널티 ${SLOT_PENALTY_MAJOR}`,
+    amplified: `패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   preheater: {
     base: '전투 시작 즉시 발사 준비',
@@ -53,15 +53,15 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierLeft: {
     base: '즉시 왼쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 나머지 인접 3칸 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: `패널티: 오른쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 패널티 기준 ⌊패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   heatAmplifierRight: {
     base: '즉시 오른쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 나머지 인접 3칸 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: `패널티: 왼쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 패널티 기준 ⌊패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
 }
 
-type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'block' | 'heatWarm' | 'heatHigh' | 'ampHeatHigh'
+type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'penaltyMinor' | 'penaltyMajor'
 
 type InfluenceCell = {
   x: number
@@ -94,22 +94,22 @@ function getAmplifierMiniGrid(moduleType: ModuleType): InfluenceCell[] | null {
 
   if (moduleType === 'blockAmplifierUp') {
     setInfluenceCell(grid, 0, -1, 'amp')
-    setInfluenceCell(grid, -1, 0, 'block')
-    setInfluenceCell(grid, 1, 0, 'block')
+    setInfluenceCell(grid, -1, 0, 'penaltyMajor')
+    setInfluenceCell(grid, 1, 0, 'penaltyMajor')
   } else if (moduleType === 'blockAmplifierDown') {
     setInfluenceCell(grid, 0, 1, 'amp')
-    setInfluenceCell(grid, -1, 0, 'block')
-    setInfluenceCell(grid, 1, 0, 'block')
+    setInfluenceCell(grid, -1, 0, 'penaltyMajor')
+    setInfluenceCell(grid, 1, 0, 'penaltyMajor')
   } else if (moduleType === 'heatAmplifierLeft') {
-    setInfluenceCell(grid, -1, 0, 'ampHeatHigh')
-    setInfluenceCell(grid, 0, -1, 'heatWarm')
-    setInfluenceCell(grid, 0, 1, 'heatWarm')
-    setInfluenceCell(grid, 1, 0, 'heatWarm')
+    setInfluenceCell(grid, -1, 0, 'amp')
+    setInfluenceCell(grid, 1, 0, 'penaltyMajor')
+    setInfluenceCell(grid, 0, -1, 'penaltyMinor')
+    setInfluenceCell(grid, 0, 1, 'penaltyMinor')
   } else if (moduleType === 'heatAmplifierRight') {
-    setInfluenceCell(grid, 1, 0, 'ampHeatHigh')
-    setInfluenceCell(grid, 0, -1, 'heatWarm')
-    setInfluenceCell(grid, 0, 1, 'heatWarm')
-    setInfluenceCell(grid, -1, 0, 'heatWarm')
+    setInfluenceCell(grid, 1, 0, 'amp')
+    setInfluenceCell(grid, -1, 0, 'penaltyMajor')
+    setInfluenceCell(grid, 0, -1, 'penaltyMinor')
+    setInfluenceCell(grid, 0, 1, 'penaltyMinor')
   }
 
   return grid.flatMap((row, y) => row.map((kind, x) => ({ x, y, kind })))
@@ -123,17 +123,15 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
     empty: '',
     center: '●',
     amp: '+',
-    block: '10',
-    heatWarm: '5',
-    heatHigh: '10',
-    ampHeatHigh: '10',
+    penaltyMinor: String(SLOT_PENALTY_MINOR),
+    penaltyMajor: String(SLOT_PENALTY_MAJOR),
   }
 
   const gridCells = cells
     .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
     .join('')
 
-  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 5는 고열 패널티, 10은 고열/차단 패널티">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단 10</span><span class="legend-item"><span class="swatch warm"></span>고열 5</span><span class="legend-item"><span class="swatch high"></span>고열 10</span></div></div>`
+  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 숫자는 슬롯 패널티(5/10), 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch penalty"></span>패널티 ${SLOT_PENALTY_MINOR}/${SLOT_PENALTY_MAJOR}</span><span class="legend-item">패널티 ${SLOT_PENALTY_MAJOR}+ = X 정지</span></div></div>`
 }
 
 function renderModuleDetail(moduleType: ModuleType | null): string {
@@ -301,7 +299,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const active = getActiveSlots(selected)
   const stats = getWeaponStats(selected)
   const previewSig = powerPreview ? `${powerPreview.slotIndex}:${powerPreview.usage}:${powerPreview.capacity}:${powerPreview.overloaded ? 1 : 0}` : 'none'
-  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.slotHeatHigh.join('|')}:${stats.slotHeatWarm.join('|')}:${stats.slotHeatCold.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.slotPenalty.join('|')}:${stats.slotPenaltyHeat.join('|')}:${stats.slotPenaltyBlock.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
@@ -311,36 +309,23 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const isDisabled = stats.slotDisabled[index] ?? !isActive
     const isFilled = Boolean(moduleType)
     const amplificationCount = stats.slotAmplification[index] ?? 0
-    const heatHigh = Math.max(0, stats.slotHeatHigh[index] ?? 0)
-    const heatWarm = Math.max(0, stats.slotHeatWarm[index] ?? 0)
-    const heatCold = Math.max(0, stats.slotHeatCold[index] ?? 0)
-    const heatTotal = heatHigh + heatWarm + heatCold
-    const heatReduction = stats.slotAmplificationReduction[index] ?? 0
-    const heatFill = Math.min(1, heatTotal)
-    const shouldNormalize = heatTotal > 1
-    const heatSegments = [
-      { kind: 'high', value: heatHigh },
-      { kind: 'warm', value: heatWarm },
-      { kind: 'cold', value: heatCold },
-    ].filter((segment) => segment.value > 0)
-    const heatGauge = heatTotal > 0
-      ? `<span class="slot-heat-gauge" aria-hidden="true"><span class="slot-heat-fill" style="width:${(heatFill * 100).toFixed(1)}%">${heatSegments
-        .map((segment) => {
-          const denominator = shouldNormalize ? heatTotal : heatFill
-          const segmentRatio = denominator > 0 ? segment.value / denominator : 0
-          return `<span class="slot-heat-segment ${segment.kind}" style="width:${(segmentRatio * 100).toFixed(1)}%"></span>`
-        })
-        .join('')}</span></span>`
+    const penaltyTotal = Math.max(0, stats.slotPenalty[index] ?? 0)
+    const penaltyHeat = Math.max(0, stats.slotPenaltyHeat[index] ?? 0)
+    const penaltyBlock = Math.max(0, stats.slotPenaltyBlock[index] ?? 0)
+    const penaltyReduction = stats.slotAmplificationReduction[index] ?? 0
+    const penaltyClass = penaltyTotal >= SLOT_PENALTY_MAJOR ? 'major' : penaltyTotal >= SLOT_PENALTY_MINOR ? 'minor' : ''
+    const penaltyOverlay = penaltyTotal > 0
+      ? `<span class="slot-penalty ${penaltyClass}" aria-hidden="true">${penaltyTotal}</span>`
       : ''
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
-    const disableOverlay = isPenaltyDisabled ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
+    const disableOverlay = penaltyTotal >= SLOT_PENALTY_MAJOR ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType
-      ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${heatReduction > 0 ? `, 열 페널티 -${heatReduction}` : ''}`
+      ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 패널티 -${penaltyReduction}` : ''}`
       : '비어 있음'
-    const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '증폭 페널티로 차단' : '활성'
+    const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '패널티로 차단' : '활성'
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    const heatState = heatTotal > 0 ? `, 상태 게이지 ${heatTotal.toFixed(1)}` : ''
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${heatState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${heatGauge}${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
+    const penaltyState = penaltyTotal > 0 ? `, 패널티 ${penaltyTotal}(열 ${penaltyHeat} + 차단 ${penaltyBlock})` : ''
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig

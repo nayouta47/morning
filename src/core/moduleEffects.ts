@@ -14,8 +14,9 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
 type Direction = 'left' | 'right' | 'up' | 'down'
 
 const CARDINAL_DIRECTIONS: Direction[] = ['left', 'right', 'up', 'down']
-const HEAT_HIGH_UNIT = 1
-const HEAT_WARM_UNIT = 0.5
+
+export const SLOT_PENALTY_MINOR = 5
+export const SLOT_PENALTY_MAJOR = 10
 
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
@@ -45,10 +46,6 @@ function isHeatAmplifierModule(type: ModuleType | null | undefined): type is 'he
   return type === 'heatAmplifierLeft' || type === 'heatAmplifierRight'
 }
 
-function isAnyAmplifierChip(type: ModuleType | null | undefined): boolean {
-  return isAmplifierModule(type) || type === 'heatAmplifierLeft' || type === 'heatAmplifierRight'
-}
-
 function applyHasteToCooldown(baseCooldownSec: number, totalHaste: number): number {
   return baseCooldownSec * (100 / (100 + Math.max(0, totalHaste)))
 }
@@ -71,10 +68,9 @@ export type ModuleLayerStats = {
   finalCooldownSec: number
   slotAmplification: number[]
   slotAmplificationReduction: number[]
-  slotHeat: number[]
-  slotHeatHigh: number[]
-  slotHeatWarm: number[]
-  slotHeatCold: number[]
+  slotPenalty: number[]
+  slotPenaltyHeat: number[]
+  slotPenaltyBlock: number[]
   slotPenaltyDisabled: boolean[]
   slotDisabled: boolean[]
   hasPreheater: boolean
@@ -107,52 +103,56 @@ function getPenaltyDirections(direction: Direction): Direction[] {
   return ['left', 'right']
 }
 
-function getHeatFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): { high: number[]; warm: number[]; total: number[] } {
-  const high = Array.from({ length: weapon.slots.length }, () => 0)
-  const warm = Array.from({ length: weapon.slots.length }, () => 0)
+type PenaltyField = {
+  heat: number[]
+  block: number[]
+  total: number[]
+}
+
+function getPenaltyFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): PenaltyField {
+  const heat = Array.from({ length: weapon.slots.length }, () => 0)
+  const block = Array.from({ length: weapon.slots.length }, () => 0)
 
   weapon.slots.forEach((moduleType, index) => {
-    if (!isHeatAmplifierModule(moduleType) || !activeSlots.has(index)) return
-    const direction = HEAT_AMPLIFIER_DIRECTION[moduleType]
-    if (!direction) return
+    if (!activeSlots.has(index)) return
 
-    const amplifiedTarget = getNeighborIndex(index, direction, weapon.slots.length)
-    if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) high[amplifiedTarget] += HEAT_HIGH_UNIT
+    if (isAmplifierModule(moduleType)) {
+      const direction = AMPLIFIER_DIRECTION[moduleType]
+      if (direction) {
+        getPenaltyDirections(direction).forEach((penaltyDirection) => {
+          const penaltyIndex = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
+          if (penaltyIndex != null && activeSlots.has(penaltyIndex)) {
+            block[penaltyIndex] += SLOT_PENALTY_MAJOR
+          }
+        })
+      }
+    }
 
-    CARDINAL_DIRECTIONS.forEach((warmDirection) => {
-      const target = getNeighborIndex(index, warmDirection, weapon.slots.length)
-      if (target == null || !activeSlots.has(target)) return
-      if (target === amplifiedTarget) return
-      if (isAnyAmplifierChip(weapon.slots[target])) return
-      warm[target] += HEAT_WARM_UNIT
-    })
+    if (isHeatAmplifierModule(moduleType)) {
+      const direction = HEAT_AMPLIFIER_DIRECTION[moduleType]
+      if (!direction) return
+
+      const amplifiedTarget = getNeighborIndex(index, direction, weapon.slots.length)
+      if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) {
+        heat[amplifiedTarget] += SLOT_PENALTY_MAJOR
+      }
+
+      CARDINAL_DIRECTIONS.forEach((penaltyDirection) => {
+        const target = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
+        if (target == null || !activeSlots.has(target)) return
+        if (target === amplifiedTarget) return
+        heat[target] += SLOT_PENALTY_MINOR
+      })
+    }
   })
 
-  const total = high.map((value, index) => value + warm[index])
-  return { high, warm, total }
+  const total = heat.map((value, index) => value + block[index])
+  return { heat, block, total }
 }
 
 function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): boolean[] {
-  const disabled = Array.from({ length: weapon.slots.length }, () => false)
-
-  weapon.slots.forEach((moduleType, index) => {
-    if (!isAmplifierModule(moduleType) || !activeSlots.has(index)) return
-    const direction = AMPLIFIER_DIRECTION[moduleType]
-    if (!direction) return
-
-    getPenaltyDirections(direction).forEach((penaltyDirection) => {
-      const penaltyIndex = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
-      if (penaltyIndex != null && activeSlots.has(penaltyIndex)) disabled[penaltyIndex] = true
-    })
-  })
-
-  const heatField = getHeatFieldByAmplifier(weapon, activeSlots)
-  heatField.total.forEach((heat, slotIndex) => {
-    const reduction = Math.floor(heat)
-    if (reduction > 0 && activeSlots.has(slotIndex)) disabled[slotIndex] = true
-  })
-
-  return disabled
+  const penaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots)
+  return penaltyField.total.map((penalty, index) => activeSlots.has(index) && penalty >= SLOT_PENALTY_MAJOR)
 }
 
 function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, enabledSlots: Set<number>): number {
@@ -198,8 +198,8 @@ export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus 
 export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerStats {
   const base = WEAPON_BASE_STATS[weapon.type]
   const activeSlots = getActiveWeaponSlots(weapon.type)
-  const heatField = getHeatFieldByAmplifier(weapon, activeSlots)
-  const slotAmplificationReduction = heatField.total.map((heat) => Math.floor(heat))
+  const penaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots)
+  const slotAmplificationReduction = penaltyField.total.map((penalty) => Math.floor(penalty / SLOT_PENALTY_MAJOR))
   const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
   const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
@@ -218,10 +218,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       finalCooldownSec: base.cooldown,
       slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
       slotAmplificationReduction,
-      slotHeat: heatField.total,
-      slotHeatHigh: heatField.high,
-      slotHeatWarm: heatField.warm,
-      slotHeatCold: Array.from({ length: weapon.slots.length }, () => 0),
+      slotPenalty: penaltyField.total,
+      slotPenaltyHeat: penaltyField.heat,
+      slotPenaltyBlock: penaltyField.block,
       slotPenaltyDisabled,
       slotDisabled,
       hasPreheater: false,
@@ -279,10 +278,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalCooldownSec,
     slotAmplification,
     slotAmplificationReduction,
-    slotHeat: heatField.total,
-    slotHeatHigh: heatField.high,
-    slotHeatWarm: heatField.warm,
-    slotHeatCold: Array.from({ length: weapon.slots.length }, () => 0),
+    slotPenalty: penaltyField.total,
+    slotPenaltyHeat: penaltyField.heat,
+    slotPenaltyBlock: penaltyField.block,
     slotPenaltyDisabled,
     slotDisabled,
     hasPreheater,
