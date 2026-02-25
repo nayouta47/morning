@@ -45,9 +45,14 @@ export const UPGRADE_DEFS = {
     baseCost: { wood: 240, iron: 120 },
     effectText: '모듈 제작 II 해금',
   },
+  moduleCraftingIII: {
+    name: '모듈 제작 III',
+    baseCost: { wood: 320, iron: 180 },
+    effectText: '모듈 제작 III 해금',
+  },
 } as const
 
-export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII'] as const
+export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII', 'moduleCraftingIII'] as const
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 

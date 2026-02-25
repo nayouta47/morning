@@ -14,8 +14,8 @@ import { pushLog } from './logging.ts'
 
 export function cycleModuleCraftTier(state: GameState, step: -1 | 1): void {
   const nextTier = state.selectedModuleCraftTier + step
-  if (nextTier < 1 || nextTier > 2) return
-  state.selectedModuleCraftTier = nextTier as 1 | 2
+  if (nextTier < 1 || nextTier > 3) return
+  state.selectedModuleCraftTier = nextTier as 1 | 2 | 3
 }
 
 export function startCraft(state: GameState, recipeKey: CraftRecipeKey): void {

@@ -141,6 +141,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.upgrades.drillBoost = Boolean(loaded.upgrades.drillBoost)
     base.upgrades.organicFilament = Boolean(loaded.upgrades.organicFilament)
     base.upgrades.moduleCraftingII = Boolean(loaded.upgrades.moduleCraftingII)
+    base.upgrades.moduleCraftingIII = Boolean(loaded.upgrades.moduleCraftingIII)
   }
   if (loaded.unlocks) {
     base.unlocks.scrapAction = Boolean(loaded.unlocks.scrapAction)
@@ -245,8 +246,16 @@ function normalizeState(raw: unknown): GameState | null {
   base.craftProgress.syntheticFood = clampProgress(loaded.craftProgress?.syntheticFood)
   base.craftProgress.smallHealPotion = clampProgress(loaded.craftProgress?.smallHealPotion)
 
-  base.selectedModuleCraftTier = loaded.selectedModuleCraftTier === 2 ? 2 : 1
-  base.moduleCraftTierInProgress = loaded.moduleCraftTierInProgress === 2 ? 2 : loaded.moduleCraftTierInProgress === 1 ? 1 : null
+  base.selectedModuleCraftTier =
+    loaded.selectedModuleCraftTier === 3 ? 3 : loaded.selectedModuleCraftTier === 2 ? 2 : 1
+  base.moduleCraftTierInProgress =
+    loaded.moduleCraftTierInProgress === 3
+      ? 3
+      : loaded.moduleCraftTierInProgress === 2
+        ? 2
+        : loaded.moduleCraftTierInProgress === 1
+          ? 1
+          : null
   if (base.craftProgress.module > 0 && base.moduleCraftTierInProgress == null) {
     base.moduleCraftTierInProgress = base.selectedModuleCraftTier
   }

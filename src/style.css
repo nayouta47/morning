@@ -237,7 +237,7 @@ h1 {
   line-height: 1;
 }
 
-/* Module I stays neutral; Module II gets clear but minimal green craft-button base. */
+/* Module I stays neutral; higher tiers get minimal rarity tint on craft button base. */
 .module-craft-row[data-module-rarity='green'] {
   --module-rarity-color: var(--rarity-green);
   --module-rarity-rgb: var(--rarity-green-rgb);
@@ -260,6 +260,30 @@ h1 {
 .module-craft-row[data-module-rarity='green'] #craft-module:disabled {
   border-color: rgba(var(--module-rarity-rgb), 0.34);
   background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.12), rgba(var(--module-rarity-rgb), 0.07));
+}
+
+.module-craft-row[data-module-rarity='blue'] {
+  --module-rarity-color: var(--rarity-blue);
+  --module-rarity-rgb: var(--rarity-blue-rgb);
+}
+
+.module-craft-row[data-module-rarity='blue'] #craft-module {
+  border-color: rgba(var(--module-rarity-rgb), 0.7);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.28), rgba(var(--module-rarity-rgb), 0.16));
+}
+
+.module-craft-row[data-module-rarity='blue'] #craft-module .gauge-fill {
+  background: linear-gradient(90deg, rgba(var(--module-rarity-rgb), 0.48), rgba(var(--module-rarity-rgb), 0.2));
+}
+
+.module-craft-row[data-module-rarity='blue'] #craft-module:hover:not(:disabled) {
+  border-color: rgba(var(--module-rarity-rgb), 0.82);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.34), rgba(var(--module-rarity-rgb), 0.2));
+}
+
+.module-craft-row[data-module-rarity='blue'] #craft-module:disabled {
+  border-color: rgba(var(--module-rarity-rgb), 0.35);
+  background: linear-gradient(180deg, rgba(var(--module-rarity-rgb), 0.13), rgba(var(--module-rarity-rgb), 0.08));
 }
 
 .upgrades {

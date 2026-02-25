@@ -14,6 +14,7 @@ export type Upgrades = {
   drillBoost: boolean
   organicFilament: boolean
   moduleCraftingII: boolean
+  moduleCraftingIII: boolean
 }
 
 export type Unlocks = {
@@ -103,7 +104,7 @@ export type ExplorationState = {
 
 export type WeaponType = 'pistol' | 'rifle'
 export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight'
-export type ModuleCraftTier = 1 | 2
+export type ModuleCraftTier = 1 | 2 | 3
 
 export type WeaponInstance = {
   id: string
@@ -189,6 +190,7 @@ export const initialState: GameState = {
     drillBoost: false,
     organicFilament: false,
     moduleCraftingII: false,
+    moduleCraftingIII: false,
   },
   unlocks: {
     scrapAction: false,

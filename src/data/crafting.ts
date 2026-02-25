@@ -93,7 +93,9 @@ const SCAVENGER_DRONE_COBALT_COST = 2
 const SCAVENGER_DRONE_IRON_COST_GROWTH = 1.15
 
 export function getSelectedModuleCraftTier(state: GameState): ModuleCraftTier {
-  return state.selectedModuleCraftTier === 2 ? 2 : 1
+  if (state.selectedModuleCraftTier === 3) return 3
+  if (state.selectedModuleCraftTier === 2) return 2
+  return 1
 }
 
 export function getActiveModuleCraftTier(state: GameState): ModuleCraftTier {
@@ -101,11 +103,13 @@ export function getActiveModuleCraftTier(state: GameState): ModuleCraftTier {
 }
 
 export function getModuleCraftTierLabel(tier: ModuleCraftTier): string {
-  return tier === 2 ? '모듈 제작 II' : '모듈 제작 I'
+  if (tier === 3) return '모듈 제작 III'
+  if (tier === 2) return '모듈 제작 II'
+  return '모듈 제작 I'
 }
 
 export function getModuleCraftPoolByTier(tier: ModuleCraftTier): ModuleType[] {
-  return tier === 2
+  return tier >= 2
     ? ['preheater', 'heatAmplifierLeft', 'heatAmplifierRight']
     : ['damage', 'cooldown', 'blockAmplifierUp', 'blockAmplifierDown']
 }
@@ -113,7 +117,10 @@ export function getModuleCraftPoolByTier(tier: ModuleCraftTier): ModuleType[] {
 export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey): number {
   if (recipe === 'module') {
     const base = CRAFT_RECIPE_DEFS.module.durationMs
-    return getActiveModuleCraftTier(state) === 2 ? base * 2 : base
+    const tier = getActiveModuleCraftTier(state)
+    if (tier === 3) return base * 3
+    if (tier === 2) return base * 2
+    return base
   }
 
   if (recipe !== 'shovel') return CRAFT_RECIPE_DEFS[recipe].durationMs
@@ -124,7 +131,11 @@ export function getCraftRecipeDuration(state: GameState, recipe: CraftRecipeKey)
 
 export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): ResourceCost {
   if (recipe === 'module') {
-    if (getActiveModuleCraftTier(state) === 2) {
+    const tier = getActiveModuleCraftTier(state)
+    if (tier === 3) {
+      return { lowAlloySteel: 1, highAlloySteel: 1, cobalt: 1 }
+    }
+    if (tier === 2) {
       return { iron: 200, chromium: 4, molybdenum: 2, cobalt: 1 }
     }
     return CRAFT_RECIPE_DEFS.module.costs
@@ -154,8 +165,10 @@ export function getCraftRecipeMissingRequirement(state: GameState, recipe: Craft
   if ((recipe === 'syntheticFood' || recipe === 'smallHealPotion') && !state.upgrades.organicFilament) {
     return '연구 필요: 유기물 필라멘트'
   }
-  if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) {
-    return '연구 필요: 모듈 제작 II'
+  if (recipe === 'module') {
+    const tier = getSelectedModuleCraftTier(state)
+    if (tier >= 3 && !state.upgrades.moduleCraftingIII) return '연구 필요: 모듈 제작 III'
+    if (tier >= 2 && !state.upgrades.moduleCraftingII) return '연구 필요: 모듈 제작 II'
   }
   return null
 }
@@ -163,6 +176,10 @@ export function getCraftRecipeMissingRequirement(state: GameState, recipe: Craft
 export function isCraftRecipeUnlocked(state: GameState, recipe: CraftRecipeKey): boolean {
   if (!areRequirementsMet(state, CRAFT_RECIPE_DEFS[recipe].requirements)) return false
   if ((recipe === 'syntheticFood' || recipe === 'smallHealPotion') && !state.upgrades.organicFilament) return false
-  if (recipe === 'module' && getSelectedModuleCraftTier(state) === 2 && !state.upgrades.moduleCraftingII) return false
+  if (recipe === 'module') {
+    const tier = getSelectedModuleCraftTier(state)
+    if (tier >= 3 && !state.upgrades.moduleCraftingIII) return false
+    if (tier >= 2 && !state.upgrades.moduleCraftingII) return false
+  }
   return true
 }
