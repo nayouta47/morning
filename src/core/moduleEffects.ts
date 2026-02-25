@@ -14,6 +14,8 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
 type Direction = 'left' | 'right' | 'up' | 'down'
 
 const CARDINAL_DIRECTIONS: Direction[] = ['left', 'right', 'up', 'down']
+const HEAT_HIGH_UNIT = 1
+const HEAT_WARM_UNIT = 0.5
 
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
@@ -115,13 +117,14 @@ function getHeatFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number
     if (!direction) return
 
     const amplifiedTarget = getNeighborIndex(index, direction, weapon.slots.length)
-    if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) high[amplifiedTarget] += 1
+    if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) high[amplifiedTarget] += HEAT_HIGH_UNIT
 
     CARDINAL_DIRECTIONS.forEach((warmDirection) => {
       const target = getNeighborIndex(index, warmDirection, weapon.slots.length)
       if (target == null || !activeSlots.has(target)) return
+      if (target === amplifiedTarget) return
       if (isAnyAmplifierChip(weapon.slots[target])) return
-      warm[target] += 0.5
+      warm[target] += HEAT_WARM_UNIT
     })
   })
 

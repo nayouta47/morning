@@ -53,11 +53,11 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierLeft: {
     base: '즉시 왼쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 상하좌우 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 나머지 인접 3칸 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
   },
   heatAmplifierRight: {
     base: '즉시 오른쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 상하좌우 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 나머지 인접 3칸 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
   },
 }
 
