@@ -24,6 +24,7 @@ type PowerPreview = {
 }
 
 let selectedModuleType: ModuleType | null = null
+let selectedModuleSelectionSource: 'inventory' | 'slot' | 'auto' | null = null
 let powerPreview: PowerPreview | null = null
 
 function getActiveSlots(weapon: WeaponInstance): Set<number> {
@@ -76,10 +77,12 @@ function syncSelectedModuleType(state: GameState): void {
   }
 
   selectedModuleType = (Object.keys(state.modules) as ModuleType[]).find((type) => state.modules[type] > 0) ?? null
+  selectedModuleSelectionSource = selectedModuleType ? 'auto' : null
 }
 
-export function setSelectedModuleType(moduleType: ModuleType): void {
+export function setSelectedModuleType(moduleType: ModuleType, source: 'inventory' | 'slot' = 'inventory'): void {
   selectedModuleType = moduleType
+  selectedModuleSelectionSource = source
 }
 
 export function setAssemblyPowerPreview(preview: PowerPreview | null): void {
@@ -132,12 +135,15 @@ export function patchModuleInventory(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
   const root = app.querySelector<HTMLDivElement>('#module-list-items')
   if (!root) return
-  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${state.modules.preheater}:${selectedModuleType ?? 'none'}`
+  const sig = `${state.modules.damage}:${state.modules.cooldown}:${state.modules.amplifier}:${state.modules.preheater}:${selectedModuleType ?? 'none'}:${selectedModuleSelectionSource ?? 'none'}`
   if (root.dataset.signature === sig) return
 
   const entries = (Object.keys(state.modules) as ModuleType[])
     .filter((type) => state.modules[type] > 0)
-    .map((type) => `<div class="module-item ${selectedModuleType === type ? 'selected' : ''}" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개"><span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span><span class="module-name">${MODULE_NAME[type]} ⚡${MODULE_POWER_COST[type]}</span><span class="module-count">x${state.modules[type]}</span></div>`)
+    .map((type) => {
+      const isInventorySelected = selectedModuleType === type && selectedModuleSelectionSource === 'inventory'
+      return `<div class="module-item ${isInventorySelected ? 'selected' : ''}" draggable="true" data-module-type="${type}" aria-label="${MODULE_LABEL[type]} 모듈 ${state.modules[type]}개"><span class="module-emoji" aria-hidden="true">${MODULE_EMOJI[type]}</span><span class="module-name">${MODULE_NAME[type]} ⚡${MODULE_POWER_COST[type]}</span><span class="module-count">x${state.modules[type]}</span></div>`
+    })
 
   root.innerHTML = entries.join('')
   if (entries.length === 0) root.innerHTML = '<p class="hint">모듈이 없습니다.</p>'

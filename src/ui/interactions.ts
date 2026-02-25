@@ -87,10 +87,15 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
 
   const selectModuleForDetail = (eventTarget: EventTarget | null): void => {
     const target = getEventTargetElement(eventTarget)
-    const moduleItem = target?.closest<HTMLElement>('[data-module-type]')
+    if (!target) return
+
+    const inventoryModuleItem = target.closest<HTMLElement>('#module-list-items [data-module-type]')
+    const slotModuleItem = target.closest<HTMLElement>('[data-slot-index].filled[data-module-type]')
+    const moduleItem = inventoryModuleItem ?? slotModuleItem
     const moduleType = moduleItem?.getAttribute('data-module-type') as ModuleType | null
     if (!moduleType) return
-    setSelectedModuleType(moduleType)
+
+    setSelectedModuleType(moduleType, inventoryModuleItem ? 'inventory' : 'slot')
     patchModuleInventory(app, state)
     patchModuleDetail(app, state)
   }
