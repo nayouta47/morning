@@ -425,9 +425,13 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   })
 
   app.addEventListener('contextmenu', (event) => {
+    // 게임 영역(#app) 내부에서는 브라우저 기본 컨텍스트 메뉴를 항상 막는다.
+    // 단, 게임에서 사용하는 우클릭 동작(예: 슬롯 모듈 해제)은 그대로 처리한다.
+    event.preventDefault()
+
     const slot = getEventTargetElement(event.target)?.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !slot.classList.contains('filled')) return
-    event.preventDefault()
+
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (Number.isFinite(slotIndex)) dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex })
   })
