@@ -206,9 +206,16 @@ h1 {
   gap: 6px;
 }
 
-.resources-owned {
-  gap: 10px;
-  grid-template-columns: minmax(0, 1fr) minmax(140px, 0.4fr);
+.warehouse-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.42fr);
+  gap: 12px;
+}
+
+.warehouse-column {
+  display: grid;
+  align-content: start;
+  gap: 6px;
 }
 
 .resource-group {
@@ -962,7 +969,8 @@ li {
   .assembly-grid,
   .module-grid,
   .resources-split,
-  .resources-owned {
+  .resources-owned,
+  .warehouse-grid {
     grid-template-columns: 1fr;
   }
 
