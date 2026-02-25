@@ -13,8 +13,6 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
 
 type Direction = 'left' | 'right' | 'up' | 'down'
 
-const CARDINAL_DIRECTIONS: Direction[] = ['left', 'right', 'up', 'down']
-
 export const SLOT_PENALTY_MINOR = 5
 export const SLOT_PENALTY_MAJOR = 10
 
@@ -103,6 +101,13 @@ function getPenaltyDirections(direction: Direction): Direction[] {
   return ['left', 'right']
 }
 
+function getOppositeDirection(direction: Direction): Direction {
+  if (direction === 'left') return 'right'
+  if (direction === 'right') return 'left'
+  if (direction === 'up') return 'down'
+  return 'up'
+}
+
 type PenaltyField = {
   heat: number[]
   block: number[]
@@ -132,15 +137,15 @@ function getPenaltyFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<num
       const direction = HEAT_AMPLIFIER_DIRECTION[moduleType]
       if (!direction) return
 
-      const amplifiedTarget = getNeighborIndex(index, direction, weapon.slots.length)
-      if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) {
-        heat[amplifiedTarget] += SLOT_PENALTY_MAJOR
+      const oppositeDirection = getOppositeDirection(direction)
+      const majorPenaltyTarget = getNeighborIndex(index, oppositeDirection, weapon.slots.length)
+      if (majorPenaltyTarget != null && activeSlots.has(majorPenaltyTarget)) {
+        heat[majorPenaltyTarget] += SLOT_PENALTY_MAJOR
       }
 
-      CARDINAL_DIRECTIONS.forEach((penaltyDirection) => {
+      getPenaltyDirections(direction).forEach((penaltyDirection) => {
         const target = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
         if (target == null || !activeSlots.has(target)) return
-        if (target === amplifiedTarget) return
         heat[target] += SLOT_PENALTY_MINOR
       })
     }

@@ -40,12 +40,12 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
     amplified: '가속 +10',
   },
   blockAmplifierUp: {
-    base: `위쪽 1칸 증폭(중첩) + 좌/우 슬롯 패널티 ${SLOT_PENALTY_MAJOR}`,
-    amplified: `패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: `위쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 ${SLOT_PENALTY_MAJOR}`,
+    amplified: `차단 패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   blockAmplifierDown: {
-    base: `아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 패널티 ${SLOT_PENALTY_MAJOR}`,
-    amplified: `패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    base: `아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 ${SLOT_PENALTY_MAJOR}`,
+    amplified: `차단 패널티 ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   preheater: {
     base: '전투 시작 즉시 발사 준비',
@@ -53,11 +53,11 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierLeft: {
     base: '즉시 왼쪽 1칸 증폭 +2',
-    amplified: `패널티: 오른쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 패널티 기준 ⌊패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    amplified: `고열 패널티: 오른쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
   heatAmplifierRight: {
     base: '즉시 오른쪽 1칸 증폭 +2',
-    amplified: `패널티: 왼쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 패널티 기준 ⌊패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
+    amplified: `고열 패널티: 왼쪽 1칸 ${SLOT_PENALTY_MAJOR}, 위/아래 1칸 ${SLOT_PENALTY_MINOR} · 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소, ${SLOT_PENALTY_MAJOR} 이상 슬롯 정지`,
   },
 }
 
@@ -131,7 +131,7 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
     .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
     .join('')
 
-  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 숫자는 슬롯 패널티(5/10), 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch penalty"></span>패널티 ${SLOT_PENALTY_MINOR}/${SLOT_PENALTY_MAJOR}</span><span class="legend-item">패널티 ${SLOT_PENALTY_MAJOR}+ = X 정지</span></div></div>`
+  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 숫자는 슬롯 고열/차단 패널티(5/10), 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch penalty"></span>고열/차단 패널티 ${SLOT_PENALTY_MINOR}/${SLOT_PENALTY_MAJOR}</span><span class="legend-item">패널티 ${SLOT_PENALTY_MAJOR}+ = X 정지</span></div></div>`
 }
 
 function renderModuleDetail(moduleType: ModuleType | null): string {
@@ -314,8 +314,9 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const penaltyBlock = Math.max(0, stats.slotPenaltyBlock[index] ?? 0)
     const penaltyReduction = stats.slotAmplificationReduction[index] ?? 0
     const penaltyClass = penaltyTotal >= SLOT_PENALTY_MAJOR ? 'major' : penaltyTotal >= SLOT_PENALTY_MINOR ? 'minor' : ''
+    const penaltyFillRatio = Math.max(0, Math.min(1, penaltyTotal / SLOT_PENALTY_MAJOR))
     const penaltyOverlay = penaltyTotal > 0
-      ? `<span class="slot-penalty ${penaltyClass}" aria-hidden="true">${penaltyTotal}</span>`
+      ? `<span class="slot-penalty ${penaltyClass}" style="--slot-penalty-fill:${penaltyFillRatio}" aria-hidden="true"></span>`
       : ''
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
     const disableOverlay = penaltyTotal >= SLOT_PENALTY_MAJOR ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
@@ -324,7 +325,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
       : '비어 있음'
     const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '패널티로 차단' : '활성'
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    const penaltyState = penaltyTotal > 0 ? `, 패널티 ${penaltyTotal}(열 ${penaltyHeat} + 차단 ${penaltyBlock})` : ''
+    const penaltyState = penaltyTotal > 0 ? `, 총 패널티 ${penaltyTotal}(고열 패널티 ${penaltyHeat} + 차단 패널티 ${penaltyBlock})` : ''
     return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')
 
