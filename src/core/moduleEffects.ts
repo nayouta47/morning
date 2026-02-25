@@ -39,6 +39,8 @@ export type ModuleLayerStats = {
   finalDamage: number
   finalCooldownSec: number
   slotAmplification: number[]
+  slotPenaltyDisabled: boolean[]
+  slotDisabled: boolean[]
   hasPreheater: boolean
   power: WeaponPowerStatus
 }
@@ -47,16 +49,32 @@ function isSameRowAdjacentLeft(leftIndex: number, rightIndex: number): boolean {
   return rightIndex - leftIndex === 1 && Math.floor(leftIndex / SLOT_COLUMNS) === Math.floor(rightIndex / SLOT_COLUMNS)
 }
 
-function getAmplifierPowerBySlot(weapon: WeaponInstance, activeSlots: Set<number>): number[] {
+function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): boolean[] {
+  const disabled = Array.from({ length: weapon.slots.length }, () => false)
+
+  weapon.slots.forEach((moduleType, index) => {
+    if (moduleType !== 'amplifier' || !activeSlots.has(index)) return
+
+    const upIndex = index - SLOT_COLUMNS
+    const downIndex = index + SLOT_COLUMNS
+
+    if (upIndex >= 0 && activeSlots.has(upIndex)) disabled[upIndex] = true
+    if (downIndex < weapon.slots.length && activeSlots.has(downIndex)) disabled[downIndex] = true
+  })
+
+  return disabled
+}
+
+function getAmplifierPowerBySlot(weapon: WeaponInstance, enabledSlots: Set<number>): number[] {
   const power = Array.from({ length: weapon.slots.length }, () => 0)
 
   for (let index = weapon.slots.length - 1; index >= 0; index -= 1) {
-    if (!activeSlots.has(index) || weapon.slots[index] !== 'amplifier') continue
+    if (!enabledSlots.has(index) || weapon.slots[index] !== 'amplifier') continue
 
     const rightIndex = index + 1
     if (
       rightIndex < weapon.slots.length
-      && activeSlots.has(rightIndex)
+      && enabledSlots.has(rightIndex)
       && weapon.slots[rightIndex] === 'amplifier'
       && isSameRowAdjacentLeft(index, rightIndex)
     ) {
@@ -70,13 +88,13 @@ function getAmplifierPowerBySlot(weapon: WeaponInstance, activeSlots: Set<number
   return power
 }
 
-function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, activeSlots: Set<number>, amplifierPower: number[]): number {
-  if (!activeSlots.has(index) || !weapon.slots[index]) return 0
+function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, enabledSlots: Set<number>, amplifierPower: number[]): number {
+  if (!enabledSlots.has(index) || !weapon.slots[index]) return 0
 
   const rightIndex = index + 1
   if (
     rightIndex < weapon.slots.length
-    && activeSlots.has(rightIndex)
+    && enabledSlots.has(rightIndex)
     && weapon.slots[rightIndex] === 'amplifier'
     && isSameRowAdjacentLeft(index, rightIndex)
   ) {
@@ -88,8 +106,9 @@ function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, act
 
 export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus {
   const activeSlots = getActiveWeaponSlots(weapon.type)
+  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
   const usage = weapon.slots.reduce((sum, moduleType, index) => {
-    if (!moduleType || !activeSlots.has(index)) return sum
+    if (!moduleType || !activeSlots.has(index) || slotPenaltyDisabled[index]) return sum
     return sum + MODULE_POWER_COST[moduleType]
   }, 0)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
@@ -104,6 +123,9 @@ export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus 
 export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerStats {
   const base = WEAPON_BASE_STATS[weapon.type]
   const activeSlots = getActiveWeaponSlots(weapon.type)
+  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
+  const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
+  const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
   const power = getWeaponPowerStatus(weapon)
 
   if (power.overloaded) {
@@ -118,14 +140,16 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       finalDamage: base.damage,
       finalCooldownSec: base.cooldown,
       slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
+      slotPenaltyDisabled,
+      slotDisabled,
       hasPreheater: false,
       power,
     }
   }
 
-  const amplifierPower = getAmplifierPowerBySlot(weapon, activeSlots)
+  const amplifierPower = getAmplifierPowerBySlot(weapon, enabledSlots)
   const slotAmplification = weapon.slots.map((_, index) =>
-    getAmplificationCountForSlot(index, weapon, activeSlots, amplifierPower),
+    getAmplificationCountForSlot(index, weapon, enabledSlots, amplifierPower),
   )
 
   let damageBase = 0
@@ -135,7 +159,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   let hasPreheater = false
 
   weapon.slots.forEach((moduleType, index) => {
-    if (!moduleType || !activeSlots.has(index)) return
+    if (!moduleType || !enabledSlots.has(index)) return
     const amplified = slotAmplification[index] ?? 0
 
     if (moduleType === 'damage') {
@@ -171,6 +195,8 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalDamage,
     finalCooldownSec,
     slotAmplification,
+    slotPenaltyDisabled,
+    slotDisabled,
     hasPreheater,
     power,
   }

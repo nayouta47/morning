@@ -12,7 +12,7 @@ const MODULE_NAME: Record<ModuleType, string> = {
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
   cooldown: '기본효과: 가속 +10 / 증폭효과: 가속 +10 · 전력 ⚡5',
-  amplifier: '기본효과: 왼쪽 1칸 증폭(중첩) / 증폭효과: 해당 없음 · 전력 ⚡2',
+  amplifier: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
   preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음 · 전력 ⚡7',
 }
 
@@ -162,18 +162,22 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const active = getActiveSlots(selected)
   const stats = getWeaponStats(selected)
   const previewSig = powerPreview ? `${powerPreview.slotIndex}:${powerPreview.usage}:${powerPreview.capacity}:${powerPreview.overloaded ? 1 : 0}` : 'none'
-  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${[...active].join(',')}:${previewSig}`
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
     const moduleType = selected.slots[index]
     const isActive = active.has(index)
+    const isPenaltyDisabled = stats.slotPenaltyDisabled[index] ?? false
+    const isDisabled = stats.slotDisabled[index] ?? !isActive
     const isFilled = Boolean(moduleType)
     const amplificationCount = stats.slotAmplification[index] ?? 0
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
+    const disableOverlay = isPenaltyDisabled ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}` : '비어 있음'
-    const previewClass = powerPreview?.slotIndex === index ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}</div>`
+    const slotStatus = !isActive ? '원래 비활성' : isPenaltyDisabled ? '증폭 페널티로 비활성' : '활성'
+    const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive && !isPenaltyDisabled ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig

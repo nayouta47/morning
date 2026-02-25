@@ -812,9 +812,34 @@ li {
   opacity: 0.45;
 }
 
+.slot.penalty-disabled {
+  border-color: #7a4545;
+  background: #2b1717;
+  color: #e2b0b0;
+}
+
+.slot.penalty-disabled.filled {
+  background: #3b1d1d;
+  color: #f0c7c7;
+}
+
 .slot.filled {
   background: #332818;
   color: #e7d4ab;
+}
+
+.slot-disable-x {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  color: rgba(255, 110, 110, 0.82);
+  text-shadow: 0 0 4px rgba(48, 10, 10, 0.8);
+  pointer-events: none;
 }
 
 .slot.preview-safe {
