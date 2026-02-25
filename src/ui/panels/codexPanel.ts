@@ -10,13 +10,14 @@ type ChipCodexEntry = {
   name: string
   icon: string
   effect: string
+  powerCost: number
 }
 
 const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
-  { type: 'damage', name: '공격력 칩', icon: '💥', effect: '무기 최종 공격력 +1' },
-  { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '무기 가속 +10 (쿨다운 단축)' },
-  { type: 'amplifier', name: '증폭 칩', icon: '📡', effect: '왼쪽 칩의 효과 +1중첩' },
-  { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '전투 시작 시 즉시 1회 발사 (중복 비중첩, 증폭 비적용)' },
+  { type: 'damage', name: '공격력 칩', icon: '💥', effect: '무기 최종 공격력 +1', powerCost: 5 },
+  { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '무기 가속 +10 (쿨다운 단축)', powerCost: 5 },
+  { type: 'amplifier', name: '증폭 칩', icon: '📡', effect: '왼쪽 칩의 효과 +1중첩', powerCost: 2 },
+  { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '전투 시작 시 즉시 1회 발사 (중복 비중첩, 증폭 비적용)', powerCost: 7 },
 ]
 
 let selectedCodexSubTab: CodexSubTab = 'enemy'
@@ -74,7 +75,7 @@ function renderChipRows(state: GameState): string {
     .map((chip) => {
       const owned = state.modules[chip.type]
       const isOwned = owned > 0
-      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p></article>`
+      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p><p class="codex-chip-power">전력 소모 ⚡${chip.powerCost}</p></article>`
     })
     .join('')
 }

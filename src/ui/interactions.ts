@@ -1,9 +1,9 @@
-import { isModuleType } from '../core/moduleEffects.ts'
+import { getWeaponPowerStatus, isModuleType } from '../core/moduleEffects.ts'
 import type { GameState, MinerProcessKey, ModuleType, SmeltingProcessKey } from '../core/state.ts'
 import type { ResourceId } from '../data/resources.ts'
 import type { Handlers, InteractionIntent } from './types.ts'
 import { getEventTargetElement } from './view.ts'
-import { patchModuleDetail, patchModuleInventory, setSelectedModuleType } from './panels/assemblyPanel.ts'
+import { patchModuleDetail, patchModuleInventory, patchWeaponBoard, setAssemblyPowerPreview, setSelectedModuleType } from './panels/assemblyPanel.ts'
 import { patchCodexPanel, setCodexSubTab } from './panels/codexPanel.ts'
 
 export function dispatchInteractionIntent(handlers: Handlers, intent: InteractionIntent): void {
@@ -95,6 +95,59 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     patchModuleDetail(app, state)
   }
 
+  const clearAssemblyPreview = (): void => {
+    setAssemblyPowerPreview(null)
+    patchWeaponBoard(app, state)
+  }
+
+  const setProjectedPowerPreview = (dragKind: string, moduleType: ModuleType, targetSlotIndex: number, sourceSlotIndex?: number): void => {
+    const selectedWeapon = state.selectedWeaponId ? state.weapons.find((weapon) => weapon.id === state.selectedWeaponId) : null
+    if (!selectedWeapon) {
+      clearAssemblyPreview()
+      return
+    }
+
+    const slots = [...selectedWeapon.slots]
+    if (dragKind === 'inventory') {
+      if (slots[targetSlotIndex]) {
+        clearAssemblyPreview()
+        return
+      }
+      slots[targetSlotIndex] = moduleType
+    } else if (dragKind === 'slot') {
+      if (!Number.isFinite(sourceSlotIndex)) {
+        clearAssemblyPreview()
+        return
+      }
+      const from = sourceSlotIndex as number
+      if (from === targetSlotIndex) {
+        clearAssemblyPreview()
+        return
+      }
+      const sourceModule = slots[from]
+      if (!sourceModule) {
+        clearAssemblyPreview()
+        return
+      }
+      const targetModule = slots[targetSlotIndex]
+      slots[from] = null
+      slots[targetSlotIndex] = sourceModule
+      if (targetModule) slots[from] = targetModule
+    } else {
+      clearAssemblyPreview()
+      return
+    }
+
+    const projectedPower = getWeaponPowerStatus({ ...selectedWeapon, slots })
+    setAssemblyPowerPreview({
+      usage: projectedPower.usage,
+      capacity: projectedPower.capacity,
+      overloaded: projectedPower.overloaded,
+      slotIndex: targetSlotIndex,
+    })
+    patchWeaponBoard(app, state)
+  }
+
   app.addEventListener('pointerdown', (event) => {
     selectModuleForDetail(event.target)
   })
@@ -173,6 +226,7 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   })
 
   app.addEventListener('dragstart', (event) => {
+    clearAssemblyPreview()
     selectModuleForDetail(event.target)
     const target = getEventTargetElement(event.target)
     if (!target || !event.dataTransfer) return
@@ -217,6 +271,7 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     if (!target) return
 
     if (event.dataTransfer.getData('text/weapon-drag-kind') === 'inventory' && target.closest<HTMLElement>('#weapon-list-items')) {
+      clearAssemblyPreview()
       event.preventDefault()
       event.dataTransfer.dropEffect = 'move'
       return
@@ -225,13 +280,30 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     const dragKind = event.dataTransfer.getData('text/module-drag-kind')
     const slot = target.closest<HTMLElement>('[data-slot-index]')
     if (slot) {
-      if (slot.getAttribute('data-accepts') !== 'true') return
-      if (dragKind === 'inventory' && slot.classList.contains('filled')) return
+      if (slot.getAttribute('data-accepts') !== 'true') {
+        clearAssemblyPreview()
+        return
+      }
+      if (dragKind === 'inventory' && slot.classList.contains('filled')) {
+        clearAssemblyPreview()
+        return
+      }
+
+      const moduleType = event.dataTransfer.getData('text/module-type') as ModuleType
+      const slotIndex = Number(slot.getAttribute('data-slot-index'))
+      const sourceSlotIndex = Number(event.dataTransfer.getData('text/module-slot-index'))
+      if (isModuleType(moduleType) && Number.isFinite(slotIndex)) {
+        setProjectedPowerPreview(dragKind, moduleType, slotIndex, sourceSlotIndex)
+      } else {
+        clearAssemblyPreview()
+      }
+
       event.preventDefault()
       event.dataTransfer.dropEffect = 'move'
       return
     }
 
+    clearAssemblyPreview()
     if (target.closest<HTMLElement>('.module-inventory') && dragKind === 'slot') {
       event.preventDefault()
       event.dataTransfer.dropEffect = 'move'
@@ -239,6 +311,7 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   })
 
   app.addEventListener('drop', (event) => {
+    clearAssemblyPreview()
     if (!event.dataTransfer) return
     const target = getEventTargetElement(event.target)
     if (!target) return
@@ -285,6 +358,10 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
       event.preventDefault()
       dispatchInteractionIntent(handlers, { type: 'module/move', fromSlotIndex: sourceSlotIndex, toSlotIndex: slotIndex })
     }
+  })
+
+  app.addEventListener('dragend', () => {
+    clearAssemblyPreview()
   })
 
   app.addEventListener('contextmenu', (event) => {

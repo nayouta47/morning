@@ -11,7 +11,7 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
   rifle: 20,
 }
 
-const MODULE_POWER_COST: Record<ModuleType, number> = {
+export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
   cooldown: 5,
   amplifier: 2,
