@@ -301,7 +301,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const active = getActiveSlots(selected)
   const stats = getWeaponStats(selected)
   const previewSig = powerPreview ? `${powerPreview.slotIndex}:${powerPreview.usage}:${powerPreview.capacity}:${powerPreview.overloaded ? 1 : 0}` : 'none'
-  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.slotHeatHigh.join('|')}:${stats.slotHeatWarm.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.slotHeatHigh.join('|')}:${stats.slotHeatWarm.join('|')}:${stats.slotHeatCold.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
@@ -311,10 +311,22 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const isDisabled = stats.slotDisabled[index] ?? !isActive
     const isFilled = Boolean(moduleType)
     const amplificationCount = stats.slotAmplification[index] ?? 0
-    const heatHigh = stats.slotHeatHigh[index] ?? 0
-    const heatWarm = stats.slotHeatWarm[index] ?? 0
+    const heatHigh = Math.max(0, stats.slotHeatHigh[index] ?? 0)
+    const heatWarm = Math.max(0, stats.slotHeatWarm[index] ?? 0)
+    const heatCold = Math.max(0, stats.slotHeatCold[index] ?? 0)
+    const heatTotal = heatHigh + heatWarm + heatCold
     const heatReduction = stats.slotAmplificationReduction[index] ?? 0
-    const heatIntensity = Math.min(1, Math.max(0, heatHigh * 0.5 + heatWarm * 0.35))
+    const heatFill = Math.min(1, heatTotal)
+    const heatSegments = [
+      { kind: 'high', value: heatHigh },
+      { kind: 'warm', value: heatWarm },
+      { kind: 'cold', value: heatCold },
+    ].filter((segment) => segment.value > 0)
+    const heatGauge = heatTotal > 0
+      ? `<span class="slot-heat-gauge" aria-hidden="true"><span class="slot-heat-fill" style="width:${(heatFill * 100).toFixed(1)}%">${heatSegments
+        .map((segment) => `<span class="slot-heat-segment ${segment.kind}" style="width:${((segment.value / heatTotal) * 100).toFixed(1)}%"></span>`)
+        .join('')}</span></span>`
+      : ''
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
     const disableOverlay = isPenaltyDisabled ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType
@@ -322,9 +334,8 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
       : '비어 있음'
     const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '증폭 페널티로 차단' : '활성'
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    const heatClasses = `${heatHigh > 0 ? ' heat-high' : ''}${heatWarm > 0 ? ' heat-warm' : ''}`
-    const heatStyle = `--slot-heat-intensity:${heatIntensity.toFixed(2)}`
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''}${heatClasses} ${previewClass}" style="${heatStyle}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
+    const heatState = heatTotal > 0 ? `, 상태 게이지 ${heatTotal.toFixed(1)}` : ''
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${heatState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${heatGauge}${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig

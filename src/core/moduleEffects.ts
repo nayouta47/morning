@@ -72,6 +72,7 @@ export type ModuleLayerStats = {
   slotHeat: number[]
   slotHeatHigh: number[]
   slotHeatWarm: number[]
+  slotHeatCold: number[]
   slotPenaltyDisabled: boolean[]
   slotDisabled: boolean[]
   hasPreheater: boolean
@@ -217,6 +218,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       slotHeat: heatField.total,
       slotHeatHigh: heatField.high,
       slotHeatWarm: heatField.warm,
+      slotHeatCold: Array.from({ length: weapon.slots.length }, () => 0),
       slotPenaltyDisabled,
       slotDisabled,
       hasPreheater: false,
@@ -277,6 +279,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     slotHeat: heatField.total,
     slotHeatHigh: heatField.high,
     slotHeatWarm: heatField.warm,
+    slotHeatCold: Array.from({ length: weapon.slots.length }, () => 0),
     slotPenaltyDisabled,
     slotDisabled,
     hasPreheater,

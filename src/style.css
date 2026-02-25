@@ -832,59 +832,54 @@ li {
   color: #b5ad9c;
   position: relative;
   overflow: hidden;
-  --slot-heat-intensity: 0;
-}
-
-.slot::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: var(--slot-heat-opacity, min(0.78, calc(var(--slot-heat-intensity) * 0.8)));
-  z-index: 0;
+  --slot-heat-visibility: 0.95;
 }
 
 .slot > * {
   position: relative;
+  z-index: 2;
+}
+
+.slot-heat-gauge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   z-index: 1;
+  display: flex;
+  align-items: stretch;
 }
 
-.slot.heat-high::before {
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(255, 148, 92, 0.24) 0,
-    rgba(255, 148, 92, 0.24) 2px,
-    rgba(255, 148, 92, 0) 2px,
-    rgba(255, 148, 92, 0) 7px
-  );
+.slot-heat-fill {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.28);
 }
 
-.slot.heat-warm::before {
-  background-image: repeating-linear-gradient(
-    135deg,
-    rgba(255, 201, 122, 0.18) 0,
-    rgba(255, 201, 122, 0.18) 1px,
-    rgba(255, 201, 122, 0) 1px,
-    rgba(255, 201, 122, 0) 8px
-  );
+.slot-heat-segment {
+  height: 100%;
+  min-width: 1px;
 }
 
-.slot.heat-high.heat-warm::before {
-  background-image:
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 148, 92, 0.24) 0,
-      rgba(255, 148, 92, 0.24) 2px,
-      rgba(255, 148, 92, 0) 2px,
-      rgba(255, 148, 92, 0) 7px
-    ),
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 201, 122, 0.16) 0,
-      rgba(255, 201, 122, 0.16) 1px,
-      rgba(255, 201, 122, 0) 1px,
-      rgba(255, 201, 122, 0) 8px
-    );
+.slot-heat-segment.high {
+  background:
+    linear-gradient(180deg, rgba(255, 185, 140, 0.36), rgba(255, 142, 88, 0.58)),
+    repeating-linear-gradient(135deg, rgba(255, 223, 182, 0.85) 0, rgba(255, 223, 182, 0.85) 2px, rgba(173, 67, 28, 0.26) 2px, rgba(173, 67, 28, 0.26) 5px);
+  opacity: var(--slot-heat-visibility);
+}
+
+.slot-heat-segment.warm {
+  background:
+    linear-gradient(180deg, rgba(255, 224, 151, 0.34), rgba(236, 170, 72, 0.52)),
+    repeating-linear-gradient(135deg, rgba(255, 239, 188, 0.78) 0, rgba(255, 239, 188, 0.78) 2px, rgba(148, 95, 21, 0.24) 2px, rgba(148, 95, 21, 0.24) 5px);
+  opacity: var(--slot-heat-visibility);
+}
+
+.slot-heat-segment.cold {
+  background:
+    linear-gradient(180deg, rgba(173, 230, 255, 0.34), rgba(87, 166, 222, 0.5)),
+    repeating-linear-gradient(135deg, rgba(210, 241, 255, 0.75) 0, rgba(210, 241, 255, 0.75) 2px, rgba(34, 82, 138, 0.24) 2px, rgba(34, 82, 138, 0.24) 5px);
+  opacity: var(--slot-heat-visibility);
 }
 
 .slot-amplify {
@@ -909,17 +904,16 @@ li {
 }
 
 /* Inactive-by-topology slots stay dark, but still expose heat/block penalties when present. */
-.slot.inactive.heat-high,
-.slot.inactive.heat-warm {
-  --slot-heat-opacity: clamp(0.16, calc(var(--slot-heat-intensity) * 0.5), 0.42);
+.slot.inactive {
+  --slot-heat-visibility: 0.62;
 }
 
 .slot.disabled:not(.penalty-disabled) {
   filter: saturate(0.72) brightness(0.72);
 }
 
-.slot.inactive.disabled.heat-high,
-.slot.inactive.disabled.heat-warm {
+.slot.inactive.disabled {
+  --slot-heat-visibility: 0.5;
   filter: saturate(0.74) brightness(0.78);
 }
 
