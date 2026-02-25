@@ -6,6 +6,7 @@ import {
   CRAFT_RECIPE_DEFS,
   getCraftRecipeCost,
   getCraftRecipeDuration,
+  getActiveModuleCraftTier,
   getCraftRecipeMissingRequirement,
   getModuleCraftTierLabel,
   getSelectedModuleCraftTier,
@@ -234,7 +235,7 @@ function renderResourceRow(resource: keyof GameState['resources'], id: string, v
 function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
   const tier = getSelectedModuleCraftTier(state)
   const canSelectTierII = state.upgrades.moduleCraftingII
-  const tierLabel = getModuleCraftTierLabel(tier)
+  const tierLabel = getModuleCraftTierLabel(getActiveModuleCraftTier(state))
   const lockedHint = !canSelectTierII ? '<p class="hint" id="module-craft-tier-hint">모듈 제작 II는 연구에서 해금됩니다.</p>' : ''
   return `<div class="module-craft-row"><div class="module-craft-tier-switch" aria-label="모듈 제작 티어 선택"><button id="module-craft-tier-prev" class="craft-tier-btn" aria-label="이전 모듈 제작 티어" ${tier <= 1 ? 'disabled' : ''}>◀</button><button id="module-craft-tier-next" class="craft-tier-btn" aria-label="다음 모듈 제작 티어" ${tier >= 2 || !canSelectTierII ? 'disabled' : ''}>▶</button></div>${renderGaugeButton('craft-module', `${tierLabel} (${formatCost(getCraftRecipeCost(state, 'module'))})`, '모듈 제작', moduleView)}</div>${lockedHint}`
 }
@@ -414,7 +415,7 @@ export function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-small-heal-potion', craftViewByRecipe(state, 'smallHealPotion'))
 
   patchGaugeTitle(app, 'craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`)
-  patchGaugeTitle(app, 'craft-module', `${getModuleCraftTierLabel(getSelectedModuleCraftTier(state))} (${formatCost(getCraftRecipeCost(state, 'module'))})`)
+  patchGaugeTitle(app, 'craft-module', `${getModuleCraftTierLabel(getActiveModuleCraftTier(state))} (${formatCost(getCraftRecipeCost(state, 'module'))})`)
   patchGaugeTitle(app, 'craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`)
   patchGaugeTitle(app, 'craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`)
   patchGaugeTitle(app, 'craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`)
