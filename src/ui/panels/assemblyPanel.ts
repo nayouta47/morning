@@ -41,11 +41,11 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   blockAmplifierUp: {
     base: '증폭(중첩) + 차단 패널티 부여',
-    amplified: '차단 패널티 누적 시 슬롯 정지',
+    amplified: '해당 없음',
   },
   blockAmplifierDown: {
     base: '증폭(중첩) + 차단 패널티 부여',
-    amplified: '차단 패널티 누적 시 슬롯 정지',
+    amplified: '해당 없음',
   },
   preheater: {
     base: '전투 시작 즉시 발사 준비',
@@ -53,11 +53,11 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierLeft: {
     base: '즉시 증폭 +2 + 열기 패널티 부여',
-    amplified: '총 열기 패널티에 비례해 증폭 감소, 누적 시 슬롯 정지',
+    amplified: '해당 없음',
   },
   heatAmplifierRight: {
     base: '즉시 증폭 +2 + 열기 패널티 부여',
-    amplified: '총 열기 패널티에 비례해 증폭 감소, 누적 시 슬롯 정지',
+    amplified: '해당 없음',
   },
 }
 
