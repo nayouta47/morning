@@ -53,11 +53,11 @@ const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string
   },
   heatAmplifierLeft: {
     base: '즉시 왼쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 + 상하좌우 온열(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 상하좌우 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
   },
   heatAmplifierRight: {
     base: '즉시 오른쪽 1칸 증폭 +2',
-    amplified: '열장 페널티: 증폭 방향 1칸 고열 + 상하좌우 온열(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 10 + 상하좌우 고열 5(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
   },
 }
 
@@ -133,7 +133,7 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
     .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
     .join('')
 
-  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 5는 온열 패널티, 10은 고열/차단 패널티">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단 10</span><span class="legend-item"><span class="swatch warm"></span>온열 5</span><span class="legend-item"><span class="swatch high"></span>고열 10</span></div></div>`
+  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 5는 고열 패널티, 10은 고열/차단 패널티">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단 10</span><span class="legend-item"><span class="swatch warm"></span>고열 5</span><span class="legend-item"><span class="swatch high"></span>고열 10</span></div></div>`
 }
 
 function renderModuleDetail(moduleType: ModuleType | null): string {

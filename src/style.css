@@ -24,6 +24,14 @@
   --rarity-yellow-rgb: 201, 176, 90;
   --rarity-orange-rgb: 198, 140, 87;
   --rarity-red-rgb: 187, 100, 95;
+
+  /* Heat penalty visuals (shared by board slots + module mini-map) */
+  --heat-high-fill:
+    linear-gradient(180deg, rgba(255, 185, 140, 0.36), rgba(255, 142, 88, 0.58)),
+    repeating-linear-gradient(135deg, rgba(255, 223, 182, 0.85) 0, rgba(255, 223, 182, 0.85) 2px, rgba(173, 67, 28, 0.26) 2px, rgba(173, 67, 28, 0.26) 5px);
+  --heat-warm-fill:
+    linear-gradient(180deg, rgba(255, 224, 151, 0.34), rgba(236, 170, 72, 0.52)),
+    repeating-linear-gradient(135deg, rgba(255, 239, 188, 0.78) 0, rgba(255, 239, 188, 0.78) 2px, rgba(148, 95, 21, 0.24) 2px, rgba(148, 95, 21, 0.24) 5px);
 }
 
 * {
@@ -866,16 +874,12 @@ li {
 }
 
 .slot-heat-segment.high {
-  background:
-    linear-gradient(180deg, rgba(255, 185, 140, 0.36), rgba(255, 142, 88, 0.58)),
-    repeating-linear-gradient(135deg, rgba(255, 223, 182, 0.85) 0, rgba(255, 223, 182, 0.85) 2px, rgba(173, 67, 28, 0.26) 2px, rgba(173, 67, 28, 0.26) 5px);
+  background: var(--heat-high-fill);
   opacity: var(--slot-heat-visibility);
 }
 
 .slot-heat-segment.warm {
-  background:
-    linear-gradient(180deg, rgba(255, 224, 151, 0.34), rgba(236, 170, 72, 0.52)),
-    repeating-linear-gradient(135deg, rgba(255, 239, 188, 0.78) 0, rgba(255, 239, 188, 0.78) 2px, rgba(148, 95, 21, 0.24) 2px, rgba(148, 95, 21, 0.24) 5px);
+  background: var(--heat-warm-fill);
   opacity: var(--slot-heat-visibility);
 }
 
@@ -1121,21 +1125,21 @@ li {
 
 .influence-cell.heatWarm {
   border-color: #926a3b;
-  background: rgba(217, 152, 79, 0.2);
+  background: var(--heat-warm-fill);
   color: #f4d5a8;
 }
 
 .influence-cell.heatHigh {
   border-color: #af5f43;
-  background: rgba(213, 103, 64, 0.3);
+  background: var(--heat-high-fill);
   color: #ffd2bf;
 }
 
 .influence-cell.ampHeatHigh {
   border-color: #6f6c3f;
   color: #ffdfae;
-  background:
-    linear-gradient(135deg, rgba(61, 120, 75, 0.7) 0%, rgba(61, 120, 75, 0.7) 50%, rgba(174, 89, 58, 0.72) 50%, rgba(174, 89, 58, 0.72) 100%);
+  background: var(--heat-high-fill);
+  box-shadow: inset 0 0 0 1px rgba(97, 160, 113, 0.55);
 }
 
 .influence-legend {
@@ -1183,12 +1187,12 @@ li {
 }
 
 .swatch.warm {
-  background: rgba(217, 152, 79, 0.35);
+  background: var(--heat-warm-fill);
   border-color: #926a3b;
 }
 
 .swatch.high {
-  background: rgba(213, 103, 64, 0.45);
+  background: var(--heat-high-fill);
   border-color: #af5f43;
 }
 
