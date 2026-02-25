@@ -66,9 +66,9 @@ export type ModuleLayerStats = {
   finalCooldownSec: number
   slotAmplification: number[]
   slotAmplificationReduction: number[]
-  slotPenalty: number[]
-  slotPenaltyHeat: number[]
-  slotPenaltyBlock: number[]
+  totalPenalty: number[]
+  heatPenalty: number[]
+  blockPenalty: number[]
   slotPenaltyDisabled: boolean[]
   slotDisabled: boolean[]
   hasPreheater: boolean
@@ -223,9 +223,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       finalCooldownSec: base.cooldown,
       slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
       slotAmplificationReduction,
-      slotPenalty: penaltyField.total,
-      slotPenaltyHeat: penaltyField.heat,
-      slotPenaltyBlock: penaltyField.block,
+      totalPenalty: penaltyField.total,
+      heatPenalty: penaltyField.heat,
+      blockPenalty: penaltyField.block,
       slotPenaltyDisabled,
       slotDisabled,
       hasPreheater: false,
@@ -283,9 +283,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalCooldownSec,
     slotAmplification,
     slotAmplificationReduction,
-    slotPenalty: penaltyField.total,
-    slotPenaltyHeat: penaltyField.heat,
-    slotPenaltyBlock: penaltyField.block,
+    totalPenalty: penaltyField.total,
+    heatPenalty: penaltyField.heat,
+    blockPenalty: penaltyField.block,
     slotPenaltyDisabled,
     slotDisabled,
     hasPreheater,

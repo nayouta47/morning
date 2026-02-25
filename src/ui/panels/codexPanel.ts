@@ -19,8 +19,8 @@ const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
   { type: 'blockAmplifierUp', name: '차단 증폭기(상)', icon: '📡▲', effect: '기본효과: 위쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음', powerCost: 2 },
   { type: 'blockAmplifierDown', name: '차단 증폭기(하)', icon: '📡▼', effect: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음', powerCost: 2 },
   { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음', powerCost: 7 },
-  { type: 'heatAmplifierLeft', name: '열 증폭기(좌)', icon: '♨️◀', effect: '기본효과: 즉시 왼쪽 1칸 증폭 +2 / 고열 패널티: 오른쪽 1칸 10 + 위/아래 1칸 5, 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소 및 10 이상 슬롯 정지', powerCost: 4 },
-  { type: 'heatAmplifierRight', name: '열 증폭기(우)', icon: '♨️▶', effect: '기본효과: 즉시 오른쪽 1칸 증폭 +2 / 고열 패널티: 왼쪽 1칸 10 + 위/아래 1칸 5, 총 고열 패널티 기준 ⌊고열 패널티/10⌋만큼 증폭 감소 및 10 이상 슬롯 정지', powerCost: 4 },
+  { type: 'heatAmplifierLeft', name: '열 증폭기(좌)', icon: '♨️◀', effect: '기본효과: 즉시 왼쪽 1칸 증폭 +2 + 열기 패널티 부여 / 열기 패널티: 오른쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
+  { type: 'heatAmplifierRight', name: '열 증폭기(우)', icon: '♨️▶', effect: '기본효과: 즉시 오른쪽 1칸 증폭 +2 + 열기 패널티 부여 / 열기 패널티: 왼쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지', powerCost: 4 },
 ]
 
 let selectedCodexSubTab: CodexSubTab = 'enemy'
