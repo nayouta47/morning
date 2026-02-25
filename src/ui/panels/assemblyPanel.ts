@@ -156,8 +156,8 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const isActive = active.has(index)
     const isFilled = Boolean(moduleType)
     const amplificationCount = stats.slotAmplification[index] ?? 0
-    const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 x${amplificationCount}">x${amplificationCount}</span>` : ''
-    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 x${amplificationCount}` : ''}` : '비어 있음'
+    const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
+    const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}` : '비어 있음'
     const previewClass = powerPreview?.slotIndex === index ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
     return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${isActive ? '활성' : '비활성'} ${slotState}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}</div>`
   }).join('')
