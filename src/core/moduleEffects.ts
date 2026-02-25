@@ -1,13 +1,31 @@
 import { WEAPON_BASE_STATS } from '../data/balance.ts'
-import type { ModuleType, WeaponInstance } from './state.ts'
+import type { ModuleType, WeaponInstance, WeaponType } from './state.ts'
 import { getActiveWeaponSlots } from './weaponSlots.ts'
 
 const MIN_COOLDOWN_SEC = 0.5
 const SLOT_COLUMNS = 10
 const HASTE_PER_COOLDOWN_MODULE = 10
 
+const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
+  pistol: 12,
+  rifle: 20,
+}
+
+const MODULE_POWER_COST: Record<ModuleType, number> = {
+  damage: 5,
+  cooldown: 5,
+  amplifier: 2,
+  preheater: 7,
+}
+
 function applyHasteToCooldown(baseCooldownSec: number, totalHaste: number): number {
   return baseCooldownSec * (100 / (100 + Math.max(0, totalHaste)))
+}
+
+export type WeaponPowerStatus = {
+  usage: number
+  capacity: number
+  overloaded: boolean
 }
 
 export type ModuleLayerStats = {
@@ -22,6 +40,7 @@ export type ModuleLayerStats = {
   finalCooldownSec: number
   slotAmplification: number[]
   hasPreheater: boolean
+  power: WeaponPowerStatus
 }
 
 function isSameRowAdjacentLeft(leftIndex: number, rightIndex: number): boolean {
@@ -67,9 +86,43 @@ function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, act
   return 0
 }
 
+export function getWeaponPowerStatus(weapon: WeaponInstance): WeaponPowerStatus {
+  const activeSlots = getActiveWeaponSlots(weapon.type)
+  const usage = weapon.slots.reduce((sum, moduleType, index) => {
+    if (!moduleType || !activeSlots.has(index)) return sum
+    return sum + MODULE_POWER_COST[moduleType]
+  }, 0)
+  const capacity = WEAPON_POWER_CAPACITY[weapon.type]
+
+  return {
+    usage,
+    capacity,
+    overloaded: usage > capacity,
+  }
+}
+
 export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerStats {
   const base = WEAPON_BASE_STATS[weapon.type]
   const activeSlots = getActiveWeaponSlots(weapon.type)
+  const power = getWeaponPowerStatus(weapon)
+
+  if (power.overloaded) {
+    return {
+      baseDamage: base.damage,
+      baseCooldownSec: base.cooldown,
+      damageBase: 0,
+      damageAmplified: 0,
+      cooldownBase: 0,
+      cooldownAmplified: 0,
+      totalHaste: 0,
+      finalDamage: base.damage,
+      finalCooldownSec: base.cooldown,
+      slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
+      hasPreheater: false,
+      power,
+    }
+  }
+
   const amplifierPower = getAmplifierPowerBySlot(weapon, activeSlots)
   const slotAmplification = weapon.slots.map((_, index) =>
     getAmplificationCountForSlot(index, weapon, activeSlots, amplifierPower),
@@ -119,6 +172,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalCooldownSec,
     slotAmplification,
     hasPreheater,
+    power,
   }
 }
 

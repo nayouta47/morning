@@ -788,6 +788,19 @@ li {
   color: #d8be82;
 }
 
+.power-stat {
+  color: #9bc5d8;
+}
+
+.overload-state.normal {
+  color: #8fb08f;
+}
+
+.overload-state.overload {
+  color: #df8d8d;
+  font-weight: 600;
+}
+
 .codex-subtabs {
   margin: 0 0 10px;
   display: inline-flex;

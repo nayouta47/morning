@@ -26,7 +26,11 @@ function getWeaponStats(weapon: WeaponInstance) {
 }
 
 function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string {
-  return `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
+  const overloadText = stats.power.overloaded
+    ? '<span class="overload-state overload">과부하: 모듈 효과 비활성</span>'
+    : '<span class="overload-state normal">과부하: 정상</span>'
+
+  return `<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="final-stat">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span> | <span class="power-stat">전력 ${stats.power.usage}/${stats.power.capacity}</span> | ${overloadText}`
 }
 
 function syncSelectedModuleType(state: GameState): void {
