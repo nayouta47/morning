@@ -38,7 +38,7 @@ export const UPGRADE_DEFS = {
   organicFilament: {
     name: '유기물 필라멘트',
     baseCost: { wood: 180, iron: 70 },
-    effectText: '유기 합성 라인 복구: 인조식량·회복약(소) 제작 해금',
+    effectText: '인조식량·회복약(소) 제작 해금',
   },
   moduleCraftingII: {
     name: '모듈 제작 II',
