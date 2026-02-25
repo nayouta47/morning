@@ -23,10 +23,10 @@ const MODULE_NAME: Record<ModuleType, string> = {
 const MODULE_LABEL: Record<ModuleType, string> = {
   damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
   cooldown: '기본효과: 가속 +10 / 증폭효과: 가속 +10 · 전력 ⚡5',
-  blockAmplifierLeft: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
-  blockAmplifierRight: '기본효과: 오른쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
-  blockAmplifierUp: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
-  blockAmplifierDown: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierLeft: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierRight: '기본효과: 오른쪽 1칸 증폭(중첩) + 상하 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierUp: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
+  blockAmplifierDown: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
   preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음 · 전력 ⚡7',
 }
 
@@ -65,7 +65,7 @@ function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: P
     : ''
 
   const overloadHint = overloaded
-    ? '<span class="power-warning-text">모듈 효과 비활성</span>'
+    ? '<span class="power-warning-text">모듈 효과 차단</span>'
     : ''
 
   return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">전력 ${usage} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}${projected}</div>`
@@ -74,7 +74,7 @@ function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: P
 function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string {
   const finalClass = stats.power.overloaded ? 'final-stat subdued' : 'final-stat'
   const overloadLine = stats.power.overloaded
-    ? '<span class="stat-warning">⚠ 과부하 상태: 모듈 효과 비활성</span>'
+    ? '<span class="stat-warning">⚠ 과부하 상태: 모듈 효과 차단</span>'
     : '<span class="stat-warning normal">모듈 효과 정상 적용 중</span>'
 
   return `${overloadLine}<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="${finalClass}">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
@@ -189,7 +189,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
     const disableOverlay = isPenaltyDisabled ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}` : '비어 있음'
-    const slotStatus = !isActive ? '원래 비활성' : isPenaltyDisabled ? '증폭 페널티로 비활성' : '활성'
+    const slotStatus = !isActive ? '기본 차단' : isPenaltyDisabled ? '증폭 페널티로 차단' : '활성'
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
     return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
   }).join('')

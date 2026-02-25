@@ -16,10 +16,10 @@ type ChipCodexEntry = {
 const CHIP_CODEX_ENTRIES: ChipCodexEntry[] = [
   { type: 'damage', name: '공격력 칩', icon: '💥', effect: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1', powerCost: 5 },
   { type: 'cooldown', name: '가속 칩', icon: '⏱️', effect: '기본효과: 가속 +10 / 증폭효과: 가속 +10', powerCost: 5 },
-  { type: 'blockAmplifierLeft', name: '차단 증폭기(좌)', icon: '📡◀', effect: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음', powerCost: 2 },
-  { type: 'blockAmplifierRight', name: '차단 증폭기(우)', icon: '📡▶', effect: '기본효과: 오른쪽 1칸 증폭(중첩) + 상하 슬롯 비활성화 / 증폭효과: 해당 없음', powerCost: 2 },
-  { type: 'blockAmplifierUp', name: '차단 증폭기(상)', icon: '📡▲', effect: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음', powerCost: 2 },
-  { type: 'blockAmplifierDown', name: '차단 증폭기(하)', icon: '📡▼', effect: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 비활성화 / 증폭효과: 해당 없음', powerCost: 2 },
+  { type: 'blockAmplifierLeft', name: '차단 증폭기(좌)', icon: '📡◀', effect: '기본효과: 왼쪽 1칸 증폭(중첩) + 상하 슬롯 차단 / 증폭효과: 해당 없음', powerCost: 2 },
+  { type: 'blockAmplifierRight', name: '차단 증폭기(우)', icon: '📡▶', effect: '기본효과: 오른쪽 1칸 증폭(중첩) + 상하 슬롯 차단 / 증폭효과: 해당 없음', powerCost: 2 },
+  { type: 'blockAmplifierUp', name: '차단 증폭기(상)', icon: '📡▲', effect: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음', powerCost: 2 },
+  { type: 'blockAmplifierDown', name: '차단 증폭기(하)', icon: '📡▼', effect: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음', powerCost: 2 },
   { type: 'preheater', name: '예열기 칩', icon: '🔥', effect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음', powerCost: 7 },
 ]
 
