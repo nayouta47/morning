@@ -199,6 +199,13 @@ function getPowerUsage(weapon: WeaponInstance, activeSlots: Set<number>, slotPen
   }, 0)
 }
 
+function getRelativeLeftTargetIndex(originIndex: number, dx: number, maxSlots: number): number | null {
+  const target = originIndex + dx
+  if (target < 0 || target >= maxSlots) return null
+  if (Math.floor(originIndex / SLOT_COLUMNS) !== Math.floor(target / SLOT_COLUMNS)) return null
+  return target
+}
+
 function getSlotUnlockerUnlockedSlots(
   weapon: WeaponInstance,
   activeSlots: Set<number>,
@@ -212,11 +219,10 @@ function getSlotUnlockerUnlockedSlots(
     if (moduleType !== 'slotUnlocker') return
     if (!activeSlots.has(index) || slotPenaltyDisabled[index]) return
 
-    const left1 = getNeighborIndex(index, 'left', weapon.slots.length)
-    if (left1 == null) return
-    unlocked.add(left1)
+    const left1 = getRelativeLeftTargetIndex(index, -1, weapon.slots.length)
+    if (left1 != null) unlocked.add(left1)
 
-    const left2 = getNeighborIndex(left1, 'left', weapon.slots.length)
+    const left2 = getRelativeLeftTargetIndex(index, -2, weapon.slots.length)
     if (left2 != null) unlocked.add(left2)
   })
 
