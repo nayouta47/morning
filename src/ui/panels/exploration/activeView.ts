@@ -1,0 +1,49 @@
+import type { GameState } from '../../../core/state.ts'
+import { getBiomeAt } from '../../../data/maps/index.ts'
+import { getResourceDisplay, type ResourceId } from '../../../data/resources.ts'
+import { renderExplorationCombatOverlay } from '../combatOverlay.ts'
+import { getSyntheticFoodButtonState, renderExplorationBackpackGrid } from './loadoutView.ts'
+
+export function renderExplorationMap(state: GameState): string {
+  const size = state.exploration.mapSize
+  const radius = 4
+  const { x, y } = state.exploration.position
+  const rows: string[] = []
+
+  for (let yy = y - radius; yy <= y + radius; yy += 1) {
+    const tokens: string[] = []
+    for (let xx = x - radius; xx <= x + radius; xx += 1) {
+      if (xx < 0 || yy < 0 || xx >= size || yy >= size) tokens.push('⬛')
+      else if (xx === x && yy === y) tokens.push('🧍')
+      else if (xx === state.exploration.start.x && yy === state.exploration.start.y) tokens.push('🏠')
+      else if (state.exploration.visited.includes(`${xx},${yy}`)) tokens.push(getBiomeAt(xx, yy).emoji)
+      else tokens.push('⬛')
+    }
+    rows.push(tokens.join(' '))
+  }
+  return rows.join('\n')
+}
+
+function renderSyntheticFoodControl(state: GameState): string {
+  const { amount, disabled } = getSyntheticFoodButtonState(state)
+  return `<button id="exploration-use-synthetic-food" type="button" ${disabled ? 'disabled' : ''}>인조식량 사용 (${amount})</button>`
+}
+
+export function renderActiveBody(state: GameState, now = Date.now()): string {
+  const backpackUsed = state.exploration.backpack.length
+  const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 슬롯 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>${renderSyntheticFoodControl(state)}${renderExplorationBackpackGrid(state)}`
+
+  if (state.exploration.phase === 'combat' && state.exploration.combat) {
+    return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
+  }
+
+  if (state.exploration.phase === 'loot') {
+    const lootRows = state.exploration.pendingLoot
+      .map((entry) => `<button data-loot-resource="${entry.resource as ResourceId}">획득: ${getResourceDisplay(entry.resource)} +${entry.amount}</button>`)
+      .join('')
+    return `<div class="exploration-active">${baseInfo}<div class="exploration-combat-box"><p>전리품 선택</p>${lootRows || '<p class="hint">가져갈 수 있는 전리품이 없다.</p>'}<button id="exploration-continue">계속 이동</button></div><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre></div>`
+  }
+
+  return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p></div>`
+}

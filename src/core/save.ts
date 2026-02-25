@@ -55,29 +55,95 @@ function normalizeBackpackEntries(entries: unknown): GameState['exploration']['b
   return normalized
 }
 
+type LoadedSave = Partial<GameState> & {
+  productionProgress?: Partial<GameState['productionProgress']>
+  productionRunning?: Partial<GameState['productionRunning']>
+  actionProgress?: Partial<GameState['actionProgress']>
+  smeltingAllocation?: Partial<GameState['smeltingAllocation']>
+  smeltingProgress?: Partial<GameState['smeltingProgress']>
+  smeltingProcessRunning?: Partial<GameState['smeltingProcessRunning']>
+  minerAllocation?: Partial<GameState['minerAllocation']>
+  minerProgress?: Partial<GameState['minerProgress']>
+  minerProcessRunning?: Partial<GameState['minerProcessRunning']>
+  craftProgress?: Partial<GameState['craftProgress']>
+  modules?: unknown
+  exploration?: unknown
+  enemyCodex?: unknown
+  gatherScrapRewardRemainderSevenths?: unknown
+  codexRevealAll?: unknown
+  selectedModuleCraftTier?: unknown
+  moduleCraftTierInProgress?: unknown
+}
+
+function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
+  if (!(loaded.exploration && typeof loaded.exploration === 'object')) return
+
+  const exploration = loaded.exploration as Partial<GameState['exploration']>
+  base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
+  base.exploration.phase = exploration.phase === 'combat' || exploration.phase === 'loot' ? exploration.phase : 'moving'
+  base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize))
+    ? Math.max(8, Number(exploration.mapSize))
+    : EXPLORATION_MAP.size
+  base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
+  base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
+  base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
+  base.exploration.backpackCapacity = EXPLORATION_BACKPACK_CAPACITY
+  base.exploration.backpack = normalizeBackpackEntries(exploration.backpack)
+  if (Array.isArray(exploration.pendingLoot)) {
+    base.exploration.pendingLoot = exploration.pendingLoot
+      .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
+        Boolean(entry && typeof entry.resource === 'string' && typeof entry.amount === 'number' && entry.amount > 0),
+      )
+      .map((entry) => ({ resource: entry.resource, amount: Math.floor(entry.amount) }))
+  }
+  base.exploration.carriedWeaponId = typeof exploration.carriedWeaponId === 'string' ? exploration.carriedWeaponId : null
+
+  const clampPos = (value: unknown, fallback: number) =>
+    Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || fallback))
+  base.exploration.start = {
+    x: clampPos(exploration.start?.x, EXPLORATION_MAP.start.x),
+    y: clampPos(exploration.start?.y, EXPLORATION_MAP.start.y),
+  }
+  base.exploration.position = {
+    x: clampPos(exploration.position?.x, base.exploration.start.x),
+    y: clampPos(exploration.position?.y, base.exploration.start.y),
+  }
+  base.exploration.steps = Math.max(0, Math.floor(Number(exploration.steps) || 0))
+
+  if (Array.isArray(exploration.visited)) {
+    base.exploration.visited = exploration.visited
+      .filter((value): value is string => typeof value === 'string' && value.includes(','))
+      .slice(-4096)
+  }
+
+  if (exploration.combat && typeof exploration.combat === 'object') {
+    base.exploration.combat = {
+      enemyId: ENEMY_IDS.includes(exploration.combat.enemyId as EnemyId)
+        ? (exploration.combat.enemyId as EnemyId)
+        : DEFAULT_ENEMY_ID,
+      enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '🧏‍♀️ 벌벌떠는 기인',
+      enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
+      enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),
+      enemyDamage: Math.max(1, Number(exploration.combat.enemyDamage) || 2),
+      enemyAttackCooldownMs: Math.max(500, Number(exploration.combat.enemyAttackCooldownMs) || 3000),
+      enemyAttackElapsedMs: Math.max(0, Number(exploration.combat.enemyAttackElapsedMs) || 0),
+      playerAttackElapsedMs: Math.max(0, Number(exploration.combat.playerAttackElapsedMs) || 0),
+      fleeGaugeDurationMs: Math.max(500, Number(exploration.combat.fleeGaugeDurationMs) || 2500),
+      fleeGaugeElapsedMs: Math.max(0, Number(exploration.combat.fleeGaugeElapsedMs) || 0),
+      fleeGaugeRunning: Boolean(exploration.combat.fleeGaugeRunning),
+      smallHealPotionCooldownRemainingMs: Math.max(0, Number(exploration.combat.smallHealPotionCooldownRemainingMs) || 0),
+    }
+  }
+
+  const startKey = `${base.exploration.start.x},${base.exploration.start.y}`
+  if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
+}
+
 function normalizeState(raw: unknown): GameState | null {
   if (!raw || typeof raw !== 'object') return null
 
   const base = structuredClone(initialState)
-  const loaded = raw as Partial<GameState> & {
-    productionProgress?: Partial<GameState['productionProgress']>
-    productionRunning?: Partial<GameState['productionRunning']>
-    actionProgress?: Partial<GameState['actionProgress']>
-    smeltingAllocation?: Partial<GameState['smeltingAllocation']>
-    smeltingProgress?: Partial<GameState['smeltingProgress']>
-    smeltingProcessRunning?: Partial<GameState['smeltingProcessRunning']>
-    minerAllocation?: Partial<GameState['minerAllocation']>
-    minerProgress?: Partial<GameState['minerProgress']>
-    minerProcessRunning?: Partial<GameState['minerProcessRunning']>
-    craftProgress?: Partial<GameState['craftProgress']>
-    modules?: unknown
-    exploration?: unknown
-    enemyCodex?: unknown
-    gatherScrapRewardRemainderSevenths?: unknown
-    codexRevealAll?: unknown
-    selectedModuleCraftTier?: unknown
-    moduleCraftTierInProgress?: unknown
-  }
+  const loaded = raw as LoadedSave
 
   if (loaded.resources) {
     base.resources.wood = Number(loaded.resources.wood ?? base.resources.wood)
@@ -329,67 +395,7 @@ function normalizeState(raw: unknown): GameState | null {
     })
   }
 
-  if (loaded.exploration && typeof loaded.exploration === 'object') {
-    const exploration = loaded.exploration as Partial<GameState['exploration']>
-    base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
-    base.exploration.phase = exploration.phase === 'combat' || exploration.phase === 'loot' ? exploration.phase : 'moving'
-    base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize))
-      ? Math.max(8, Number(exploration.mapSize))
-      : EXPLORATION_MAP.size
-    base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
-    base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
-    base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
-    base.exploration.backpackCapacity = EXPLORATION_BACKPACK_CAPACITY
-    base.exploration.backpack = normalizeBackpackEntries(exploration.backpack)
-    if (Array.isArray(exploration.pendingLoot)) {
-      base.exploration.pendingLoot = exploration.pendingLoot
-        .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>
-          Boolean(entry && typeof entry.resource === 'string' && typeof entry.amount === 'number' && entry.amount > 0),
-        )
-        .map((entry) => ({ resource: entry.resource, amount: Math.floor(entry.amount) }))
-    }
-    base.exploration.carriedWeaponId = typeof exploration.carriedWeaponId === 'string' ? exploration.carriedWeaponId : null
-
-    const clampPos = (value: unknown, fallback: number) =>
-      Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || fallback))
-    base.exploration.start = {
-      x: clampPos(exploration.start?.x, EXPLORATION_MAP.start.x),
-      y: clampPos(exploration.start?.y, EXPLORATION_MAP.start.y),
-    }
-    base.exploration.position = {
-      x: clampPos(exploration.position?.x, base.exploration.start.x),
-      y: clampPos(exploration.position?.y, base.exploration.start.y),
-    }
-    base.exploration.steps = Math.max(0, Math.floor(Number(exploration.steps) || 0))
-
-    if (Array.isArray(exploration.visited)) {
-      base.exploration.visited = exploration.visited
-        .filter((value): value is string => typeof value === 'string' && value.includes(','))
-        .slice(-4096)
-    }
-
-    if (exploration.combat && typeof exploration.combat === 'object') {
-      base.exploration.combat = {
-        enemyId: ENEMY_IDS.includes(exploration.combat.enemyId as EnemyId)
-          ? (exploration.combat.enemyId as EnemyId)
-          : DEFAULT_ENEMY_ID,
-        enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '🧏‍♀️ 벌벌떠는 기인',
-        enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
-        enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),
-        enemyDamage: Math.max(1, Number(exploration.combat.enemyDamage) || 2),
-        enemyAttackCooldownMs: Math.max(500, Number(exploration.combat.enemyAttackCooldownMs) || 3000),
-        enemyAttackElapsedMs: Math.max(0, Number(exploration.combat.enemyAttackElapsedMs) || 0),
-        playerAttackElapsedMs: Math.max(0, Number(exploration.combat.playerAttackElapsedMs) || 0),
-        fleeGaugeDurationMs: Math.max(500, Number(exploration.combat.fleeGaugeDurationMs) || 2500),
-        fleeGaugeElapsedMs: Math.max(0, Number(exploration.combat.fleeGaugeElapsedMs) || 0),
-        fleeGaugeRunning: Boolean(exploration.combat.fleeGaugeRunning),
-        smallHealPotionCooldownRemainingMs: Math.max(0, Number(exploration.combat.smallHealPotionCooldownRemainingMs) || 0),
-      }
-    }
-
-    const startKey = `${base.exploration.start.x},${base.exploration.start.y}`
-    if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
-  }
+  normalizeExplorationState(base, loaded)
 
   if (base.exploration.mode !== 'active') {
     base.exploration.phase = 'moving'
