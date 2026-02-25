@@ -131,7 +131,7 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
     .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellLabel[cell.kind]}</span>`)
     .join('')
 
-  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 숫자는 슬롯 고열/차단 패널티(5/10), 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch penalty"></span>고열/차단 패널티 ${SLOT_PENALTY_MINOR}/${SLOT_PENALTY_MAJOR}</span><span class="legend-item">패널티 ${SLOT_PENALTY_MAJOR}+ = X 정지</span></div></div>`
+  return `<article class="module-effect-card module-effect-map" aria-label="영향 맵"><h4>영향 맵</h4><div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, 숫자는 슬롯 고열/차단 패널티(5/10), 10 이상은 슬롯 정지">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch penalty"></span>고열/차단 패널티 ${SLOT_PENALTY_MINOR}/${SLOT_PENALTY_MAJOR}</span><span class="legend-item">패널티 ${SLOT_PENALTY_MAJOR}+ = X 정지</span></div></div></article>`
 }
 
 function renderModuleDetail(moduleType: ModuleType | null): string {

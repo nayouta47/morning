@@ -1069,6 +1069,11 @@ li {
   background: rgba(120, 103, 76, 0.08);
 }
 
+.module-effect-map {
+  border-color: #39444d;
+  background: rgba(80, 112, 136, 0.08);
+}
+
 #module-detail-content {
   display: grid;
   gap: 8px;
