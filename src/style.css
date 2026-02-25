@@ -809,18 +809,25 @@ li {
 }
 
 .slot.inactive {
-  opacity: 0.45;
+  border-color: #2c2f33;
+  background: #121417;
+  color: #6e737b;
+}
+
+.slot.disabled:not(.penalty-disabled) {
+  filter: saturate(0.72) brightness(0.72);
 }
 
 .slot.penalty-disabled {
-  border-color: #7a4545;
-  background: #2b1717;
-  color: #e2b0b0;
+  border-color: #5f3b3b;
+  background: #181214;
+  color: #b48686;
+  box-shadow: inset 0 0 0 1px rgba(120, 54, 54, 0.28);
 }
 
 .slot.penalty-disabled.filled {
-  background: #3b1d1d;
-  color: #f0c7c7;
+  background: #201417;
+  color: #cd9f9f;
 }
 
 .slot.filled {
