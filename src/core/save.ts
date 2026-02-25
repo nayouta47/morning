@@ -35,12 +35,14 @@ function inferModuleType(value: unknown): ModuleType {
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'
-    || value === 'heatAmplifier'
+    || value === 'heatAmplifierLeft'
+    || value === 'heatAmplifierRight'
   ) return value
   if (value === 'amplifier' || value === 'amplifierLeft') return 'blockAmplifierLeft'
   if (value === 'amplifierRight') return 'blockAmplifierRight'
   if (value === 'amplifierUp') return 'blockAmplifierUp'
   if (value === 'amplifierDown') return 'blockAmplifierDown'
+  if (value === 'heatAmplifier') return 'heatAmplifierLeft'
   if (typeof value === 'string') {
     if (value.startsWith('DMG-')) return 'damage'
     if (value.startsWith('CDN-')) return 'cooldown'
@@ -50,7 +52,8 @@ function inferModuleType(value: unknown): ModuleType {
     if (value.startsWith('AMP-D-')) return 'blockAmplifierDown'
     if (value.startsWith('AMP-')) return 'blockAmplifierLeft'
     if (value.startsWith('PRE-')) return 'preheater'
-    if (value.startsWith('HEAT-')) return 'heatAmplifier'
+    if (value.startsWith('HEAT-R-')) return 'heatAmplifierRight'
+    if (value.startsWith('HEAT-L-') || value.startsWith('HEAT-')) return 'heatAmplifierLeft'
   }
   return 'cooldown'
 }
@@ -294,7 +297,9 @@ function normalizeState(raw: unknown): GameState | null {
     base.modules.blockAmplifierUp = Math.max(0, Number(modules.blockAmplifierUp ?? 0) || 0) + legacyAmplifierUp
     base.modules.blockAmplifierDown = Math.max(0, Number(modules.blockAmplifierDown ?? 0) || 0) + legacyAmplifierDown
     base.modules.preheater = Math.max(0, Number(modules.preheater ?? 0) || 0)
-    base.modules.heatAmplifier = Math.max(0, Number(modules.heatAmplifier ?? 0) || 0)
+    const legacyHeatAmplifier = Math.max(0, Number(modules.heatAmplifier ?? 0) || 0)
+    base.modules.heatAmplifierLeft = Math.max(0, Number(modules.heatAmplifierLeft ?? 0) || 0) + legacyHeatAmplifier
+    base.modules.heatAmplifierRight = Math.max(0, Number(modules.heatAmplifierRight ?? 0) || 0)
   }
 
   if (Array.isArray(loaded.modules)) {

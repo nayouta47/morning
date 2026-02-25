@@ -11,17 +11,9 @@ const WEAPON_POWER_CAPACITY: Record<WeaponType, number> = {
   rifle: 20,
 }
 
-const HEAT_AMPLIFIER_HIGH_HEAT_OFFSETS = [
-  { x: 1, y: 0 },
-  { x: 1, y: 1 },
-  { x: 1, y: -1 },
-] as const
+type Direction = 'left' | 'right' | 'up' | 'down'
 
-const HEAT_AMPLIFIER_WARM_HEAT_OFFSETS = [
-  { x: 2, y: 0 },
-  { x: 2, y: 1 },
-  { x: 2, y: -1 },
-] as const
+const CARDINAL_DIRECTIONS: Direction[] = ['left', 'right', 'up', 'down']
 
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
@@ -31,10 +23,9 @@ export const MODULE_POWER_COST: Record<ModuleType, number> = {
   blockAmplifierUp: 2,
   blockAmplifierDown: 2,
   preheater: 7,
-  heatAmplifier: 4,
+  heatAmplifierLeft: 4,
+  heatAmplifierRight: 4,
 }
-
-type Direction = 'left' | 'right' | 'up' | 'down'
 
 const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
   blockAmplifierLeft: 'left',
@@ -43,8 +34,21 @@ const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
   blockAmplifierDown: 'down',
 }
 
-function isAmplifierModule(type: ModuleType | null | undefined): type is keyof typeof AMPLIFIER_DIRECTION {
+const HEAT_AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
+  heatAmplifierLeft: 'left',
+  heatAmplifierRight: 'right',
+}
+
+function isAmplifierModule(type: ModuleType | null | undefined): type is 'blockAmplifierLeft' | 'blockAmplifierRight' | 'blockAmplifierUp' | 'blockAmplifierDown' {
   return type === 'blockAmplifierLeft' || type === 'blockAmplifierRight' || type === 'blockAmplifierUp' || type === 'blockAmplifierDown'
+}
+
+function isHeatAmplifierModule(type: ModuleType | null | undefined): type is 'heatAmplifierLeft' | 'heatAmplifierRight' {
+  return type === 'heatAmplifierLeft' || type === 'heatAmplifierRight'
+}
+
+function isAnyAmplifierChip(type: ModuleType | null | undefined): boolean {
+  return isAmplifierModule(type) || type === 'heatAmplifierLeft' || type === 'heatAmplifierRight'
 }
 
 function applyHasteToCooldown(baseCooldownSec: number, totalHaste: number): number {
@@ -104,35 +108,22 @@ function getPenaltyDirections(direction: Direction): Direction[] {
   return ['left', 'right']
 }
 
-function toGridPosition(index: number): { x: number; y: number } {
-  return { x: index % SLOT_COLUMNS, y: Math.floor(index / SLOT_COLUMNS) }
-}
-
-function toGridIndex(x: number, y: number, maxSlots: number): number | null {
-  if (x < 0 || x >= SLOT_COLUMNS || y < 0) return null
-  const index = y * SLOT_COLUMNS + x
-  if (index < 0 || index >= maxSlots) return null
-  return index
-}
-
 function getHeatFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): { high: number[]; warm: number[]; total: number[] } {
   const high = Array.from({ length: weapon.slots.length }, () => 0)
   const warm = Array.from({ length: weapon.slots.length }, () => 0)
 
   weapon.slots.forEach((moduleType, index) => {
-    if (moduleType !== 'heatAmplifier' || !activeSlots.has(index)) return
+    if (!isHeatAmplifierModule(moduleType) || !activeSlots.has(index)) return
+    const direction = HEAT_AMPLIFIER_DIRECTION[moduleType]
+    if (!direction) return
 
-    const origin = toGridPosition(index)
+    const amplifiedTarget = getNeighborIndex(index, direction, weapon.slots.length)
+    if (amplifiedTarget != null && activeSlots.has(amplifiedTarget)) high[amplifiedTarget] += 1
 
-    HEAT_AMPLIFIER_HIGH_HEAT_OFFSETS.forEach((offset) => {
-      const target = toGridIndex(origin.x + offset.x, origin.y + offset.y, weapon.slots.length)
+    CARDINAL_DIRECTIONS.forEach((warmDirection) => {
+      const target = getNeighborIndex(index, warmDirection, weapon.slots.length)
       if (target == null || !activeSlots.has(target)) return
-      high[target] += 1
-    })
-
-    HEAT_AMPLIFIER_WARM_HEAT_OFFSETS.forEach((offset) => {
-      const target = toGridIndex(origin.x + offset.x, origin.y + offset.y, weapon.slots.length)
-      if (target == null || !activeSlots.has(target)) return
+      if (isAnyAmplifierChip(weapon.slots[target])) return
       warm[target] += 0.5
     })
   })
@@ -170,8 +161,9 @@ function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, ena
   return weapon.slots.reduce((count, moduleType, ampIndex) => {
     if (!enabledSlots.has(ampIndex)) return count
 
-    if (moduleType === 'heatAmplifier') {
-      const targetIndex = getNeighborIndex(ampIndex, 'left', weapon.slots.length)
+    if (moduleType === 'heatAmplifierLeft' || moduleType === 'heatAmplifierRight') {
+      const direction = moduleType === 'heatAmplifierLeft' ? 'left' : 'right'
+      const targetIndex = getNeighborIndex(ampIndex, direction, weapon.slots.length)
       if (targetIndex === index && enabledSlots.has(targetIndex)) return count + 2
       return count
     }
@@ -304,5 +296,6 @@ export function isModuleType(value: string | null | undefined): value is ModuleT
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'
-    || value === 'heatAmplifier'
+    || value === 'heatAmplifierLeft'
+    || value === 'heatAmplifierRight'
 }

@@ -9,7 +9,8 @@ function moduleName(type: ModuleType): string {
   if (type === 'blockAmplifierRight') return '차단 증폭기(우)'
   if (type === 'blockAmplifierUp') return '차단 증폭기(상)'
   if (type === 'blockAmplifierDown') return '차단 증폭기(하)'
-  if (type === 'heatAmplifier') return '열 증폭기(왼쪽 +2, 열장 페널티)'
+  if (type === 'heatAmplifierLeft') return '열 증폭기(좌)'
+  if (type === 'heatAmplifierRight') return '열 증폭기(우)'
   return '예열기(전투 시작 즉시 발사)'
 }
 
