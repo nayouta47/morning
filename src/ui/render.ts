@@ -1,7 +1,6 @@
 import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
-import { isCappedResource, RESOURCE_STORAGE_CAP } from '../core/resourceCaps.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
@@ -70,8 +69,7 @@ function patchLogs(app: ParentNode, state: GameState): void {
 }
 
 function formatBaseResourceAmount(resourceId: ResourceId, amount: number): string {
-  const current = formatResourceValue(resourceId, amount)
-  return isCappedResource(resourceId) ? `${current}/${RESOURCE_STORAGE_CAP}` : current
+  return formatResourceValue(resourceId, amount)
 }
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
