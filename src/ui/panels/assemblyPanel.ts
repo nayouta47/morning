@@ -317,6 +317,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const heatTotal = heatHigh + heatWarm + heatCold
     const heatReduction = stats.slotAmplificationReduction[index] ?? 0
     const heatFill = Math.min(1, heatTotal)
+    const shouldNormalize = heatTotal > 1
     const heatSegments = [
       { kind: 'high', value: heatHigh },
       { kind: 'warm', value: heatWarm },
@@ -324,7 +325,11 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     ].filter((segment) => segment.value > 0)
     const heatGauge = heatTotal > 0
       ? `<span class="slot-heat-gauge" aria-hidden="true"><span class="slot-heat-fill" style="width:${(heatFill * 100).toFixed(1)}%">${heatSegments
-        .map((segment) => `<span class="slot-heat-segment ${segment.kind}" style="width:${((segment.value / heatTotal) * 100).toFixed(1)}%"></span>`)
+        .map((segment) => {
+          const denominator = shouldNormalize ? heatTotal : heatFill
+          const segmentRatio = denominator > 0 ? segment.value / denominator : 0
+          return `<span class="slot-heat-segment ${segment.kind}" style="width:${(segmentRatio * 100).toFixed(1)}%"></span>`
+        })
         .join('')}</span></span>`
       : ''
     const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
