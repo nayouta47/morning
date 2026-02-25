@@ -1,3 +1,5 @@
+import type { ResourceCost } from './resources.ts'
+
 export const COST_SCALE = 1.15
 
 export const ACTION_DURATION_MS = {
@@ -50,9 +52,14 @@ export const UPGRADE_DEFS = {
     baseCost: { wood: 320, iron: 180 },
     effectText: '모듈 제작 III 해금',
   },
+  cannedMetalTech: {
+    name: '금속 통조림 기술',
+    cost: { iron: 1200, lowAlloySteel: 12, cobalt: 8 },
+    effectText: '창고 상한 5000',
+  },
 } as const
 
-export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII', 'moduleCraftingIII'] as const
+export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII', 'moduleCraftingIII', 'cannedMetalTech'] as const
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
@@ -64,10 +71,13 @@ export const WEAPON_BASE_STATS = {
   rifle: { damage: 8, cooldown: 10 },
 } as const
 
-export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): { wood: number; iron: number } {
-  const base = UPGRADE_DEFS[key].baseCost
-  return {
-    wood: discountCost(base.wood),
-    iron: discountCost(base.iron),
-  }
+export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): ResourceCost {
+  const def = UPGRADE_DEFS[key]
+  if ('cost' in def) return def.cost
+
+  return Object.fromEntries(
+    Object.entries(def.baseCost)
+      .filter(([, amount]) => amount > 0)
+      .map(([resourceId, amount]) => [resourceId, discountCost(amount)]),
+  ) as ResourceCost
 }

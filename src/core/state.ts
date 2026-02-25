@@ -15,6 +15,7 @@ export type Upgrades = {
   organicFilament: boolean
   moduleCraftingII: boolean
   moduleCraftingIII: boolean
+  cannedMetalTech: boolean
 }
 
 export type Unlocks = {
@@ -191,6 +192,7 @@ export const initialState: GameState = {
     organicFilament: false,
     moduleCraftingII: false,
     moduleCraftingIII: false,
+    cannedMetalTech: false,
   },
   unlocks: {
     scrapAction: false,

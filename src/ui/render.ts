@@ -1,6 +1,7 @@
 import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
+import { getResourceStorageCap } from '../core/resourceCaps.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
@@ -81,6 +82,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-scrap', actionUI.gatherScrap)
 
+  setText(app, '#resource-storage-cap-label', `자원 (최대 ${getResourceStorageCap(state)})`)
   setText(app, '#res-wood', formatBaseResourceAmount('wood', state.resources.wood))
   setText(app, '#res-scrap', formatBaseResourceAmount('scrap', state.resources.scrap))
   setText(app, '#res-iron', formatBaseResourceAmount('iron', state.resources.iron))
@@ -165,7 +167,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
     const upgradeButton = app.querySelector<HTMLButtonElement>(`button[data-upgrade="${key}"]`)
     if (upgradeButton) {
       upgradeButton.disabled = done
-      const label = `${def.name} (${formatResourceAmount('wood', cost.wood)}, ${formatResourceAmount('iron', cost.iron)})`
+      const label = `${def.name} (${formatCost(cost)})`
       if (upgradeButton.textContent !== label) upgradeButton.textContent = label
     }
     setText(app, `#upgrade-hint-${key}`, `${def.effectText}${done ? ' (완료)' : ''}`)
