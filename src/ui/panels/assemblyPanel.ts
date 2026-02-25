@@ -65,8 +65,16 @@ function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string 
   return `${overloadLine}<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="${finalClass}">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
 }
 
+function isModuleTypeEquipped(state: GameState, moduleType: ModuleType): boolean {
+  return state.weapons.some((weapon) => weapon.slots.some((slot) => slot === moduleType))
+}
+
 function syncSelectedModuleType(state: GameState): void {
-  if (selectedModuleType && state.modules[selectedModuleType] > 0) return
+  if (selectedModuleType) {
+    if (state.modules[selectedModuleType] > 0) return
+    if (isModuleTypeEquipped(state, selectedModuleType)) return
+  }
+
   selectedModuleType = (Object.keys(state.modules) as ModuleType[]).find((type) => state.modules[type] > 0) ?? null
 }
 
