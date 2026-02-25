@@ -189,20 +189,25 @@ function getWeaponStats(weapon: WeaponInstance) {
 }
 
 function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: PowerPreview | null): string {
-  const usage = preview?.usage ?? stats.power.usage
+  const currentUsage = stats.power.usage
   const capacity = preview?.capacity ?? stats.power.capacity
   const overloaded = preview?.overloaded ?? stats.power.overloaded
   const statusLabel = overloaded ? '과부하' : '정상'
 
-  const projected = preview
-    ? `<span class="power-preview ${preview.overloaded ? 'risk' : 'safe'}">예상 전력 ${preview.usage} / ${preview.capacity}${preview.overloaded ? ' · 드롭 시 과부하 위험' : ''}</span>`
+  const delta = preview ? preview.usage - currentUsage : 0
+  const deltaLabel = preview
+    ? delta > 0
+      ? `(⬆️${delta})`
+      : delta < 0
+        ? `(⬇️${Math.abs(delta)})`
+        : '(↔0)'
     : ''
 
   const overloadHint = overloaded
     ? '<span class="power-warning-text">모듈 효과 차단</span>'
     : ''
 
-  return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">전력 ${usage} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}${projected}</div>`
+  return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">전력 ${currentUsage}${deltaLabel} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}</div>`
 }
 
 function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string {

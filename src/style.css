@@ -864,13 +864,14 @@ li {
 
 .power-summary {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   border: 1px solid #3f4b52;
   border-radius: 6px;
   padding: 8px 10px;
   background: #12181c;
+  min-height: 36px;
 }
 
 .power-summary.overload {
@@ -881,6 +882,7 @@ li {
 .power-summary-value {
   color: #c7dfeb;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .power-summary-badge {
@@ -899,6 +901,7 @@ li {
 .power-warning-text {
   color: #e49d9d;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .power-preview {
