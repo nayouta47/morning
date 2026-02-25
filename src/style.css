@@ -40,9 +40,29 @@ h1 {
 }
 
 .layout {
+  position: relative;
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cheat-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: auto;
+  margin: 0;
+  padding: 4px 8px;
+  min-height: 0;
+  border-color: #3f3a30;
+  font-size: 11px;
+  color: #b8ad95;
+  background: rgba(18, 18, 18, 0.92);
+  z-index: 3;
+}
+
+.cheat-btn:hover:not(:disabled) {
+  color: #e5d3a5;
 }
 
 .hidden {

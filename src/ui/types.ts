@@ -52,6 +52,7 @@ export type Handlers = {
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
   onMoveEquippedModule: (fromSlotIndex: number, toSlotIndex: number) => void
   onUnequipModule: (slotIndex: number) => void
+  onCheatAccelerateBaseTime: () => void
 }
 
 export type ActionUI = {

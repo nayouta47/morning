@@ -1,5 +1,6 @@
 import './style.css'
 import {
+  appendLog,
   buyBuilding,
   buyUpgrade,
   equipModuleToSlot,
@@ -28,7 +29,7 @@ import {
 } from './core/actions.ts'
 import { loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
-import { advanceState } from './core/tick.ts'
+import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
 import { getGatherScrapDurationMs } from './core/rewards.ts'
@@ -37,6 +38,7 @@ let state: GameState = loadGame() ?? structuredClone(initialState)
 
 const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
+const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
 type ActionKey = 'gatherWood' | 'gatherScrap'
 
@@ -192,6 +194,18 @@ function redraw(nowOverride?: number): void {
         },
         onSelectTab: (tab) => {
           setActiveTab(state, tab)
+          redraw()
+        },
+        onCheatAccelerateBaseTime: () => {
+          syncState()
+          advanceBaseOnlyStateByElapsed(state, BASE_CHEAT_ACCELERATION_MS)
+          const accelerationMin = BASE_CHEAT_ACCELERATION_MS / (60 * 1000)
+          if (state.exploration.mode === 'active') {
+            appendLog(state, `치트 사용: 거점 시간 +${accelerationMin}분 (탐험 전투 시간 제외)`)
+          } else {
+            appendLog(state, `치트 사용: 거점 시간 +${accelerationMin}분`)
+          }
+          simulationLastTickAt = Date.now()
           redraw()
         },
         onStartExploration: () => {

@@ -350,11 +350,7 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
   }
 }
 
-export function advanceState(state: GameState, now = Date.now()): void {
-  const prev = Number.isFinite(state.lastUpdate) ? state.lastUpdate : now
-  const elapsed = Math.max(0, Math.min(MAX_ELAPSED_MS, now - prev))
-  state.lastUpdate = now
-
+function advanceBaseByElapsed(state: GameState, elapsed: number): void {
   if (elapsed <= 0) return
 
   processBuildingElapsed(state, 'lumberMill', elapsed)
@@ -371,7 +367,29 @@ export function advanceState(state: GameState, now = Date.now()): void {
 
   processActionElapsed(state, 'gatherWood', elapsed)
   processActionElapsed(state, 'gatherScrap', elapsed)
+}
+
+export function advanceState(state: GameState, now = Date.now()): void {
+  const prev = Number.isFinite(state.lastUpdate) ? state.lastUpdate : now
+  const elapsed = Math.max(0, Math.min(MAX_ELAPSED_MS, now - prev))
+  state.lastUpdate = now
+
+  if (elapsed <= 0) return
+
+  advanceBaseByElapsed(state, elapsed)
   processExplorationCombat(state, elapsed)
+
+  const unlockLogs = evaluateUnlocks(state)
+  unlockLogs.forEach((line) => appendLog(state, line))
+}
+
+export function advanceBaseOnlyStateByElapsed(state: GameState, elapsedMs: number, now = Date.now()): void {
+  const elapsed = Math.max(0, Math.min(MAX_ELAPSED_MS, elapsedMs))
+  state.lastUpdate = now
+
+  if (elapsed <= 0) return
+
+  advanceBaseByElapsed(state, elapsed)
 
   const unlockLogs = evaluateUnlocks(state)
   unlockLogs.forEach((line) => appendLog(state, line))
