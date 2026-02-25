@@ -115,7 +115,13 @@ type PenaltyField = {
   total: number[]
 }
 
-function getPenaltyFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): PenaltyField {
+type PenaltyFieldTargetScope = 'activeOnly' | 'all'
+
+function getPenaltyFieldByAmplifier(
+  weapon: WeaponInstance,
+  activeSlots: Set<number>,
+  targetScope: PenaltyFieldTargetScope = 'activeOnly',
+): PenaltyField {
   const heat = Array.from({ length: weapon.slots.length }, () => 0)
   const block = Array.from({ length: weapon.slots.length }, () => 0)
 
@@ -127,9 +133,9 @@ function getPenaltyFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<num
       if (direction) {
         getPenaltyDirections(direction).forEach((penaltyDirection) => {
           const penaltyIndex = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
-          if (penaltyIndex != null && activeSlots.has(penaltyIndex)) {
-            block[penaltyIndex] += SLOT_PENALTY_MAJOR
-          }
+          if (penaltyIndex == null) return
+          if (targetScope === 'activeOnly' && !activeSlots.has(penaltyIndex)) return
+          block[penaltyIndex] += SLOT_PENALTY_MAJOR
         })
       }
     }
@@ -140,13 +146,14 @@ function getPenaltyFieldByAmplifier(weapon: WeaponInstance, activeSlots: Set<num
 
       const oppositeDirection = getOppositeDirection(direction)
       const majorPenaltyTarget = getNeighborIndex(index, oppositeDirection, weapon.slots.length)
-      if (majorPenaltyTarget != null && activeSlots.has(majorPenaltyTarget)) {
+      if (majorPenaltyTarget != null && (targetScope === 'all' || activeSlots.has(majorPenaltyTarget))) {
         heat[majorPenaltyTarget] += SLOT_PENALTY_MAJOR
       }
 
       getPenaltyDirections(direction).forEach((penaltyDirection) => {
         const target = getNeighborIndex(index, penaltyDirection, weapon.slots.length)
-        if (target == null || !activeSlots.has(target)) return
+        if (target == null) return
+        if (targetScope === 'activeOnly' && !activeSlots.has(target)) return
         heat[target] += SLOT_PENALTY_MINOR
       })
     }
@@ -248,8 +255,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   const base = WEAPON_BASE_STATS[weapon.type]
   const resolved = resolveWeaponActiveSlotState(weapon)
   const activeSlots = resolved.activeSlots
-  const penaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots)
-  const slotAmplificationReduction = penaltyField.total.map((penalty) => Math.floor(penalty / SLOT_PENALTY_MAJOR))
+  const gameplayPenaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots, 'activeOnly')
+  const visualPenaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots, 'all')
+  const slotAmplificationReduction = gameplayPenaltyField.total.map((penalty) => Math.floor(penalty / SLOT_PENALTY_MAJOR))
   const slotPenaltyDisabled = resolved.slotPenaltyDisabled
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
   const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
@@ -272,9 +280,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       finalCooldownSec: base.cooldown,
       slotAmplification: Array.from({ length: weapon.slots.length }, () => 0),
       slotAmplificationReduction,
-      totalPenalty: penaltyField.total,
-      heatPenalty: penaltyField.heat,
-      blockPenalty: penaltyField.block,
+      totalPenalty: visualPenaltyField.total,
+      heatPenalty: visualPenaltyField.heat,
+      blockPenalty: visualPenaltyField.block,
       slotPenaltyDisabled,
       slotDisabled,
       hasPreheater: false,
@@ -332,9 +340,9 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     finalCooldownSec,
     slotAmplification,
     slotAmplificationReduction,
-    totalPenalty: penaltyField.total,
-    heatPenalty: penaltyField.heat,
-    blockPenalty: penaltyField.block,
+    totalPenalty: visualPenaltyField.total,
+    heatPenalty: visualPenaltyField.heat,
+    blockPenalty: visualPenaltyField.block,
     slotPenaltyDisabled,
     slotDisabled,
     hasPreheater,
