@@ -1025,6 +1025,43 @@ li {
   margin: 0;
 }
 
+.module-effect-cards {
+  display: grid;
+  gap: 8px;
+}
+
+.module-effect-card {
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid #353535;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  gap: 4px;
+}
+
+.module-effect-card h4 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: #d2c7b0;
+}
+
+.module-effect-card p {
+  margin: 0;
+  color: #aca491;
+}
+
+.module-effect-base {
+  border-color: #3e463c;
+  background: rgba(75, 106, 75, 0.08);
+}
+
+.module-effect-amp {
+  border-color: #45403a;
+  background: rgba(120, 103, 76, 0.08);
+}
+
 #module-detail-content {
   display: grid;
   gap: 8px;

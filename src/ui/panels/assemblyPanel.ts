@@ -30,6 +30,37 @@ const MODULE_LABEL: Record<ModuleType, string> = {
   heatAmplifierRight: '증폭/열 영향은 지도 참조 · 전력 ⚡4',
 }
 
+const MODULE_EFFECT_DETAIL: Record<ModuleType, { base: string; amplified: string }> = {
+  damage: {
+    base: '공격력 +1',
+    amplified: '공격력 +1',
+  },
+  cooldown: {
+    base: '가속 +10',
+    amplified: '가속 +10',
+  },
+  blockAmplifierUp: {
+    base: '위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단',
+    amplified: '해당 없음',
+  },
+  blockAmplifierDown: {
+    base: '아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단',
+    amplified: '해당 없음',
+  },
+  preheater: {
+    base: '전투 시작 즉시 발사 준비',
+    amplified: '해당 없음',
+  },
+  heatAmplifierLeft: {
+    base: '즉시 왼쪽 1칸 증폭 +2',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 + 상하좌우 온열(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+  },
+  heatAmplifierRight: {
+    base: '즉시 오른쪽 1칸 증폭 +2',
+    amplified: '열장 페널티: 증폭 방향 1칸 고열 + 상하좌우 온열(증폭기 칩 장착 칸 제외), ⌊열⌋만큼 증폭 감소 및 슬롯 정지',
+  },
+}
+
 type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'block' | 'heatWarm' | 'heatHigh' | 'ampHeatHigh'
 
 type InfluenceCell = {
@@ -108,7 +139,18 @@ function renderInfluenceMiniGrid(moduleType: ModuleType): string {
 function renderModuleDetail(moduleType: ModuleType | null): string {
   if (!moduleType) return '<p id="module-detail-effect" class="module-effect hint">모듈을 선택하세요.</p>'
   const miniGrid = renderInfluenceMiniGrid(moduleType)
-  return `<p id="module-detail-effect" class="module-effect hint">${MODULE_LABEL[moduleType]}</p>${miniGrid}`
+  const detail = MODULE_EFFECT_DETAIL[moduleType]
+
+  return `<div id="module-detail-effect" class="module-effect-cards" aria-label="모듈 효과 상세">
+    <article class="module-effect-card module-effect-base" aria-label="기본효과">
+      <h4>기본효과</h4>
+      <p class="hint">${detail.base}</p>
+    </article>
+    <article class="module-effect-card module-effect-amp" aria-label="증폭효과">
+      <h4>증폭효과</h4>
+      <p class="hint">${detail.amplified}</p>
+    </article>
+  </div>${miniGrid}`
 }
 
 type PowerPreview = {
