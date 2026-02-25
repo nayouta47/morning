@@ -21,13 +21,94 @@ const MODULE_NAME: Record<ModuleType, string> = {
   heatAmplifierRight: '열 증폭기(우)',
 }
 const MODULE_LABEL: Record<ModuleType, string> = {
-  damage: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1 · 전력 ⚡5',
-  cooldown: '기본효과: 가속 +10 / 증폭효과: 가속 +10 · 전력 ⚡5',
-  blockAmplifierUp: '기본효과: 위쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
-  blockAmplifierDown: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌우 슬롯 차단 / 증폭효과: 해당 없음 · 전력 ⚡2',
-  preheater: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음 · 전력 ⚡7',
-  heatAmplifierLeft: '기본효과: 즉시 왼쪽 1칸 증폭 +2 / 열 페널티: 증폭 대상 슬롯 고열(+1.0) + 주변 4방향 온열(+0.5, 증폭기 칩은 제외) 누적 ⌊열⌋만큼 증폭 감소 및 슬롯 정지 · 전력 ⚡4',
-  heatAmplifierRight: '기본효과: 즉시 오른쪽 1칸 증폭 +2 / 열 페널티: 증폭 대상 슬롯 고열(+1.0) + 주변 4방향 온열(+0.5, 증폭기 칩은 제외) 누적 ⌊열⌋만큼 증폭 감소 및 슬롯 정지 · 전력 ⚡4',
+  damage: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
+  cooldown: '기본 가속 +10, 증폭 시 추가 +10 · 전력 ⚡5',
+  blockAmplifierUp: '증폭/차단 영향은 지도 참조 · 전력 ⚡2',
+  blockAmplifierDown: '증폭/차단 영향은 지도 참조 · 전력 ⚡2',
+  preheater: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
+  heatAmplifierLeft: '증폭/열 영향은 지도 참조 · 전력 ⚡4',
+  heatAmplifierRight: '증폭/열 영향은 지도 참조 · 전력 ⚡4',
+}
+
+type InfluenceCellKind = 'empty' | 'center' | 'amp' | 'block' | 'heatWarm' | 'heatHigh' | 'ampHeatHigh'
+
+type InfluenceCell = {
+  x: number
+  y: number
+  kind: InfluenceCellKind
+}
+
+const MINI_GRID_SIZE = 5
+const MINI_GRID_CENTER = Math.floor(MINI_GRID_SIZE / 2)
+
+function setInfluenceCell(grid: InfluenceCellKind[][], dx: number, dy: number, kind: InfluenceCellKind): void {
+  const x = MINI_GRID_CENTER + dx
+  const y = MINI_GRID_CENTER + dy
+  if (x < 0 || x >= MINI_GRID_SIZE || y < 0 || y >= MINI_GRID_SIZE) return
+  grid[y][x] = kind
+}
+
+function getAmplifierMiniGrid(moduleType: ModuleType): InfluenceCell[] | null {
+  if (
+    moduleType !== 'blockAmplifierUp'
+    && moduleType !== 'blockAmplifierDown'
+    && moduleType !== 'heatAmplifierLeft'
+    && moduleType !== 'heatAmplifierRight'
+  ) {
+    return null
+  }
+
+  const grid = Array.from({ length: MINI_GRID_SIZE }, () => Array.from({ length: MINI_GRID_SIZE }, () => 'empty' as InfluenceCellKind))
+  setInfluenceCell(grid, 0, 0, 'center')
+
+  if (moduleType === 'blockAmplifierUp') {
+    setInfluenceCell(grid, 0, -1, 'amp')
+    setInfluenceCell(grid, -1, 0, 'block')
+    setInfluenceCell(grid, 1, 0, 'block')
+  } else if (moduleType === 'blockAmplifierDown') {
+    setInfluenceCell(grid, 0, 1, 'amp')
+    setInfluenceCell(grid, -1, 0, 'block')
+    setInfluenceCell(grid, 1, 0, 'block')
+  } else if (moduleType === 'heatAmplifierLeft') {
+    setInfluenceCell(grid, -1, 0, 'ampHeatHigh')
+    setInfluenceCell(grid, 0, -1, 'heatWarm')
+    setInfluenceCell(grid, 0, 1, 'heatWarm')
+    setInfluenceCell(grid, 1, 0, 'heatWarm')
+  } else if (moduleType === 'heatAmplifierRight') {
+    setInfluenceCell(grid, 1, 0, 'ampHeatHigh')
+    setInfluenceCell(grid, 0, -1, 'heatWarm')
+    setInfluenceCell(grid, 0, 1, 'heatWarm')
+    setInfluenceCell(grid, -1, 0, 'heatWarm')
+  }
+
+  return grid.flatMap((row, y) => row.map((kind, x) => ({ x, y, kind })))
+}
+
+function renderInfluenceMiniGrid(moduleType: ModuleType): string {
+  const cells = getAmplifierMiniGrid(moduleType)
+  if (!cells) return ''
+
+  const cellEmoji: Record<InfluenceCellKind, string> = {
+    empty: '',
+    center: '●',
+    amp: '+',
+    block: '✕',
+    heatWarm: 'w',
+    heatHigh: 'h',
+    ampHeatHigh: '+',
+  }
+
+  const gridCells = cells
+    .map((cell) => `<span class="influence-cell ${cell.kind}" aria-hidden="true">${cellEmoji[cell.kind]}</span>`)
+    .join('')
+
+  return `<div class="influence-preview" aria-label="모듈 영향 미니 지도"><div class="influence-grid" role="img" aria-label="중앙은 모듈 위치, +는 증폭, ✕는 차단, w는 온열, h는 고열">${gridCells}</div><div class="influence-legend"><span class="legend-item"><span class="swatch center"></span>중심</span><span class="legend-item"><span class="swatch amp"></span>증폭</span><span class="legend-item"><span class="swatch block"></span>차단</span><span class="legend-item"><span class="swatch warm"></span>온열</span><span class="legend-item"><span class="swatch high"></span>고열</span></div></div>`
+}
+
+function renderModuleDetail(moduleType: ModuleType | null): string {
+  if (!moduleType) return '<p id="module-detail-effect" class="module-effect hint">모듈을 선택하세요.</p>'
+  const miniGrid = renderInfluenceMiniGrid(moduleType)
+  return `<p id="module-detail-effect" class="module-effect hint">${MODULE_LABEL[moduleType]}</p>${miniGrid}`
 }
 
 type PowerPreview = {
@@ -115,7 +196,7 @@ export function renderAssemblyPanel(state: GameState): string {
         <aside class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></aside>
         <div class="weapon-board-wrap"><h3>선택 무기 슬롯 (5x10)</h3><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint" id="weapon-stat-text">${stats ? renderWeaponStatText(stats) : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
       </div>
-      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><p id="module-detail-effect" class="module-effect hint">${selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'}</p></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
+      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
     </section>`
 }
 
@@ -139,10 +220,12 @@ export function patchWeaponInventory(app: ParentNode, state: GameState): void {
 
 export function patchModuleDetail(app: ParentNode, state: GameState): void {
   syncSelectedModuleType(state)
-  const detail = app.querySelector<HTMLElement>('#module-detail-effect')
+  const detail = app.querySelector<HTMLElement>('#module-detail-content')
   if (!detail) return
-  const text = selectedModuleType ? MODULE_LABEL[selectedModuleType] : '모듈을 선택하세요.'
-  if (detail.textContent !== text) detail.textContent = text
+  const sig = selectedModuleType ?? 'none'
+  if (detail.dataset.signature === sig) return
+  detail.innerHTML = renderModuleDetail(selectedModuleType)
+  detail.dataset.signature = sig
 }
 
 export function patchModuleInventory(app: ParentNode, state: GameState): void {

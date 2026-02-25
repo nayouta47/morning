@@ -1025,6 +1025,138 @@ li {
   margin: 0;
 }
 
+#module-detail-content {
+  display: grid;
+  gap: 8px;
+}
+
+.influence-preview {
+  display: grid;
+  gap: 6px;
+}
+
+.influence-grid {
+  width: fit-content;
+  display: grid;
+  grid-template-columns: repeat(5, 14px);
+  grid-template-rows: repeat(5, 14px);
+  gap: 3px;
+}
+
+.influence-cell {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #2f2f2f;
+  border-radius: 3px;
+  background: #141414;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.influence-cell.center {
+  border-color: #9b9b9b;
+  background: #3a3a3a;
+  color: #f0f0f0;
+}
+
+.influence-cell.amp {
+  border-color: #4f7c5f;
+  background: #173020;
+  color: #9fdfb0;
+}
+
+.influence-cell.block {
+  border-color: #7d4f4f;
+  color: #efb4b4;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(140, 73, 73, 0.45) 0,
+      rgba(140, 73, 73, 0.45) 1px,
+      rgba(140, 73, 73, 0) 1px,
+      rgba(140, 73, 73, 0) 4px
+    ),
+    #211516;
+}
+
+.influence-cell.heatWarm {
+  border-color: #926a3b;
+  background: rgba(217, 152, 79, 0.2);
+  color: #f4d5a8;
+}
+
+.influence-cell.heatHigh {
+  border-color: #af5f43;
+  background: rgba(213, 103, 64, 0.3);
+  color: #ffd2bf;
+}
+
+.influence-cell.ampHeatHigh {
+  border-color: #6f6c3f;
+  color: #ffdfae;
+  background:
+    linear-gradient(135deg, rgba(61, 120, 75, 0.7) 0%, rgba(61, 120, 75, 0.7) 50%, rgba(174, 89, 58, 0.72) 50%, rgba(174, 89, 58, 0.72) 100%);
+}
+
+.influence-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 10px;
+  color: #9f9889;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  border: 1px solid #424242;
+  border-radius: 2px;
+  background: #141414;
+}
+
+.swatch.center {
+  background: #5a5a5a;
+}
+
+.swatch.amp {
+  background: #255035;
+  border-color: #4f7c5f;
+}
+
+.swatch.block {
+  border-color: #7d4f4f;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(140, 73, 73, 0.5) 0,
+      rgba(140, 73, 73, 0.5) 1px,
+      rgba(140, 73, 73, 0) 1px,
+      rgba(140, 73, 73, 0) 4px
+    ),
+    #211516;
+}
+
+.swatch.warm {
+  background: rgba(217, 152, 79, 0.35);
+  border-color: #926a3b;
+}
+
+.swatch.high {
+  background: rgba(213, 103, 64, 0.45);
+  border-color: #af5f43;
+}
+
 .module-list {
   display: grid;
   gap: 6px;
