@@ -417,10 +417,31 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
     if (Number.isFinite(slotIndex)) dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex })
   })
 
+  app.addEventListener('mousedown', (event) => {
+    if (event.button !== 1) return
+    const codexChipCard = getEventTargetElement(event.target)?.closest<HTMLElement>('#codex-chip-list [data-codex-chip-type]')
+    if (codexChipCard) event.preventDefault()
+  })
+
   app.addEventListener('auxclick', (event) => {
     if (event.button !== 1) return
-    const slot = getEventTargetElement(event.target)?.closest<HTMLElement>('[data-slot-index]')
+
+    const target = getEventTargetElement(event.target)
+    if (!target) return
+
+    const codexChipCard = target.closest<HTMLElement>('#codex-chip-list [data-codex-chip-type]')
+    if (codexChipCard) {
+      event.preventDefault()
+      const moduleType = codexChipCard.getAttribute('data-codex-chip-type') as ModuleType | null
+      if (moduleType && isModuleType(moduleType)) {
+        handlers.onCheatGrantCodexChip(moduleType)
+      }
+      return
+    }
+
+    const slot = target.closest<HTMLElement>('[data-slot-index]')
     if (!slot || !slot.classList.contains('filled')) return
+    event.preventDefault()
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (Number.isFinite(slotIndex)) dispatchInteractionIntent(handlers, { type: 'module/unequip', slotIndex })
   })

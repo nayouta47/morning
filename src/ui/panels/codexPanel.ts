@@ -79,7 +79,7 @@ function renderChipRows(state: GameState): string {
     .map((chip) => {
       const owned = state.modules[chip.type]
       const isOwned = owned > 0
-      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p><p class="codex-chip-power">전력 소모 ⚡${chip.powerCost}</p></article>`
+      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" data-codex-chip-type="${chip.type}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p><p class="codex-chip-power">전력 소모 ⚡${chip.powerCost}</p></article>`
     })
     .join('')
 }

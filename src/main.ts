@@ -208,6 +208,11 @@ function redraw(nowOverride?: number): void {
           simulationLastTickAt = Date.now()
           redraw()
         },
+        onCheatGrantCodexChip: (moduleType) => {
+          syncState()
+          state.modules[moduleType] += 1
+          redraw()
+        },
         onStartExploration: () => {
           syncState()
           if (!state.selectedWeaponId) {
