@@ -18,8 +18,6 @@ const CARDINAL_DIRECTIONS: Direction[] = ['left', 'right', 'up', 'down']
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
   damage: 5,
   cooldown: 5,
-  blockAmplifierLeft: 2,
-  blockAmplifierRight: 2,
   blockAmplifierUp: 2,
   blockAmplifierDown: 2,
   preheater: 7,
@@ -28,8 +26,6 @@ export const MODULE_POWER_COST: Record<ModuleType, number> = {
 }
 
 const AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
-  blockAmplifierLeft: 'left',
-  blockAmplifierRight: 'right',
   blockAmplifierUp: 'up',
   blockAmplifierDown: 'down',
 }
@@ -39,8 +35,8 @@ const HEAT_AMPLIFIER_DIRECTION: Partial<Record<ModuleType, Direction>> = {
   heatAmplifierRight: 'right',
 }
 
-function isAmplifierModule(type: ModuleType | null | undefined): type is 'blockAmplifierLeft' | 'blockAmplifierRight' | 'blockAmplifierUp' | 'blockAmplifierDown' {
-  return type === 'blockAmplifierLeft' || type === 'blockAmplifierRight' || type === 'blockAmplifierUp' || type === 'blockAmplifierDown'
+function isAmplifierModule(type: ModuleType | null | undefined): type is 'blockAmplifierUp' | 'blockAmplifierDown' {
+  return type === 'blockAmplifierUp' || type === 'blockAmplifierDown'
 }
 
 function isHeatAmplifierModule(type: ModuleType | null | undefined): type is 'heatAmplifierLeft' | 'heatAmplifierRight' {
@@ -291,8 +287,6 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
 export function isModuleType(value: string | null | undefined): value is ModuleType {
   return value === 'damage'
     || value === 'cooldown'
-    || value === 'blockAmplifierLeft'
-    || value === 'blockAmplifierRight'
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'

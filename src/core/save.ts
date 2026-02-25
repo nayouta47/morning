@@ -26,36 +26,29 @@ function toWeaponType(value: unknown): WeaponType {
   return value === 'rifle' ? 'rifle' : 'pistol'
 }
 
-function inferModuleType(value: unknown): ModuleType {
+function inferModuleType(value: unknown): ModuleType | null {
   if (
     value === 'damage'
     || value === 'cooldown'
-    || value === 'blockAmplifierLeft'
-    || value === 'blockAmplifierRight'
     || value === 'blockAmplifierUp'
     || value === 'blockAmplifierDown'
     || value === 'preheater'
     || value === 'heatAmplifierLeft'
     || value === 'heatAmplifierRight'
   ) return value
-  if (value === 'amplifier' || value === 'amplifierLeft') return 'blockAmplifierLeft'
-  if (value === 'amplifierRight') return 'blockAmplifierRight'
   if (value === 'amplifierUp') return 'blockAmplifierUp'
   if (value === 'amplifierDown') return 'blockAmplifierDown'
   if (value === 'heatAmplifier') return 'heatAmplifierLeft'
   if (typeof value === 'string') {
     if (value.startsWith('DMG-')) return 'damage'
     if (value.startsWith('CDN-')) return 'cooldown'
-    if (value.startsWith('AMP-L-')) return 'blockAmplifierLeft'
-    if (value.startsWith('AMP-R-')) return 'blockAmplifierRight'
     if (value.startsWith('AMP-U-')) return 'blockAmplifierUp'
     if (value.startsWith('AMP-D-')) return 'blockAmplifierDown'
-    if (value.startsWith('AMP-')) return 'blockAmplifierLeft'
     if (value.startsWith('PRE-')) return 'preheater'
     if (value.startsWith('HEAT-R-')) return 'heatAmplifierRight'
     if (value.startsWith('HEAT-L-') || value.startsWith('HEAT-')) return 'heatAmplifierLeft'
   }
-  return 'cooldown'
+  return null
 }
 
 function normalizeBackpackEntries(entries: unknown): GameState['exploration']['backpack'] {
@@ -287,13 +280,8 @@ function normalizeState(raw: unknown): GameState | null {
     const modules = loaded.modules as Partial<Record<string, unknown>>
     base.modules.damage = Math.max(0, Number(modules.damage ?? 0) || 0)
     base.modules.cooldown = Math.max(0, Number(modules.cooldown ?? 0) || 0)
-    const legacyAmplifier = Math.max(0, Number(modules.amplifier ?? 0) || 0)
-    const legacyAmplifierLeft = Math.max(0, Number(modules.amplifierLeft ?? 0) || 0)
-    const legacyAmplifierRight = Math.max(0, Number(modules.amplifierRight ?? 0) || 0)
     const legacyAmplifierUp = Math.max(0, Number(modules.amplifierUp ?? 0) || 0)
     const legacyAmplifierDown = Math.max(0, Number(modules.amplifierDown ?? 0) || 0)
-    base.modules.blockAmplifierLeft = Math.max(0, Number(modules.blockAmplifierLeft ?? 0) || 0) + legacyAmplifier + legacyAmplifierLeft
-    base.modules.blockAmplifierRight = Math.max(0, Number(modules.blockAmplifierRight ?? 0) || 0) + legacyAmplifierRight
     base.modules.blockAmplifierUp = Math.max(0, Number(modules.blockAmplifierUp ?? 0) || 0) + legacyAmplifierUp
     base.modules.blockAmplifierDown = Math.max(0, Number(modules.blockAmplifierDown ?? 0) || 0) + legacyAmplifierDown
     base.modules.preheater = Math.max(0, Number(modules.preheater ?? 0) || 0)
@@ -305,6 +293,7 @@ function normalizeState(raw: unknown): GameState | null {
   if (Array.isArray(loaded.modules)) {
     loaded.modules.forEach((moduleLike) => {
       const type = inferModuleType((moduleLike as { type?: unknown; id?: unknown })?.type ?? (moduleLike as { id?: unknown })?.id)
+      if (!type) return
       base.modules[type] += 1
     })
   }

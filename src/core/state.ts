@@ -102,7 +102,7 @@ export type ExplorationState = {
 }
 
 export type WeaponType = 'pistol' | 'rifle'
-export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierLeft' | 'blockAmplifierRight' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight'
+export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight'
 export type ModuleCraftTier = 1 | 2
 
 export type WeaponInstance = {
@@ -245,8 +245,6 @@ export const initialState: GameState = {
   modules: {
     damage: 0,
     cooldown: 0,
-    blockAmplifierLeft: 0,
-    blockAmplifierRight: 0,
     blockAmplifierUp: 0,
     blockAmplifierDown: 0,
     preheater: 0,
