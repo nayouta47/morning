@@ -879,35 +879,43 @@ li {
   pointer-events: none;
   z-index: 1;
   opacity: var(--slot-penalty-visibility);
-  --slot-penalty-fill: 0;
+}
+
+.slot-penalty.heat {
+  --heat-penalty-fill-amount: 0;
   background-image:
     linear-gradient(
       to top,
       var(--heat-penalty-fill) 0,
-      var(--heat-penalty-fill) calc(var(--slot-penalty-fill) * 100%),
-      transparent calc(var(--slot-penalty-fill) * 100%),
+      var(--heat-penalty-fill) calc(var(--heat-penalty-fill-amount) * 100%),
+      transparent calc(var(--heat-penalty-fill-amount) * 100%),
       transparent 100%
     );
 }
 
-.slot-penalty.major {
+.slot-penalty.heat.major {
   background-image:
     linear-gradient(
       to top,
       var(--heat-penalty-fill-strong) 0,
-      var(--heat-penalty-fill-strong) calc(var(--slot-penalty-fill) * 100%),
-      transparent calc(var(--slot-penalty-fill) * 100%),
+      var(--heat-penalty-fill-strong) calc(var(--heat-penalty-fill-amount) * 100%),
+      transparent calc(var(--heat-penalty-fill-amount) * 100%),
       transparent 100%
     );
 }
 
 .slot-penalty.block {
+  --block-penalty-fill-amount: 0;
+  inset-inline: 2px;
+  border-radius: 3px;
+  z-index: 2;
+  opacity: calc(var(--slot-penalty-visibility) * 0.88);
   background-image:
     linear-gradient(
       to bottom,
       var(--block-penalty-fill) 0,
-      var(--block-penalty-fill) calc(var(--slot-penalty-fill) * 100%),
-      transparent calc(var(--slot-penalty-fill) * 100%),
+      var(--block-penalty-fill) calc(var(--block-penalty-fill-amount) * 100%),
+      transparent calc(var(--block-penalty-fill-amount) * 100%),
       transparent 100%
     );
 }
@@ -917,20 +925,10 @@ li {
     linear-gradient(
       to bottom,
       var(--block-penalty-fill-strong) 0,
-      var(--block-penalty-fill-strong) calc(var(--slot-penalty-fill) * 100%),
-      transparent calc(var(--slot-penalty-fill) * 100%),
+      var(--block-penalty-fill-strong) calc(var(--block-penalty-fill-amount) * 100%),
+      transparent calc(var(--block-penalty-fill-amount) * 100%),
       transparent 100%
     );
-}
-
-.slot-amplify {
-  position: absolute;
-  right: 2px;
-  bottom: 1px;
-  font-size: 10px;
-  line-height: 1;
-  color: #f3cc7a;
-  font-weight: 700;
 }
 
 .slot.active {

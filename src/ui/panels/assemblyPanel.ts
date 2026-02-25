@@ -318,8 +318,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const blockPenaltyClass = penaltyBlock >= SLOT_PENALTY_MAJOR ? 'major' : ''
     const heatPenaltyFillRatio = Math.max(0, Math.min(1, penaltyHeat / SLOT_PENALTY_MAJOR))
     const blockPenaltyFillRatio = Math.max(0, Math.min(1, penaltyBlock / SLOT_PENALTY_MAJOR))
-    const penaltyOverlay = `${penaltyHeat > 0 ? `<span class="slot-penalty heat ${heatPenaltyClass}" style="--slot-penalty-fill:${heatPenaltyFillRatio}" aria-hidden="true"></span>` : ''}${penaltyBlock > 0 ? `<span class="slot-penalty block ${blockPenaltyClass}" style="--slot-penalty-fill:${blockPenaltyFillRatio}" aria-hidden="true"></span>` : ''}`
-    const ampBadge = moduleType && amplificationCount > 0 ? `<span class="slot-amplify" aria-label="증폭 +${amplificationCount}">+${amplificationCount}</span>` : ''
+    const penaltyOverlay = `${penaltyHeat > 0 ? `<span class="slot-penalty heat ${heatPenaltyClass}" style="--heat-penalty-fill-amount:${heatPenaltyFillRatio}" aria-hidden="true"></span>` : ''}${penaltyBlock > 0 ? `<span class="slot-penalty block ${blockPenaltyClass}" style="--block-penalty-fill-amount:${blockPenaltyFillRatio}" aria-hidden="true"></span>` : ''}`
     const disableOverlay = penaltyTotal >= SLOT_PENALTY_MAJOR ? '<span class="slot-disable-x" aria-hidden="true">✕</span>' : ''
     const slotState = moduleType
       ? `${MODULE_LABEL[moduleType]} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 증폭 감소 -${penaltyReduction}` : ''}`
@@ -328,7 +327,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
     const previewClass = powerPreview?.slotIndex === index && !isDisabled ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
     const penaltyState = penaltyTotal > 0 ? `, 총 패널티 ${penaltyTotal}(열기 패널티 ${penaltyHeat} + 차단 패널티 ${penaltyBlock})` : ''
     const penaltyBreakdown = penaltyTotal > 0 ? `열기 ${penaltyHeat}/${SLOT_PENALTY_MAJOR}, 차단 ${penaltyBlock}/${SLOT_PENALTY_MAJOR}, 총합 ${penaltyTotal}/${SLOT_PENALTY_MAJOR}` : '패널티 없음'
-    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" title="${penaltyBreakdown}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `${MODULE_EMOJI[moduleType]}${ampBadge}` : ''}${disableOverlay}</div>`
+    return `<div class="slot ${isActive ? 'active' : 'inactive'} ${isDisabled ? 'disabled' : ''} ${isPenaltyDisabled ? 'penalty-disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${isActive ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" title="${penaltyBreakdown}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? MODULE_EMOJI[moduleType] : ''}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig
