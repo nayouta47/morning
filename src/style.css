@@ -932,6 +932,11 @@ li {
   z-index: 2;
 }
 
+.slot-module-emoji {
+  position: relative;
+  z-index: 2;
+}
+
 .slot-penalty {
   position: absolute;
   inset: 0;
@@ -954,7 +959,7 @@ li {
   --block-penalty-fill-amount: 0;
   inset-inline: 2px;
   border-radius: 3px;
-  z-index: 2;
+  z-index: 1;
   opacity: calc(var(--slot-penalty-visibility) * 0.88);
   background-image: var(--block-penalty-fill);
   clip-path: inset(0 0 calc((1 - var(--block-penalty-fill-amount)) * 100%) 0);
