@@ -71,10 +71,17 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.cheat-btn {
+.top-controls {
   position: absolute;
   top: 0;
   right: 0;
+  display: inline-flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.cheat-btn {
+  position: static;
   width: auto;
   margin: 0;
   padding: 4px 8px;
@@ -83,11 +90,19 @@ h1 {
   font-size: 11px;
   color: #b8ad95;
   background: rgba(18, 18, 18, 0.92);
-  z-index: 3;
 }
 
 .cheat-btn:hover:not(:disabled) {
   color: #e5d3a5;
+}
+
+.cheat-btn.danger {
+  border-color: #5a2d2d;
+  color: #cf9f9f;
+}
+
+.cheat-btn.danger:hover:not(:disabled) {
+  color: #f3b4b4;
 }
 
 .hidden {
