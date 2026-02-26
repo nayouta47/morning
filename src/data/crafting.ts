@@ -133,7 +133,7 @@ export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): Re
   if (recipe === 'module') {
     const tier = getActiveModuleCraftTier(state)
     if (tier === 3) {
-      return { lowAlloySteel: 1, highAlloySteel: 1, cobalt: 1 }
+      return { siliconIngot: 1, highAlloySteel: 1 }
     }
     if (tier === 2) {
       return { iron: 200, chromium: 4, molybdenum: 2, cobalt: 1 }
