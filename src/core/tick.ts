@@ -256,8 +256,8 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
 
   state.isGuideRobotRecovered = true
   state.actionProgress.recoverGuideRobot = 0
-  appendLog(state, '파괴된 안내견을 회수했다.')
-  appendLog(state, '이제 거점에서 수리를 진행할 수 있다.')
+  appendLog(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다. 이제 거점에서 수리를 진행할 수 있다.')
+  appendLog(state, '구조가 생각보다 단순한 것 같다. 수리할 수 있을지도.')
 }
 
 function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {

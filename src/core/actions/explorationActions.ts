@@ -84,7 +84,7 @@ export function startRecoverGuideRobot(state: GameState): boolean {
   }
 
   state.actionProgress.recoverGuideRobot = ACTION_DURATION_MS.recoverGuideRobot
-  pushLog(state, `파괴된 안내견 줍기 시작 (${Math.round(ACTION_DURATION_MS.recoverGuideRobot / 1000)}초)`)
+  pushLog(state, '네 다리가 달린 고물 로봇을 발견했다.')
   return true
 }
 
