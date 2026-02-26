@@ -54,7 +54,7 @@ export const UPGRADE_DEFS = {
   },
   cannedMetalTech: {
     name: '금속 통조림 기술',
-    cost: { iron: 1200, lowAlloySteel: 12, cobalt: 8 },
+    cost: { iron: 1200, lowAlloySteel: 12, nickel: 1 },
     effectText: '창고 상한 5000',
   },
 } as const
