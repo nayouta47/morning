@@ -5,6 +5,7 @@ export const COST_SCALE = 1.15
 export const ACTION_DURATION_MS = {
   gatherWood: 5000,
   gatherScrap: 35000,
+  recoverGuideRobot: 7000,
 } as const
 
 export const BUILDING_CYCLE_MS = 10000

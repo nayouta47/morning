@@ -31,6 +31,7 @@ export type Handlers = {
   onToggleScavengerRun: () => void
   onBuyUpgrade: (key: UpgradeKey) => void
   onSelectTab: (tab: 'base' | 'assembly' | 'exploration' | 'codex') => void
+  onStartRecoverGuideRobot: () => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
   onFleeExplorationCombat: () => void
@@ -64,6 +65,7 @@ export type Handlers = {
 export type ActionUI = {
   gatherWood: ActionGaugeView
   gatherScrap: ActionGaugeView
+  recoverGuideRobot: ActionGaugeView
 }
 
 export type InteractionIntent =

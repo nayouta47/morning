@@ -46,6 +46,7 @@ type LoadedSave = Partial<GameState> & {
   moduleCraftTierInProgress?: unknown
   robotName?: unknown
   needsRobotNaming?: unknown
+  isGuideRobotRecovered?: unknown
 }
 
 function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
@@ -202,6 +203,7 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
   base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
+  base.actionProgress.recoverGuideRobot = clampProgress(loaded.actionProgress?.recoverGuideRobot)
 
   base.smeltingAllocation.burnWood = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.burnWood) || 0))
   base.smeltingAllocation.meltScrap = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.meltScrap) || 0))
@@ -289,6 +291,7 @@ function normalizeState(raw: unknown): GameState | null {
 
   base.robotName = typeof loaded.robotName === 'string' ? loaded.robotName.trim().slice(0, 12) : null
   base.needsRobotNaming = Boolean(loaded.needsRobotNaming)
+  base.isGuideRobotRecovered = Boolean(loaded.isGuideRobotRecovered)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()

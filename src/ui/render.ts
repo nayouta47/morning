@@ -41,7 +41,6 @@ function patchTabs(app: ParentNode, state: GameState): void {
   const isCodex = state.activeTab === 'codex'
   const explorationActive = state.exploration.mode === 'active'
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const explorationUnlocked = state.buildings.laikaRepair >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
   baseTab.classList.toggle('active', isBase)
@@ -53,13 +52,13 @@ function patchTabs(app: ParentNode, state: GameState): void {
   assTab.setAttribute('aria-selected', String(isAssembly))
   assTab.textContent = assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'
   explorationTab.setAttribute('aria-selected', String(isExploration))
-  explorationTab.textContent = explorationUnlocked ? '탐험' : '탐험(잠김)'
+  explorationTab.textContent = '탐험'
   codexTab.setAttribute('aria-selected', String(isCodex))
   codexTab.textContent = codexUnlocked ? '도감' : '도감(잠김)'
 
   baseTab.disabled = explorationActive
   assTab.disabled = explorationActive || !assemblyUnlocked
-  explorationTab.disabled = !explorationUnlocked
+  explorationTab.disabled = false
   codexTab.disabled = explorationActive || !codexUnlocked
 
   panelBase.classList.toggle('hidden', !isBase)
@@ -93,6 +92,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-scrap', actionUI.gatherScrap)
+  patchActionGauge(app, 'recover-guide-robot', actionUI.recoverGuideRobot)
 
   setText(app, '#resource-storage-cap-label', `자원 (최대 ${getResourceStorageCap(state)})`)
   setText(app, '#res-wood', formatBaseResourceAmount('wood', state.resources.wood))
@@ -142,13 +142,15 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   const buyLaikaRepair = app.querySelector<HTMLButtonElement>('#buy-laika-repair')
   const laikaRepairInstalled = state.buildings.laikaRepair >= 1
-  if (buyLaikaRepair) buyLaikaRepair.disabled = laikaRepairInstalled
+  if (buyLaikaRepair) buyLaikaRepair.disabled = laikaRepairInstalled || !state.isGuideRobotRecovered
   setText(
     app,
     '#buy-laika-repair-label',
     laikaRepairInstalled
       ? `${companionName} 수리 (설치 완료)`
-      : `${companionName} 수리 (${formatCost(laikaRepairCost)})`,
+      : state.isGuideRobotRecovered
+        ? `${companionName} 수리 (${formatCost(laikaRepairCost)})`
+        : `${companionName} 수리 (안내견 회수 필요)`,
   )
 
   const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
@@ -209,7 +211,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchWeaponBoard(app, state)
   patchModuleInventory(app, state)
   patchModuleDetail(app, state)
-  patchExplorationBody(app, state)
+  patchExplorationBody(app, state, actionUI.recoverGuideRobot)
   patchExplorationCombatOverlay(app, state, now)
   patchCodexPanel(app, state)
 
@@ -226,10 +228,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   const focusedId = (document.activeElement as HTMLElement | null)?.id ?? null
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const explorationUnlocked = state.buildings.laikaRepair >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
-  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}`
+  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')

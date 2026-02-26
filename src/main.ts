@@ -19,6 +19,7 @@ import {
   startCraft,
   cycleModuleCraftTier,
   startExploration,
+  startRecoverGuideRobot,
   startExplorationFlee,
   takeExplorationLoot,
   toggleBuildingRun,
@@ -43,7 +44,7 @@ const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
-type ActionKey = 'gatherWood' | 'gatherScrap'
+type ActionKey = 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -107,6 +108,7 @@ function redraw(nowOverride?: number): void {
   const actionUI = {
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
+    recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
   }
 
   if (!appMounted) {
@@ -250,6 +252,13 @@ function redraw(nowOverride?: number): void {
           state.needsRobotNaming = false
           appendLog(state, `안내견 로봇의 이름이 ${result.normalized}(으)로 정해졌다.`)
           appMounted = false
+          redraw()
+        },
+        onStartRecoverGuideRobot: () => {
+          syncState()
+          const view = toActionView('recoverGuideRobot', state.isGuideRobotRecovered)
+          if (view.disabled) return
+          startRecoverGuideRobot(state)
           redraw()
         },
         onStartExploration: () => {

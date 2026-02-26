@@ -239,7 +239,7 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key, storageCap)
 }
 
-function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap', storageCap: number): void {
+function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', storageCap: number): void {
   if (key === 'gatherWood') {
     const amount = getGatherWoodReward(state)
     const gain = addResourceWithCap(state.resources, 'wood', amount, storageCap)
@@ -247,12 +247,20 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
     return
   }
 
-  const amount = resolveGatherScrapReward(state)
-  const gain = addResourceWithCap(state.resources, 'scrap', amount, storageCap)
-  logDiscardedOverflow(state, 'scrap', gain.discarded)
+  if (key === 'gatherScrap') {
+    const amount = resolveGatherScrapReward(state)
+    const gain = addResourceWithCap(state.resources, 'scrap', amount, storageCap)
+    logDiscardedOverflow(state, 'scrap', gain.discarded)
+    return
+  }
+
+  state.isGuideRobotRecovered = true
+  state.actionProgress.recoverGuideRobot = 0
+  appendLog(state, '파괴된 안내견을 회수했다.')
+  appendLog(state, '이제 거점에서 수리를 진행할 수 있다.')
 }
 
-function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap', elapsedMs: number, storageCap: number): void {
+function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
   const current = state.actionProgress[key]
   if (current <= 0) return
 
@@ -339,6 +347,7 @@ function advanceBaseByElapsed(state: GameState, elapsed: number): void {
 
   processActionElapsed(state, 'gatherWood', elapsed, storageCap)
   processActionElapsed(state, 'gatherScrap', elapsed, storageCap)
+  processActionElapsed(state, 'recoverGuideRobot', elapsed, storageCap)
 }
 
 export function advanceState(state: GameState, now = Date.now()): void {

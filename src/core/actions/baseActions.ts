@@ -6,7 +6,6 @@ import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
 import { getGatherScrapDurationMs } from '../rewards.ts'
-import { getCompanionName } from '../companion.ts'
 
 type UpgradeKey = keyof typeof UPGRADE_DEFS
 
@@ -83,6 +82,11 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
     return
 
   if ((key === 'droneController' || key === 'electricFurnace') && state.buildings.lab <= 0) return
+
+  if (key === 'laikaRepair' && !state.isGuideRobotRecovered) {
+    pushLog(state, '먼저 파괴된 안내견을 주워 와야 한다.')
+    return
+  }
 
   const singletonBuildings: BuildingId[] = ['lab', 'laikaRepair', 'workbench', 'droneController']
   if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return
@@ -231,10 +235,6 @@ export function unlockAllEnemyCodex(state: GameState): void {
 export function setActiveTab(state: GameState, tab: TabKey): void {
   if (tab === 'assembly' && state.buildings.workbench <= 0) {
     pushLog(state, '금속 프린터를 설치해야 조립 탭을 사용할 수 있다.')
-    return
-  }
-  if (tab === 'exploration' && state.buildings.laikaRepair <= 0) {
-    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 탐험 탭을 사용할 수 있다.`)
     return
   }
   if (tab === 'codex' && state.buildings.lab <= 0) {

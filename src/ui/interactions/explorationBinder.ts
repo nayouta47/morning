@@ -8,6 +8,11 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
     const target = getEventTargetElement(event.target)
     if (!target) return
 
+    if (target.closest<HTMLElement>('#recover-guide-robot')) {
+      handlers.onStartRecoverGuideRobot()
+      return
+    }
+
     if (target.closest<HTMLElement>('#exploration-start')) {
       handlers.onStartExploration()
       return

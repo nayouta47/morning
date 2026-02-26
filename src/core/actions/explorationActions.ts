@@ -10,7 +10,7 @@ import type { GameState } from '../state.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
-import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
+import { ACTION_DURATION_MS, SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
 import { getCompanionName } from '../companion.ts'
 import {
@@ -71,9 +71,31 @@ function endExplorationToLoadout(state: GameState): void {
   state.exploration.carriedWeaponId = null
 }
 
+
+export function startRecoverGuideRobot(state: GameState): boolean {
+  if (state.isGuideRobotRecovered) {
+    pushLog(state, '이미 파괴된 안내견을 확보했다.')
+    return false
+  }
+
+  if (state.actionProgress.recoverGuideRobot > 0) {
+    pushLog(state, '이미 파괴된 안내견을 옮기는 중이다.')
+    return false
+  }
+
+  state.actionProgress.recoverGuideRobot = ACTION_DURATION_MS.recoverGuideRobot
+  pushLog(state, `파괴된 안내견 줍기 시작 (${Math.round(ACTION_DURATION_MS.recoverGuideRobot / 1000)}초)`)
+  return true
+}
+
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
+  if (!state.isGuideRobotRecovered) {
+    pushLog(state, '먼저 파괴된 안내견을 주워 와야 한다.')
+    return false
+  }
+
   if (state.buildings.laikaRepair <= 0) {
-    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 탐험을 시작할 수 있다.`)
+    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 출발할 수 있다.`)
     return false
   }
 

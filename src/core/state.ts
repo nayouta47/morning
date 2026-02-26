@@ -50,6 +50,7 @@ export type MinerProcessRunning = Record<MinerProcessKey, boolean>
 export type ActionProgress = {
   gatherWood: number
   gatherScrap: number
+  recoverGuideRobot: number
 }
 
 export type TabKey = 'base' | 'assembly' | 'exploration' | 'codex'
@@ -158,6 +159,7 @@ export type GameState = {
   moduleCraftTierInProgress: ModuleCraftTier | null
   robotName: string | null
   needsRobotNaming: boolean
+  isGuideRobotRecovered: boolean
 }
 
 export const initialState: GameState = {
@@ -247,6 +249,7 @@ export const initialState: GameState = {
   actionProgress: {
     gatherWood: 0,
     gatherScrap: 0,
+    recoverGuideRobot: 0,
   },
   lastUpdate: Date.now(),
   log: ['게임 시작. 🪵 뗄감을 모아보자.'],
@@ -298,4 +301,5 @@ export const initialState: GameState = {
   moduleCraftTierInProgress: null,
   robotName: null,
   needsRobotNaming: false,
+  isGuideRobotRecovered: false,
 }
