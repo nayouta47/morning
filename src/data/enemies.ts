@@ -39,7 +39,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     id: 'siliconBug',
     name: '🐛 규소충',
     tier: 1,
-    hp: 4,
+    hp: 3,
     damage: 1,
     attackCooldownMs: 2000,
     drops: [
