@@ -53,7 +53,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     tier: 1,
     hp: 4,
     damage: 3,
-    attackCooldownMs: 3000,
+    attackCooldownMs: 4500,
     drops: [
       { resource: 'scrap', minAmount: 10, maxAmount: 14, chance: 1 },
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.2 },
