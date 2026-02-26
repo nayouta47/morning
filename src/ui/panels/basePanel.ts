@@ -10,6 +10,7 @@ import {
   getCraftRecipeMissingRequirement,
   getModuleCraftTierLabel,
   getSelectedModuleCraftTier,
+  isCraftRecipeUnlocked,
   type CraftRecipeKey,
 } from '../../data/crafting.ts'
 import { getBuildingLabel } from '../../data/buildings.ts'
@@ -244,23 +245,38 @@ function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView)
 }
 
 export function renderCraftActions(state: GameState): string {
-  const pistolView = craftViewByRecipe(state, 'pistol')
-  const rifleView = craftViewByRecipe(state, 'rifle')
-  const moduleView = craftViewByRecipe(state, 'module')
   const shovelView = shovelCraftView(state)
-  const scavengerDroneView = craftViewByRecipe(state, 'scavengerDrone')
-  const syntheticFoodView = craftViewByRecipe(state, 'syntheticFood')
-  const smallHealPotionView = craftViewByRecipe(state, 'smallHealPotion')
+  const moduleView = craftViewByRecipe(state, 'module')
 
-  return `<div class="craft-actions" role="group" aria-label="제작 행동">
-      ${renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView)}
-      ${renderGaugeButton('craft-pistol', `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(getCraftRecipeCost(state, 'pistol'))})`, '권총 제작', pistolView)}
-      ${renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(getCraftRecipeCost(state, 'rifle'))})`, '소총 제작', rifleView)}
-      ${renderModuleCraftControl(state, moduleView)}
-      ${renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`, '🛸 스캐빈저 드론 제작', scavengerDroneView)}
-      ${renderGaugeButton('craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`, '무작위맛 통조림 제작', syntheticFoodView)}
-      ${renderGaugeButton('craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`, '회복약(소) 제작', smallHealPotionView)}
-    </div>`
+  const isCraftVisible = (recipe: CraftRecipeKey): boolean => {
+    if (state.craftProgress[recipe] > 0) return true
+    return isCraftRecipeUnlocked(state, recipe)
+  }
+
+  const rows: string[] = [
+    renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView),
+  ]
+
+  if (isCraftVisible('pistol')) {
+    rows.push(renderGaugeButton('craft-pistol', `${CRAFT_RECIPE_DEFS.pistol.label} 제작 (${formatCost(getCraftRecipeCost(state, 'pistol'))})`, '권총 제작', craftViewByRecipe(state, 'pistol')))
+  }
+  if (isCraftVisible('rifle')) {
+    rows.push(renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(getCraftRecipeCost(state, 'rifle'))})`, '소총 제작', craftViewByRecipe(state, 'rifle')))
+  }
+  if (isCraftVisible('module')) {
+    rows.push(renderModuleCraftControl(state, moduleView))
+  }
+  if (isCraftVisible('scavengerDrone')) {
+    rows.push(renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`, '🛸 스캐빈저 드론 제작', craftViewByRecipe(state, 'scavengerDrone')))
+  }
+  if (isCraftVisible('syntheticFood')) {
+    rows.push(renderGaugeButton('craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`, '무작위맛 통조림 제작', craftViewByRecipe(state, 'syntheticFood')))
+  }
+  if (isCraftVisible('smallHealPotion')) {
+    rows.push(renderGaugeButton('craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`, '회복약(소) 제작', craftViewByRecipe(state, 'smallHealPotion')))
+  }
+
+  return `<div class="craft-actions" role="group" aria-label="제작 행동">${rows.join('')}</div>`
 }
 
 export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date.now()): string {
@@ -291,10 +307,52 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   const storageCap = getResourceStorageCap(state)
   const companionName = getCompanionName(state)
 
+  const gatherRows: string[] = [renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)]
+  if (state.unlocks.scrapAction) {
+    gatherRows.push(renderGaugeButton('gather-scrap', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`, '🗑️ 고물 줍기 행동', actionUI.gatherScrap))
+  }
+  const gatherSection = `<section class="action-group" aria-label="줍기 행동"><h3 class="subheading">줍기</h3>${gatherRows.join('')}</section>`
+
+  const runRows: string[] = []
+  if (state.buildings.lumberMill > 0) {
+    runRows.push(renderBuildingGauge('lumber-progress', `벌목기 가동 x${state.buildings.lumberMill}`, lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase))
+  }
+  if (state.buildings.droneController > 0) {
+    runRows.push(renderBuildingGauge('scavenger-progress', `스캐빈저 가동 x${state.resources.scavengerDrone}`, scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase))
+  }
+  const runSection = runRows.length > 0
+    ? `<section class="action-group" aria-label="가동 행동"><h3 class="subheading">가동</h3>${runRows.join('')}</section>`
+    : ''
+
+  const minerSection = state.buildings.miner > 0
+    ? `<section class="action-group" aria-label="분쇄 행동"><h3 class="subheading">분쇄</h3><p class="hint" id="miner-remaining">분쇄기 배정: ${state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass}/${state.buildings.miner} (남음 ${Math.max(0, state.buildings.miner - (state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass))})</p>${renderMinerRow(state, 'crushScrap', '고물 분쇄 (🗑️1 → ⛓️1 + 🟢/🔵)')}${renderMinerRow(state, 'crushSiliconMass', '규소 덩어리 분쇄 (🧱1 → 🟣1)')}</section>`
+    : ''
+
+  const smeltingSection = state.buildings.electricFurnace > 0
+    ? `<section class="action-group" aria-label="녹이기 행동"><h3 class="subheading">녹이기</h3><p class="hint" id="smelting-remaining">전기로 배정: ${smeltingUsed}/${state.buildings.electricFurnace} (남음 ${smeltingRemaining})</p>${renderSmeltingRow(state, 'burnWood', '땔감 태우기 (🪵1K → ⚫탄소1)')}${renderSmeltingRow(state, 'meltScrap', '고물 녹이기 (🗑️1K+🟢3+🔵1 → 🔗1)')}${renderSmeltingRow(state, 'meltIron', '철 녹이기 (⛓️1K+🟡8 → 🖇️1)')}${renderSmeltingRow(state, 'meltSiliconMass', '규소 덩어리 녹이기 (🧱1 → 🗞️75% / 🟡25%)')}</section>`
+    : ''
+
+  const buildingRows: string[] = []
+  if (state.unlocks.lumberMill || state.buildings.lumberMill > 0) {
+    buildingRows.push(`<button id="buy-lumber" aria-label="건물 설치"><span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span></button>`)
+  }
+  if (state.unlocks.miner || state.buildings.miner > 0) {
+    buildingRows.push(`<button id="buy-miner" aria-label="건물 설치"><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button>`)
+  }
+  buildingRows.push(`<button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button>`)
+  buildingRows.push(`<button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button>`)
+  buildingRows.push(`<button id="buy-laika-repair" aria-label="건물 설치" ${singletonInstalled.laikaRepair ? 'disabled' : ''}><span id="buy-laika-repair-label">${singletonInstalled.laikaRepair ? `${companionName} 수리 (설치 완료)` : `${companionName} 수리 (${formatCost(laikaRepairCost)})`}</span></button>`)
+  if (electricFurnaceUnlocked || state.buildings.electricFurnace > 0) {
+    buildingRows.push(`<button id="buy-electric-furnace" aria-label="건물 설치" ${state.buildings.lab <= 0 ? 'disabled' : ''}><span id="buy-electric-furnace-label">전기로 설치 (${formatCost(electricFurnaceCost)})</span></button>`)
+  }
+  if (droneControllerUnlocked || singletonInstalled.droneController) {
+    buildingRows.push(`<button id="buy-drone-controller" aria-label="건물 설치" ${singletonInstalled.droneController ? 'disabled' : ''}><span id="buy-drone-controller-label">${singletonInstalled.droneController ? `${getBuildingLabel('droneController')} (설치 완료)` : `드론 컨트롤러 설치 (${formatCost(droneControllerCost)})`}</span></button>`)
+  }
+
   return `<section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
       <div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel resources"><h2>창고</h2><section class="warehouse-grid" aria-label="창고"><div class="warehouse-column" aria-label="자원"><p class="resource-group-label" id="resource-storage-cap-label">자원 (최대 ${storageCap})</p><div class="resource-group resource-group--major">${renderResourceRow('wood', 'res-wood', formatBaseResourceValue('wood', state.resources.wood))}${renderResourceRow('scrap', 'res-scrap', formatBaseResourceValue('scrap', state.resources.scrap))}${renderResourceRow('siliconMass', 'res-silicon-mass', formatBaseResourceValue('siliconMass', state.resources.siliconMass))}</div><div class="resource-group resource-group--major">${renderResourceRow('iron', 'res-iron', formatBaseResourceValue('iron', state.resources.iron))}${renderResourceRow('lowAlloySteel', 'res-low-alloy-steel', formatBaseResourceValue('lowAlloySteel', state.resources.lowAlloySteel))}${renderResourceRow('highAlloySteel', 'res-high-alloy-steel', formatBaseResourceValue('highAlloySteel', state.resources.highAlloySteel))}</div><div class="resource-group resource-group--major">${renderResourceRow('chromium', 'res-chromium', formatBaseResourceValue('chromium', state.resources.chromium))}${renderResourceRow('molybdenum', 'res-molybdenum', formatBaseResourceValue('molybdenum', state.resources.molybdenum))}${renderResourceRow('cobalt', 'res-cobalt', formatBaseResourceValue('cobalt', state.resources.cobalt))}${renderResourceRow('nickel', 'res-nickel', formatBaseResourceValue('nickel', state.resources.nickel))}</div><div class="resource-group resource-group--major">${renderResourceRow('carbon', 'res-carbon', formatBaseResourceValue('carbon', state.resources.carbon))}${renderResourceRow('siliconIngot', 'res-silicon-ingot', formatBaseResourceValue('siliconIngot', state.resources.siliconIngot))}</div></div><div class="warehouse-column" aria-label="장비"><p class="resource-group-label">장비</p><div class="resource-group resource-group--major">${renderResourceRow('shovel', 'res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)}${renderResourceRow('scavengerDrone', 'res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))}${renderResourceRow('syntheticFood', 'res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood))}${renderResourceRow('smallHealPotion', 'res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))}</div></div></section></section></div>
-      <section class="panel actions"><h2>행동</h2><section class="action-group" aria-label="줍기 행동"><h3 class="subheading">줍기</h3>${renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)}${renderGaugeButton('gather-scrap', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`, state.unlocks.scrapAction ? '🗑️ 고물 줍기 행동' : '잠긴 🗑️ 고물 줍기 행동', actionUI.gatherScrap)}<p class="hint" id="scrap-hint" ${state.unlocks.scrapAction ? 'hidden' : ''}>해금 조건: ${getResourceDisplay('shovel')} 1개 이상</p></section><section class="action-group" aria-label="가동 행동"><h3 class="subheading">가동</h3>${renderBuildingGauge('lumber-progress', `벌목기 가동 x${state.buildings.lumberMill}`, lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)}${renderBuildingGauge('scavenger-progress', `스캐빈저 가동 x${state.resources.scavengerDrone}`, scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)}</section><section class="action-group" aria-label="분쇄 행동"><h3 class="subheading">분쇄</h3><p class="hint" id="miner-remaining">분쇄기 배정: ${state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass}/${state.buildings.miner} (남음 ${Math.max(0, state.buildings.miner - (state.minerAllocation.crushScrap + state.minerAllocation.crushSiliconMass))})</p>${renderMinerRow(state, 'crushScrap', '고물 분쇄 (🗑️1 → ⛓️1 + 🟢/🔵)')}${renderMinerRow(state, 'crushSiliconMass', '규소 덩어리 분쇄 (🧱1 → 🟣1)')}</section><section class="action-group" aria-label="녹이기 행동"><h3 class="subheading">녹이기</h3><p class="hint" id="smelting-remaining">전기로 배정: ${smeltingUsed}/${state.buildings.electricFurnace} (남음 ${smeltingRemaining})</p>${renderSmeltingRow(state, 'burnWood', '땔감 태우기 (🪵1K → ⚫탄소1)')}${renderSmeltingRow(state, 'meltScrap', '고물 녹이기 (🗑️1K+🟢3+🔵1 → 🔗1)')}${renderSmeltingRow(state, 'meltIron', '철 녹이기 (⛓️1K+🟡8 → 🖇️1)')}${renderSmeltingRow(state, 'meltSiliconMass', '규소 덩어리 녹이기 (🧱1 → 🗞️75% / 🟡25%)')}</section></section>
-      <section class="panel production"><h2>생산</h2><section id="crafting-panel" class="production-group" aria-label="제작"><h3 class="subheading">제작</h3>${renderCraftActions(state)}</section><section class="production-group" aria-label="건설"><h3 class="subheading">건설</h3><button id="buy-lumber" aria-label="건물 설치" ${state.unlocks.lumberMill ? '' : 'disabled'}><span id="buy-lumber-label">벌목기 설치 (${formatResourceAmount('scrap', lumberCost.scrap ?? 0)})</span></button><button id="buy-miner" aria-label="건물 설치" ${state.unlocks.miner ? '' : 'disabled'}><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button><button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button><button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button><button id="buy-laika-repair" aria-label="건물 설치" ${singletonInstalled.laikaRepair ? 'disabled' : ''}><span id="buy-laika-repair-label">${singletonInstalled.laikaRepair ? `${companionName} 수리 (설치 완료)` : `${companionName} 수리 (${formatCost(laikaRepairCost)})`}</span></button><button id="buy-electric-furnace" aria-label="건물 설치" ${state.buildings.lab <= 0 ? 'disabled' : ''} ${electricFurnaceUnlocked ? '' : 'disabled'}><span id="buy-electric-furnace-label">${electricFurnaceUnlocked ? `전기로 설치 (${formatCost(electricFurnaceCost)})` : '전기로 설치 (잠김)'}</span></button><p class="hint" id="electric-furnace-hint" ${electricFurnaceUnlocked ? 'hidden' : ''}>해금 조건: 지자 컴퓨터 설치</p><button id="buy-drone-controller" aria-label="건물 설치" ${singletonInstalled.droneController || !droneControllerUnlocked ? 'disabled' : ''}><span id="buy-drone-controller-label">${singletonInstalled.droneController ? `${getBuildingLabel('droneController')} (설치 완료)` : droneControllerUnlocked ? `드론 컨트롤러 설치 (${formatCost(droneControllerCost)})` : '드론 컨트롤러 설치 (잠김)'}</span></button><p class="hint" id="drone-controller-hint" ${droneControllerUnlocked ? 'hidden' : ''}>해금 조건: 지자 컴퓨터 설치</p></section></section>
+      <section class="panel actions"><h2>행동</h2>${gatherSection}${runSection}${minerSection}${smeltingSection}</section>
+      <section class="panel production"><h2>생산</h2><section id="crafting-panel" class="production-group" aria-label="제작"><h3 class="subheading">제작</h3>${renderCraftActions(state)}</section><section class="production-group" aria-label="건설"><h3 class="subheading">건설</h3>${buildingRows.join('')}</section></section>
       <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}><h2>연구</h2>${RESEARCH_PANEL_UPGRADE_KEYS.map((key) => {
         const def = UPGRADE_DEFS[key]
         const done = state.upgrades[key]
