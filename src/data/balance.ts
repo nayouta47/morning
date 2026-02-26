@@ -43,7 +43,7 @@ export const UPGRADE_DEFS = {
     effectText: '인조식량·회복약(소) 제작 해금',
   },
   moduleCraftingII: {
-    name: '식각:코발트 배리어',
+    name: '배선:코발트 라이너',
     baseCost: { wood: 240, iron: 120 },
     effectText: '모듈 제작 II 해금',
   },
