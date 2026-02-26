@@ -69,12 +69,16 @@ function patchTabs(app: ParentNode, state: GameState): void {
 }
 
 function patchLogs(app: ParentNode, state: GameState): void {
-  const logList = app.querySelector<HTMLUListElement>('#log-list')
-  if (!logList) return
+  const logLists = app.querySelectorAll<HTMLUListElement>('#log-list')
+  if (logLists.length <= 0) return
   const signature = `${state.log.length}:${state.log[state.log.length - 1] ?? ''}`
-  if (logList.dataset.signature === signature) return
-  logList.innerHTML = [...state.log].reverse().map((line) => `<li>${line}</li>`).join('')
-  logList.dataset.signature = signature
+  const html = [...state.log].reverse().map((line) => `<li>${line}</li>`).join('')
+
+  logLists.forEach((logList) => {
+    if (logList.dataset.signature === signature) return
+    logList.innerHTML = html
+    logList.dataset.signature = signature
+  })
 }
 
 function formatBaseResourceAmount(resourceId: ResourceId, amount: number): string {

@@ -383,8 +383,31 @@ h1 {
   padding: 10px;
 }
 
-.logs--compact h2 {
+.logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 6px;
+}
+
+.logs--compact h2 {
+  margin: 0;
+}
+
+.log-clear-btn {
+  width: auto;
+  margin: 0;
+  padding: 2px 6px;
+  min-height: 0;
+  border-color: #3f3a30;
+  font-size: 11px;
+  color: #9f957f;
+  background: rgba(18, 18, 18, 0.9);
+}
+
+.log-clear-btn:hover:not(:disabled) {
+  color: #d5c7a7;
+  border-color: #5a513f;
 }
 
 .logs--compact ul {

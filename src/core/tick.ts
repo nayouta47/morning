@@ -6,7 +6,6 @@ import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, getModuleCraftPoolByTier, getModuleCraftTierLabel, type CraftRecipeKey } from '../data/crafting.ts'
 import { MODULE_METADATA } from '../data/modules.ts'
-import { getResourceDisplay } from '../data/resources.ts'
 import { addResourceWithCap, getResourceStorageCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
 
@@ -18,7 +17,8 @@ type ProductionBuildingKey = 'lumberMill' | 'scavenger'
 
 function logDiscardedOverflow(state: GameState, resourceId: keyof GameState['resources'], discarded: number): void {
   if (discarded <= 0) return
-  appendLog(state, `${getResourceDisplay(resourceId)} 저장 한도 도달: +${discarded} 손실`)
+  void state
+  void resourceId
 }
 
 function processBuildingElapsed(state: GameState, key: ProductionBuildingKey, elapsedMs: number, storageCap: number): void {

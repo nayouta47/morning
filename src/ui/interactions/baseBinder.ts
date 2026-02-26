@@ -9,6 +9,10 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   app.querySelector<HTMLButtonElement>('#cheat-accelerate-base-time')?.addEventListener('click', handlers.onCheatAccelerateBaseTime)
   app.querySelector<HTMLButtonElement>('#delete-data')?.addEventListener('click', handlers.onDeleteData)
 
+  app.querySelectorAll<HTMLButtonElement>('button[data-clear-log]').forEach((button) => {
+    button.addEventListener('click', handlers.onClearLog)
+  })
+
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)
   app.querySelector<HTMLButtonElement>('#gather-scrap')?.addEventListener('click', handlers.onGatherScrap)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)

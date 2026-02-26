@@ -230,6 +230,10 @@ function redraw(nowOverride?: number): void {
             window.location.reload()
           }
         },
+        onClearLog: () => {
+          state.log = []
+          redraw()
+        },
         onCheatGrantCodexChip: (moduleType) => {
           syncState()
           state.modules[moduleType] += 1

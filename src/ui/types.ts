@@ -56,6 +56,7 @@ export type Handlers = {
   onUnequipModule: (slotIndex: number) => void
   onCheatAccelerateBaseTime: () => void
   onDeleteData: () => void
+  onClearLog: () => void
   onCheatGrantCodexChip: (moduleType: ModuleType) => void
   onConfirmRobotName: (name: string) => void
 }

@@ -7,7 +7,7 @@ import {
   selectEncounterEnemyId,
 } from '../combat.ts'
 import type { GameState } from '../state.ts'
-import { getResourceDisplay, type ResourceId } from '../../data/resources.ts'
+import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { pushLog } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
@@ -57,10 +57,7 @@ function revealExplorationTilesInRadius(state: GameState): void {
 
 function commitExplorationBackpack(state: GameState): void {
   state.exploration.backpack.forEach((entry) => {
-    const gain = addResourceWithCap(state.resources, entry.resource, entry.amount, getResourceStorageCap(state))
-    if (gain.discarded > 0) {
-      pushLog(state, `${getResourceDisplay(entry.resource)} 저장 한도 도달: +${gain.discarded} 손실`)
-    }
+    addResourceWithCap(state.resources, entry.resource, entry.amount, getResourceStorageCap(state))
   })
   state.exploration.backpack = []
 }
