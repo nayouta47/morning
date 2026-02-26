@@ -76,10 +76,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     label: '스캐빈저 드론',
     durationMs: WEAPON_CRAFT_DURATION_MS,
     costs: { iron: 500, cobalt: 1 },
-    requirements: [
-      { kind: 'building', building: 'workbench', count: 1 },
-      { kind: 'building', building: 'droneController', count: 1 },
-    ],
+    requirements: [{ kind: 'building', building: 'droneController', count: 1 }],
     outputs: [{ kind: 'resource', resource: 'scavengerDrone', amount: 1 }],
   },
 }

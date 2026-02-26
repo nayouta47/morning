@@ -82,9 +82,12 @@ function processMinerElapsed(state: GameState, key: 'crushScrap' | 'crushSilicon
       if (Math.random() < MOLYBDENUM_CHANCE_PER_SCRAP) molybdenum += 1
     }
 
-    const chromiumGain = chromium > 0 ? addResourceWithCap(state.resources, 'chromium', chromium, storageCap) : { added: 0, discarded: 0 }
+    const chromiumYield = chromium * 10
+    const molybdenumYield = molybdenum * 10
+
+    const chromiumGain = chromiumYield > 0 ? addResourceWithCap(state.resources, 'chromium', chromiumYield, storageCap) : { added: 0, discarded: 0 }
     const molybdenumGain =
-      molybdenum > 0 ? addResourceWithCap(state.resources, 'molybdenum', molybdenum, storageCap) : { added: 0, discarded: 0 }
+      molybdenumYield > 0 ? addResourceWithCap(state.resources, 'molybdenum', molybdenumYield, storageCap) : { added: 0, discarded: 0 }
 
     logDiscardedOverflow(state, 'iron', ironGain.discarded)
     logDiscardedOverflow(state, 'chromium', chromiumGain.discarded)
