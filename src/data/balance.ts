@@ -71,6 +71,11 @@ export const WEAPON_BASE_STATS = {
   rifle: { damage: 8, cooldown: 10 },
 } as const
 
+export const WEAPON_DISPLAY_STATS = {
+  pistol: { accuracy: 82, range: 30, weight: 1.2 },
+  rifle: { accuracy: 74, range: 95, weight: 4.1 },
+} as const
+
 export function getUpgradeCost(key: keyof typeof UPGRADE_DEFS): ResourceCost {
   const def = UPGRADE_DEFS[key]
   if ('cost' in def) return def.cost
