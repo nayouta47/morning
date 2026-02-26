@@ -23,7 +23,7 @@ export function gatherWood(state: GameState): void {
   }
 
   state.actionProgress.gatherWood = ACTION_DURATION_MS.gatherWood
-  pushLog(state, `🪵 뗄감 줍기 시작 (${Math.round(ACTION_DURATION_MS.gatherWood / 1000)}초)`)
+  pushLog(state, '근처를 돌아다니며 불에 탈만한 것들을 긁어모은다.')
 }
 
 export function gatherScrap(state: GameState): void {
@@ -39,7 +39,7 @@ export function gatherScrap(state: GameState): void {
 
   const durationMs = getGatherScrapDurationMs(state)
   state.actionProgress.gatherScrap = durationMs
-  pushLog(state, `🗑️ 고물 줍기 시작 (${Math.round(durationMs / 1000)}초)`)
+  pushLog(state, '어딜 파도 용도를 모를 고철 쓰레기들이 끝없이 나온다.')
 }
 
 export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'scavenger'): void {
