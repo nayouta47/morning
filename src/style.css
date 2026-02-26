@@ -1099,8 +1099,11 @@ li {
   font-size: 28px;
   font-weight: 900;
   line-height: 1;
-  color: rgba(255, 128, 128, 0.96);
-  text-shadow: 0 0 6px rgba(28, 6, 6, 0.95);
+  color: rgba(255, 140, 140, 0.22);
+  -webkit-text-stroke: 1.4px rgba(255, 148, 148, 0.96);
+  text-shadow:
+    0 0 4px rgba(36, 8, 8, 0.75),
+    0 0 1px rgba(36, 8, 8, 0.9);
   pointer-events: none;
   z-index: 3;
 }
@@ -1109,9 +1112,9 @@ li {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(1.5px);
-  -webkit-backdrop-filter: blur(1.5px);
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(0.8px);
+  -webkit-backdrop-filter: blur(0.8px);
   z-index: -1;
 }
 
