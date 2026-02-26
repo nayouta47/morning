@@ -1,6 +1,7 @@
 import type { GameState } from '../../core/state.ts'
 import { renderActiveBody, renderExplorationMap } from './exploration/activeView.ts'
 import { getSyntheticFoodButtonState, renderLoadoutBody } from './exploration/loadoutView.ts'
+import { renderCompactLogPanel } from './logPanel.ts'
 
 function renderExplorationBody(state: GameState, now = Date.now()): string {
   const isActive = state.exploration.mode === 'active'
@@ -16,7 +17,7 @@ function getExplorationBodySignature(state: GameState): string {
 }
 
 export function renderExplorationPanel(state: GameState, now = Date.now()): string {
-  return `<section class="panel exploration ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${getExplorationBodySignature(state)}"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, now)}</div></section>`
+  return `<section class="exploration-tab ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${getExplorationBodySignature(state)}"><div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel exploration"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, now)}</div></section></div></section>`
 }
 
 export { renderExplorationMap }

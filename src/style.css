@@ -357,21 +357,51 @@ h1 {
   grid-column: 1 / -1;
 }
 
-.content-layout--with-logs {
-  display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-}
-
 .content-panels {
   min-width: 0;
 }
 
+.tab-top-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.tab-top-row > .resources,
+.tab-top-row > .logs,
+.tab-top-row > .exploration {
+  grid-column: auto;
+}
+
 .logs {
-  align-self: start;
-  max-height: 360px;
+  align-self: stretch;
+}
+
+.logs--compact {
+  padding: 10px;
+}
+
+.logs--compact h2 {
+  margin-bottom: 6px;
+}
+
+.logs--compact ul {
+  margin: 0;
+  padding-left: 16px;
+  max-height: 340px;
   overflow: auto;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.logs--compact li + li {
+  margin-top: 2px;
+}
+
+.exploration-tab {
+  grid-column: 1 / -1;
 }
 
 button {
@@ -1593,8 +1623,13 @@ li {
   .module-grid,
   .resources-split,
   .resources-owned,
-  .warehouse-grid {
+  .warehouse-grid,
+  .tab-top-row {
     grid-template-columns: 1fr;
+  }
+
+  .tab-top-row > .logs {
+    order: 2;
   }
 
   .equipment-group {
