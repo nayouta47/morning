@@ -3,7 +3,7 @@ import type { ResourceCost } from './resources.ts'
 export const COST_SCALE = 1.15
 
 export const ACTION_DURATION_MS = {
-  gatherWood: 30000,
+  gatherWood: 5000,
   gatherScrap: 35000,
 } as const
 
