@@ -1,4 +1,5 @@
 import type { GameState, MinerProcessKey, SmeltingProcessKey } from '../../core/state.ts'
+import type { ResourceId } from '../../data/resources.ts'
 import type { Handlers } from '../types.ts'
 
 export function bindBaseInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers): void {
@@ -11,6 +12,28 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
 
   app.querySelectorAll<HTMLButtonElement>('button[data-clear-log]').forEach((button) => {
     button.addEventListener('click', handlers.onClearLog)
+  })
+
+  app.addEventListener('mousedown', (event) => {
+    if (event.button !== 1) return
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-grid [data-resource-row][data-resource-id]')
+    if (!resourceRow) return
+    event.preventDefault()
+  })
+
+  app.addEventListener('auxclick', (event) => {
+    if (event.button !== 1) return
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-grid [data-resource-row][data-resource-id]')
+    if (!resourceRow) return
+
+    event.preventDefault()
+    const resourceId = resourceRow.getAttribute('data-resource-id') as ResourceId | null
+    if (!resourceId || !(resourceId in state.resources)) return
+    handlers.onCheatGrantResource(resourceId)
   })
 
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)

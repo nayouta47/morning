@@ -59,6 +59,7 @@ export type Handlers = {
   onDeleteData: () => void
   onClearLog: () => void
   onCheatGrantCodexChip: (moduleType: ModuleType) => void
+  onCheatGrantResource: (resourceId: ResourceId) => void
   onConfirmRobotName: (name: string) => void
 }
 

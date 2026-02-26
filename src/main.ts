@@ -33,6 +33,7 @@ import {
 import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
 import { validateCompanionName } from './core/companion.ts'
+import { addResourceWithCap, getResourceStorageCap } from './core/resourceCaps.ts'
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
@@ -52,6 +53,7 @@ let autosaveTimer: number | null = null
 let simulationLastTickAt = Date.now()
 let appMounted = false
 let isHardResetting = false
+let lastStructureSignature = ''
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
   const duration = key === 'gatherScrap' ? getGatherScrapDurationMs(state) : ACTION_DURATION_MS[key]
@@ -102,8 +104,34 @@ function runSimulation(now = Date.now()): void {
   simulationLastTickAt = now
 }
 
+function getStructureSignature(): string {
+  const unlockSig = [
+    state.unlocks.scrapAction,
+    state.unlocks.lumberMill,
+    state.unlocks.miner,
+    state.unlocks.droneController,
+    state.unlocks.electricFurnace,
+  ].map((value) => (value ? '1' : '0')).join('')
+
+  const buildingSig = [
+    state.buildings.lumberMill,
+    state.buildings.miner,
+    state.buildings.lab,
+    state.buildings.droneController,
+    state.buildings.electricFurnace,
+    state.buildings.laikaRepair,
+  ].join(':')
+
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}`
+}
+
 function redraw(nowOverride?: number): void {
   const now = nowOverride ?? Date.now()
+  const structureSignature = getStructureSignature()
+
+  if (appMounted && structureSignature !== lastStructureSignature) {
+    appMounted = false
+  }
 
   const actionUI = {
     gatherWood: toActionView('gatherWood', false, now),
@@ -239,6 +267,11 @@ function redraw(nowOverride?: number): void {
         onCheatGrantCodexChip: (moduleType) => {
           syncState()
           state.modules[moduleType] += 1
+          redraw()
+        },
+        onCheatGrantResource: (resourceId) => {
+          syncState()
+          addResourceWithCap(state.resources, resourceId, 100, getResourceStorageCap(state))
           redraw()
         },
         onConfirmRobotName: (name) => {
@@ -382,10 +415,12 @@ function redraw(nowOverride?: number): void {
       now,
     )
     appMounted = true
+    lastStructureSignature = structureSignature
     return
   }
 
   patchAnimatedUI(state, actionUI, now)
+  lastStructureSignature = structureSignature
 }
 
 function frameLoop(): void {

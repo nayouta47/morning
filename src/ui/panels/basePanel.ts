@@ -231,7 +231,7 @@ function formatBaseResourceValue(resource: keyof GameState['resources'], amount:
 }
 
 function renderResourceRow(resource: keyof GameState['resources'], id: string, value: string): string {
-  return `<p>${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
+  return `<p class="resource-row" data-resource-row="true" data-resource-id="${resource}">${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
 }
 
 function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
