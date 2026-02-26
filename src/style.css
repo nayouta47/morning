@@ -353,8 +353,25 @@ h1 {
   margin: 0;
 }
 
-.logs {
+.content-layout {
   grid-column: 1 / -1;
+}
+
+.content-layout--with-logs {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.content-panels {
+  min-width: 0;
+}
+
+.logs {
+  align-self: start;
+  max-height: 360px;
+  overflow: auto;
 }
 
 button {
