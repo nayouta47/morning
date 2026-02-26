@@ -100,12 +100,12 @@ export function renderAssemblyPanel(state: GameState): string {
 
   return `<section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
       <h2>무기 조립</h2>
-      <section class="module-inventory module-inventory-top" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section>
+      <section class="weapon-list weapon-list-top" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></section>
       <div class="assembly-grid">
-        <aside class="assembly-left" aria-label="무기 인벤토리 및 현재 스펙"><section class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></section><div id="weapon-stat-text" class="weapon-stat-area">${stats ? renderWeaponStatCards(stats) : '<p class="hint">무기를 선택하세요.</p>'}</div></aside>
         <div class="weapon-board-wrap"><div class="weapon-board-header"><h3>선택 무기 슬롯 (5x10)</h3><button id="copy-selected-weapon-slot-state" class="chip-state-copy-btn" type="button" ${selected ? '' : 'disabled'}>슬롯 상태 복사</button></div><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
+        <aside id="weapon-stat-text" class="weapon-stat-area" aria-label="선택 무기 현재 스펙">${stats ? renderWeaponStatCards(stats) : '<p class="hint">무기를 선택하세요.</p>'}</aside>
       </div>
-      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section></div>
+      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
     </section>`
 }
 

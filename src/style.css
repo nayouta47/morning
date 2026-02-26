@@ -844,14 +844,9 @@ li {
 }
 .assembly-grid {
   display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
   gap: 10px;
-}
-
-.assembly-left {
-  display: grid;
-  gap: 10px;
-  align-content: start;
+  align-items: start;
 }
 
 .weapon-list,
@@ -864,7 +859,7 @@ li {
   background: #121212;
 }
 
-.module-inventory-top {
+.weapon-list-top {
   margin-bottom: 10px;
 }
 
