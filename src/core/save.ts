@@ -9,6 +9,8 @@ import { inferModuleTypeFromAlias } from '../data/modules.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT, normalizeBackpackEntries } from './explorationBackpack.ts'
 
 const SAVE_KEY = 'morning-save-v4'
+const LEGACY_SAVE_KEYS = Array.from({ length: 10 }, (_, index) => `morning-save-v${index + 1}`)
+const BASE_SAVE_KEY = 'morning-save'
 const AUTOSAVE_MS = 5000
 
 function clampProgress(value: unknown): number {
@@ -429,7 +431,19 @@ export function loadGame(): GameState | null {
 }
 
 export function clearGameSave(): void {
-  localStorage.removeItem(SAVE_KEY)
+  const keysToRemove = new Set<string>([SAVE_KEY, BASE_SAVE_KEY, ...LEGACY_SAVE_KEYS])
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index)
+    if (!key) continue
+    if (key === BASE_SAVE_KEY || /^morning-save-v\d+$/.test(key)) {
+      keysToRemove.add(key)
+    }
+  }
+
+  keysToRemove.forEach((key) => {
+    localStorage.removeItem(key)
+  })
 }
 
 export function startAutosave(getState: () => GameState): number {

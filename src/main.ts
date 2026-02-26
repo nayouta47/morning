@@ -224,7 +224,11 @@ function redraw(nowOverride?: number): void {
           }
 
           clearGameSave()
-          window.location.reload()
+          try {
+            window.location.replace(window.location.href)
+          } catch {
+            window.location.reload()
+          }
         },
         onCheatGrantCodexChip: (moduleType) => {
           syncState()
