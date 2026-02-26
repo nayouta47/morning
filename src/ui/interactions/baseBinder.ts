@@ -18,7 +18,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     if (event.button !== 1) return
     const target = event.target
     if (!(target instanceof Element)) return
-    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-grid [data-resource-row][data-resource-id]')
+    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-column[aria-label="자원"] [data-resource-row][data-resource-id]')
     if (!resourceRow) return
     event.preventDefault()
   })
@@ -27,7 +27,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     if (event.button !== 1) return
     const target = event.target
     if (!(target instanceof Element)) return
-    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-grid [data-resource-row][data-resource-id]')
+    const resourceRow = target.closest<HTMLElement>('#panel-base .warehouse-column[aria-label="자원"] [data-resource-row][data-resource-id]')
     if (!resourceRow) return
 
     event.preventDefault()
