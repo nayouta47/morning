@@ -17,7 +17,7 @@ function renderExplorationBody(state: GameState, recoverGuideRobot: ActionGaugeV
     return '<div class="exploration-gate"><p class="hint">사전 조건을 진행 중입니다.</p></div>'
   }
   if (state.buildings.laikaRepair <= 0) {
-    return '<div class="exploration-gate"><p class="hint">탐험 잠금: 거점에서 안내견 로봇 수리를 완료하세요.</p></div>'
+    return '<div class="exploration-gate"><p class="hint">이곳은 어둡고 복잡하며, 건설자에 의해 끊임없이 구조가 변화한다. 도움 없이 먼 곳에 가는 것은 자살행위이다.</p></div>'
   }
   return renderLoadoutBody(state, recoverGuideRobot)
 }
