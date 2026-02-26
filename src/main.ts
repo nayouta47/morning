@@ -31,6 +31,7 @@ import {
 } from './core/actions.ts'
 import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
+import { validateCompanionName } from './core/companion.ts'
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
@@ -219,6 +220,19 @@ function redraw(nowOverride?: number): void {
         onCheatGrantCodexChip: (moduleType) => {
           syncState()
           state.modules[moduleType] += 1
+          redraw()
+        },
+        onConfirmRobotName: (name) => {
+          const result = validateCompanionName(name)
+          if (!result.valid) {
+            appendLog(state, '이름은 1~12자이며 공백만 입력할 수 없다.')
+            redraw()
+            return
+          }
+          state.robotName = result.normalized
+          state.needsRobotNaming = false
+          appendLog(state, `안내견 로봇의 이름이 ${result.normalized}(으)로 정해졌다.`)
+          appMounted = false
           redraw()
         },
         onStartExploration: () => {
@@ -420,6 +434,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 document.addEventListener('keydown', (event) => {
   if (event.repeat || isTypingTarget(event.target)) return
+  if (state.needsRobotNaming) return
 
   const isCodexRevealHotkey = event.key.toLowerCase() === 'p'
   if (isCodexRevealHotkey) {

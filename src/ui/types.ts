@@ -57,6 +57,7 @@ export type Handlers = {
   onCheatAccelerateBaseTime: () => void
   onDeleteData: () => void
   onCheatGrantCodexChip: (moduleType: ModuleType) => void
+  onConfirmRobotName: (name: string) => void
 }
 
 export type ActionUI = {

@@ -29,4 +29,18 @@ export function bindUIInteractions(app: HTMLDivElement, state: GameState, handle
   bindAssemblyInteractions(app, state, handlers, (intent) => dispatchInteractionIntent(handlers, intent))
   bindExplorationInteractions(app, state, handlers)
   bindCodexInteractions(app, state, handlers)
+
+  const nameInput = app.querySelector<HTMLInputElement>('#robot-name-input')
+  const confirmButton = app.querySelector<HTMLButtonElement>('#robot-name-confirm')
+  const submit = () => {
+    if (!nameInput) return
+    handlers.onConfirmRobotName(nameInput.value)
+  }
+  confirmButton?.addEventListener('click', submit)
+  nameInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      submit()
+    }
+  })
 }

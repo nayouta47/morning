@@ -154,6 +154,8 @@ export type GameState = {
   enemyCodex: Record<EnemyId, EnemyCodexEntry>
   selectedModuleCraftTier: ModuleCraftTier
   moduleCraftTierInProgress: ModuleCraftTier | null
+  robotName: string | null
+  needsRobotNaming: boolean
 }
 
 export const initialState: GameState = {
@@ -290,4 +292,6 @@ export const initialState: GameState = {
   ) as Record<EnemyId, EnemyCodexEntry>,
   selectedModuleCraftTier: 1,
   moduleCraftTierInProgress: null,
+  robotName: null,
+  needsRobotNaming: false,
 }

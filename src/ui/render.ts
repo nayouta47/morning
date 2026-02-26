@@ -2,6 +2,7 @@ import type { GameState } from '../core/state.ts'
 import { getBuildingCost } from '../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward } from '../core/rewards.ts'
 import { getResourceStorageCap } from '../core/resourceCaps.ts'
+import { getCompanionName } from '../core/companion.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
@@ -15,6 +16,13 @@ import { patchExplorationBody, renderExplorationMap, renderExplorationPanel } fr
 import { patchCodexPanel, renderCodexPanel } from './panels/codexPanel.ts'
 
 export type { ActionUI } from './types.ts'
+
+
+function renderRobotNamingModal(state: GameState): string {
+  if (!state.needsRobotNaming) return ''
+  const current = state.robotName ?? ''
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="안내견 로봇 이름 설정"><div class="modal-card"><h2>안내견 로봇 이름 정하기</h2><p class="hint">이름은 1~12자, 공백만은 불가합니다.</p><input id="robot-name-input" type="text" maxlength="12" value="${current}" autocomplete="off" /><button id="robot-name-confirm" type="button">확인</button></div></div>`
+}
 
 function patchTabs(app: ParentNode, state: GameState): void {
   const baseTab = app.querySelector<HTMLButtonElement>('#tab-base')
@@ -112,6 +120,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   const workbenchCost = getBuildingCost(state, 'workbench')
   const labCost = getBuildingCost(state, 'lab')
   const laikaRepairCost = getBuildingCost(state, 'laikaRepair')
+  const companionName = getCompanionName(state)
   const droneControllerCost = getBuildingCost(state, 'droneController')
 
   const buyLumber = app.querySelector<HTMLButtonElement>('#buy-lumber')
@@ -134,8 +143,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
     app,
     '#buy-laika-repair-label',
     laikaRepairInstalled
-      ? `${getBuildingLabel('laikaRepair')} (설치 완료)`
-      : `${getBuildingLabel('laikaRepair')} (${formatCost(laikaRepairCost)})`,
+      ? `${companionName} 수리 (설치 완료)`
+      : `${companionName} 수리 (${formatCost(laikaRepairCost)})`,
   )
 
   const buyWorkbench = app.querySelector<HTMLButtonElement>('#buy-workbench')
@@ -198,7 +207,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const explorationUnlocked = state.buildings.laikaRepair >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
-  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section>${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}<section class="panel logs"><h2>로그</h2><ul id="log-list" data-signature="${state.log.length}:${state.log[state.log.length - 1] ?? ''}">${[...state.log].reverse().map((line) => `<li>${line}</li>`).join('')}</ul></section></main>`
+  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${explorationUnlocked ? '' : 'disabled'}>${explorationUnlocked ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section>${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}<section class="panel logs"><h2>로그</h2><ul id="log-list" data-signature="${state.log.length}:${state.log[state.log.length - 1] ?? ''}">${[...state.log].reverse().map((line) => `<li>${line}</li>`).join('')}</ul></section></main>${renderRobotNamingModal(state)}`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')

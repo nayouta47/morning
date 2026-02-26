@@ -12,6 +12,7 @@ import { pushLog } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
+import { getCompanionName } from '../companion.ts'
 import {
   addResourceToBackpack,
   getBackpackResourceAmount,
@@ -75,7 +76,7 @@ function endExplorationToLoadout(state: GameState): void {
 
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
   if (state.buildings.laikaRepair <= 0) {
-    pushLog(state, '🐶 라이카 수리를 완료해야 탐험을 시작할 수 있다.')
+    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 탐험을 시작할 수 있다.`)
     return false
   }
 
@@ -104,7 +105,7 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.combat = null
   revealExplorationTilesInRadius(state)
   state.activeTab = 'exploration'
-  pushLog(state, '탐험 시작. 칠흑 속에서 숨소리만 들린다.')
+  pushLog(state, `${getCompanionName(state)}와 함께 탐험 시작. 칠흑 속에서 숨소리만 들린다.`)
   return true
 }
 

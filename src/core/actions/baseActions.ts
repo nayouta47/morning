@@ -6,6 +6,7 @@ import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { pushLog } from './logging.ts'
 import { getGatherScrapDurationMs } from '../rewards.ts'
+import { getCompanionName } from '../companion.ts'
 
 type UpgradeKey = keyof typeof UPGRADE_DEFS
 
@@ -102,6 +103,10 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
   }
 
   pushLog(state, `${getBuildingLabel(key)} 설치 (${state.buildings[key]})`)
+  if (key === 'laikaRepair') {
+    state.needsRobotNaming = true
+    pushLog(state, '안내견 로봇 이름을 정해 주세요.')
+  }
   applyUnlocks(state)
 }
 
@@ -229,7 +234,7 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     return
   }
   if (tab === 'exploration' && state.buildings.laikaRepair <= 0) {
-    pushLog(state, '🐶 라이카 수리를 완료해야 탐험 탭을 사용할 수 있다.')
+    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 탐험 탭을 사용할 수 있다.`)
     return
   }
   if (tab === 'codex' && state.buildings.lab <= 0) {

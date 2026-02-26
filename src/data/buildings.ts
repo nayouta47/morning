@@ -34,7 +34,7 @@ export const BUILDING_DEFS = {
   },
   laikaRepair: {
     id: 'laikaRepair',
-    label: '🐶 라이카 수리',
+    label: '안내견 로봇 수리',
     unlockRequirements: [] as Requirement[],
     baseCost: { chromium: 1, scrap: 100 } as ResourceCost,
     effectsText: '탐험 탭 해금',

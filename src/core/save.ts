@@ -42,6 +42,8 @@ type LoadedSave = Partial<GameState> & {
   codexRevealAll?: unknown
   selectedModuleCraftTier?: unknown
   moduleCraftTierInProgress?: unknown
+  robotName?: unknown
+  needsRobotNaming?: unknown
 }
 
 function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
@@ -281,6 +283,9 @@ function normalizeState(raw: unknown): GameState | null {
     base.moduleCraftTierInProgress = base.selectedModuleCraftTier
   }
 
+  base.robotName = typeof loaded.robotName === 'string' ? loaded.robotName.trim().slice(0, 12) : null
+  base.needsRobotNaming = Boolean(loaded.needsRobotNaming)
+
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
@@ -366,6 +371,10 @@ function normalizeState(raw: unknown): GameState | null {
 
   normalizeExplorationState(base, loaded)
 
+  if (base.buildings.laikaRepair >= 1 && !base.robotName) {
+    base.needsRobotNaming = true
+  }
+
   if (base.exploration.mode !== 'active') {
     base.exploration.phase = 'moving'
     base.exploration.hp = base.exploration.maxHp
@@ -393,6 +402,7 @@ function normalizeState(raw: unknown): GameState | null {
       base.exploration.combat = null
       base.exploration.carriedWeaponId = null
     }
+    base.needsRobotNaming = false
   } else if (base.exploration.mode === 'active') {
     base.activeTab = 'exploration'
   }
