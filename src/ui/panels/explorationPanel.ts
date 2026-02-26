@@ -1,13 +1,25 @@
 import type { GameState } from '../../core/state.ts'
 import { renderActiveBody, renderExplorationMap } from './exploration/activeView.ts'
 import { getSyntheticFoodButtonState, renderLoadoutBody } from './exploration/loadoutView.ts'
+import { renderGaugeButton } from './basePanel.ts'
 import type { ActionGaugeView } from '../types.ts'
 import { renderCompactLogPanel } from './logPanel.ts'
 
+function renderExplorationPrecondition(state: GameState, recoverGuideRobot: ActionGaugeView): string {
+  if (state.isGuideRobotRecovered) return ''
+  return `<section class="panel exploration-precondition" aria-label="탐험 사전 조건"><h2>사전 조건</h2><p class="hint">탐험을 시작하려면 먼저 파괴된 안내견을 회수하세요.</p>${renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot)}</section>`
+}
+
 function renderExplorationBody(state: GameState, recoverGuideRobot: ActionGaugeView, now = Date.now()): string {
   const isActive = state.exploration.mode === 'active'
-  if (!isActive) return renderLoadoutBody(state, recoverGuideRobot)
-  return renderActiveBody(state, now)
+  if (isActive) return renderActiveBody(state, now)
+  if (!state.isGuideRobotRecovered) {
+    return '<div class="exploration-gate"><p class="hint">사전 조건을 진행 중입니다.</p></div>'
+  }
+  if (state.buildings.laikaRepair <= 0) {
+    return '<div class="exploration-gate"><p class="hint">탐험 잠금: 거점에서 안내견 로봇 수리를 완료하세요.</p></div>'
+  }
+  return renderLoadoutBody(state, recoverGuideRobot)
 }
 
 function getExplorationBodySignature(state: GameState): string {
@@ -18,7 +30,7 @@ function getExplorationBodySignature(state: GameState): string {
 }
 
 export function renderExplorationPanel(state: GameState, recoverGuideRobot: ActionGaugeView, now = Date.now()): string {
-  return `<section class="exploration-tab ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${getExplorationBodySignature(state)}"><div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel exploration"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, recoverGuideRobot, now)}</div></section></div></section>`
+  return `<section class="exploration-tab ${state.activeTab === 'exploration' ? '' : 'hidden'}" id="panel-exploration" data-mode="${getExplorationBodySignature(state)}"><div class="exploration-precondition-wrap">${renderExplorationPrecondition(state, recoverGuideRobot)}</div><div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel exploration"><h2>탐험</h2><div id="exploration-body">${renderExplorationBody(state, recoverGuideRobot, now)}</div></section></div></section>`
 }
 
 export { renderExplorationMap }

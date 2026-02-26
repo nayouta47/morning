@@ -1,7 +1,6 @@
 import type { GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight, getBackpackResourceAmount } from '../../../core/explorationBackpack.ts'
 import { RESOURCE_DEFS, type ResourceId } from '../../../data/resources.ts'
-import { renderGaugeButton } from '../basePanel.ts'
 import type { ActionGaugeView } from '../../types.ts'
 
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
@@ -46,21 +45,16 @@ function renderLoadoutItemRows(state: GameState): string {
   }).join('')
 }
 
-function getBlockReason(state: GameState, canStart: boolean): string {
-  if (!state.isGuideRobotRecovered) return '출발 조건: 먼저 파괴된 안내견을 주워 오세요.'
-  if (state.buildings.laikaRepair <= 0) return '출발 조건: 안내견 로봇 수리를 완료하세요.'
+function getBlockReason(canStart: boolean): string {
   if (!canStart) return '출발 조건: 무기 1개를 선택하세요.'
   return ''
 }
 
-export function renderLoadoutBody(state: GameState, recoverGuideRobot: ActionGaugeView): string {
+export function renderLoadoutBody(state: GameState, _recoverGuideRobot: ActionGaugeView): string {
   const canStart = Boolean(state.selectedWeaponId) && state.isGuideRobotRecovered && state.buildings.laikaRepair > 0
-  const blockReason = getBlockReason(state, Boolean(state.selectedWeaponId))
-  const preconditionSection = state.isGuideRobotRecovered
-    ? '<p class="hint">파괴된 안내견 회수 완료.</p>'
-    : renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot)
+  const blockReason = getBlockReason(Boolean(state.selectedWeaponId))
 
-  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p><section class="action-group" aria-label="탐험 사전 조건"><h3 class="subheading">사전 조건</h3>${preconditionSection}</section>${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section>${renderBackpackHeatmap(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason ? `<p class="hint">${blockReason}</p>` : ''}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
+  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p>${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section>${renderBackpackHeatmap(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason ? `<p class="hint">${blockReason}</p>` : ''}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
 }
 
 export function getSyntheticFoodButtonState(state: GameState): { amount: number; disabled: boolean } {

@@ -427,6 +427,19 @@ h1 {
   grid-column: 1 / -1;
 }
 
+.exploration-precondition-wrap {
+  margin-bottom: 10px;
+}
+
+.exploration-precondition {
+  max-width: 520px;
+}
+
+.exploration-precondition h2,
+.exploration-precondition .hint {
+  text-align: left;
+}
+
 button {
   width: 100%;
   border: 1px solid #47423a;
@@ -613,13 +626,19 @@ li {
 }
 
 .exploration-active,
-.exploration-loadout {
+.exploration-loadout,
+.exploration-gate {
   width: 100%;
   max-width: 900px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+}
+
+.exploration-gate {
+  min-height: 120px;
+  justify-content: center;
 }
 
 .exploration-combat-box {
