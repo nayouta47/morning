@@ -156,10 +156,28 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   if (buyWorkbench) buyWorkbench.disabled = workbenchInstalled
   setText(app, '#buy-workbench-label', workbenchInstalled ? `${getBuildingLabel('workbench')} (설치 완료)` : `${getBuildingLabel('workbench')} 설치 (${formatCost(workbenchCost)})`)
 
+  const buyElectricFurnace = app.querySelector<HTMLButtonElement>('#buy-electric-furnace')
+  if (buyElectricFurnace) buyElectricFurnace.disabled = !state.unlocks.electricFurnace
+  setText(
+    app,
+    '#buy-electric-furnace-label',
+    state.unlocks.electricFurnace ? `전기로 설치 (${formatCost(getBuildingCost(state, 'electricFurnace'))})` : '전기로 설치 (잠김)',
+  )
+  setHidden(app, '#electric-furnace-hint', state.unlocks.electricFurnace)
+
   const buyDroneController = app.querySelector<HTMLButtonElement>('#buy-drone-controller')
   const droneControllerInstalled = state.buildings.droneController >= 1
-  if (buyDroneController) buyDroneController.disabled = droneControllerInstalled
-  setText(app, '#buy-drone-controller-label', droneControllerInstalled ? `${getBuildingLabel('droneController')} (설치 완료)` : `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`)
+  if (buyDroneController) buyDroneController.disabled = droneControllerInstalled || !state.unlocks.droneController
+  setText(
+    app,
+    '#buy-drone-controller-label',
+    droneControllerInstalled
+      ? `${getBuildingLabel('droneController')} (설치 완료)`
+      : state.unlocks.droneController
+        ? `${getBuildingLabel('droneController')} 설치 (${formatCost(droneControllerCost)})`
+        : '드론 컨트롤러 설치 (잠김)',
+  )
+  setHidden(app, '#drone-controller-hint', state.unlocks.droneController)
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const scavengerGauge = getBuildingGaugeView(state, 'scavenger', now)

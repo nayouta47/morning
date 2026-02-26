@@ -77,12 +77,12 @@ export function buyBuilding(state: GameState, key: BuildingId): void {
     (key === 'lumberMill' ||
       key === 'workbench' ||
       key === 'lab' ||
-      key === 'laikaRepair' ||
-      key === 'droneController' ||
-      key === 'electricFurnace') &&
+      key === 'laikaRepair') &&
     !state.unlocks.lumberMill
   )
     return
+
+  if ((key === 'droneController' || key === 'electricFurnace') && state.buildings.lab <= 0) return
 
   const singletonBuildings: BuildingId[] = ['lab', 'laikaRepair', 'workbench', 'droneController']
   if (singletonBuildings.includes(key) && state.buildings[key] >= 1) return

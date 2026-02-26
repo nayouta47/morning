@@ -168,6 +168,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.unlocks.scrapAction = Boolean(loaded.unlocks.scrapAction)
     base.unlocks.lumberMill = Boolean(loaded.unlocks.lumberMill)
     base.unlocks.miner = Boolean(loaded.unlocks.miner)
+    base.unlocks.electricFurnace = Boolean(loaded.unlocks.electricFurnace)
+    base.unlocks.droneController = Boolean(loaded.unlocks.droneController)
   }
 
   const effectiveStorageCap = getResourceStorageCap(base)

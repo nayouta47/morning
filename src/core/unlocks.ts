@@ -25,6 +25,16 @@ const UNLOCK_DEFS: UnlockDef[] = [
     requirements: [],
     log: '건물 해금: 분쇄기',
   },
+  {
+    id: 'electricFurnace',
+    requirements: [{ kind: 'building', building: 'lab', count: 1 }],
+    log: '건물 해금: 전기로',
+  },
+  {
+    id: 'droneController',
+    requirements: [{ kind: 'building', building: 'lab', count: 1 }],
+    log: '건물 해금: 드론 컨트롤러',
+  },
 ]
 
 export function evaluateUnlocks(state: GameState): string[] {

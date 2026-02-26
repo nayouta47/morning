@@ -23,6 +23,8 @@ export type Unlocks = {
   scrapAction: boolean
   lumberMill: boolean
   miner: boolean
+  electricFurnace: boolean
+  droneController: boolean
 }
 
 export type ProductionProgress = {
@@ -201,6 +203,8 @@ export const initialState: GameState = {
     scrapAction: false,
     lumberMill: true,
     miner: true,
+    electricFurnace: false,
+    droneController: false,
   },
   productionProgress: {
     lumberMill: 0,
