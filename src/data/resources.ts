@@ -7,7 +7,7 @@ export const RESOURCE_DEFS = {
   cobalt: { id: 'cobalt', label: '코발트', emoji: '🟣', order: 6, precision: 1 },
   shovel: { id: 'shovel', label: '삽', emoji: '🪏', order: 7, precision: 0 },
   scavengerDrone: { id: 'scavengerDrone', label: '스캐빈저 드론', emoji: '🛸', order: 8, precision: 0 },
-  syntheticFood: { id: 'syntheticFood', label: '인조식량', emoji: '🍱', order: 9, precision: 0 },
+  syntheticFood: { id: 'syntheticFood', label: '무작위맛 통조림', emoji: '🍱', order: 9, precision: 0 },
   smallHealPotion: { id: 'smallHealPotion', label: '회복약(소)', emoji: '🧪', order: 10, precision: 0 },
   siliconMass: { id: 'siliconMass', label: '규소 덩어리', emoji: '🧱', order: 11, precision: 0 },
   carbon: { id: 'carbon', label: '탄소', emoji: '⚫', order: 12, precision: 0 },

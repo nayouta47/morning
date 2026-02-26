@@ -37,5 +37,5 @@ export function patchExplorationBody(app: ParentNode, state: GameState): void {
   if (!syntheticFoodButton) return
   const { amount, disabled } = getSyntheticFoodButtonState(state)
   syntheticFoodButton.disabled = disabled
-  syntheticFoodButton.textContent = `인조식량 사용 (${amount})`
+  syntheticFoodButton.textContent = `무작위맛 통조림 사용 (${amount})`
 }

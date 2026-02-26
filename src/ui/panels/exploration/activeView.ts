@@ -27,7 +27,7 @@ export function renderExplorationMap(state: GameState): string {
 
 function renderSyntheticFoodControl(state: GameState): string {
   const { amount, disabled } = getSyntheticFoodButtonState(state)
-  return `<button id="exploration-use-synthetic-food" type="button" ${disabled ? 'disabled' : ''}>인조식량 사용 (${amount})</button>`
+  return `<button id="exploration-use-synthetic-food" type="button" ${disabled ? 'disabled' : ''}>무작위맛 통조림 사용 (${amount})</button>`
 }
 
 export function renderActiveBody(state: GameState, now = Date.now()): string {

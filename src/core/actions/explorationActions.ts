@@ -163,7 +163,7 @@ export function useSyntheticFood(state: GameState): boolean {
 
   const backpackAmount = getBackpackResourceAmount(state.exploration.backpack, 'syntheticFood')
   if (backpackAmount <= 0) {
-    pushLog(state, '인조식량이 없다.')
+    pushLog(state, '무작위맛 통조림이 없다.')
     return false
   }
 
@@ -171,7 +171,7 @@ export function useSyntheticFood(state: GameState): boolean {
   const prevHp = state.exploration.hp
   state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + 5)
   const healed = state.exploration.hp - prevHp
-  pushLog(state, `인조식량 사용. HP +${healed}`)
+  pushLog(state, `무작위맛 통조림 사용. HP +${healed}`)
   return true
 }
 

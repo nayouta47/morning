@@ -263,7 +263,7 @@ export function renderCraftActions(state: GameState): string {
       ${renderGaugeButton('craft-rifle', `${CRAFT_RECIPE_DEFS.rifle.label} 제작 (${formatCost(getCraftRecipeCost(state, 'rifle'))})`, '소총 제작', rifleView)}
       ${renderModuleCraftControl(state, moduleView)}
       ${renderGaugeButton('craft-scavenger-drone', `${getResourceDisplay('scavengerDrone')} 제작 (${formatCost(getCraftRecipeCost(state, 'scavengerDrone'))})`, '🛸 스캐빈저 드론 제작', scavengerDroneView)}
-      ${renderGaugeButton('craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`, '인조식량 제작', syntheticFoodView)}
+      ${renderGaugeButton('craft-synthetic-food', `${getResourceDisplay('syntheticFood')} 제작 (${formatCost(getCraftRecipeCost(state, 'syntheticFood'))})`, '무작위맛 통조림 제작', syntheticFoodView)}
       ${renderGaugeButton('craft-small-heal-potion', `${getResourceDisplay('smallHealPotion')} 제작 (${formatCost(getCraftRecipeCost(state, 'smallHealPotion'))})`, '회복약(소) 제작', smallHealPotionView)}
     </div>`
 }

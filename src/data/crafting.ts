@@ -57,7 +57,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
 
   syntheticFood: {
     id: 'syntheticFood',
-    label: '인조식량',
+    label: '무작위맛 통조림',
     durationMs: WEAPON_CRAFT_DURATION_MS,
     costs: { carbon: 1 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
