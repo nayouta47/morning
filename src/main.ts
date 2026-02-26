@@ -47,8 +47,10 @@ type ActionKey = 'gatherWood' | 'gatherScrap'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
+let autosaveTimer: number | null = null
 let simulationLastTickAt = Date.now()
 let appMounted = false
+let isHardResetting = false
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
   const duration = key === 'gatherScrap' ? getGatherScrapDurationMs(state) : ACTION_DURATION_MS[key]
@@ -214,6 +216,13 @@ function redraw(nowOverride?: number): void {
         onDeleteData: () => {
           const confirmed = window.confirm('저장된 게임 데이터를 삭제하고 초기 상태로 되돌릴까요?')
           if (!confirmed) return
+
+          isHardResetting = true
+          if (autosaveTimer != null) {
+            window.clearInterval(autosaveTimer)
+            autosaveTimer = null
+          }
+
           clearGameSave()
           window.location.reload()
         },
@@ -404,7 +413,7 @@ simulationLastTickAt = Date.now()
 redraw()
 startFrameLoop()
 
-startAutosave(() => state)
+autosaveTimer = startAutosave(() => state)
 
 const moveByKey: Record<string, { dx: number; dy: number }> = {
   w: { dx: 0, dy: -1 },
@@ -470,6 +479,7 @@ document.addEventListener('visibilitychange', () => {
 })
 
 window.addEventListener('beforeunload', () => {
+  if (isHardResetting) return
   syncState()
   saveGame(state)
 })
