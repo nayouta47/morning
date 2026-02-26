@@ -9,6 +9,7 @@ export const ENCOUNTER_FIGHT_CHANCE = 0.2
 export const DEFAULT_ENEMY_ID: EnemyId = 'siliconLifeform'
 export const FLEE_GAUGE_DURATION_MS = 2500
 export const FLEE_SUCCESS_CHANCE = 0.3
+export const ENEMY_LOOT_AMOUNT_MULTIPLIER = 10
 
 export function selectEncounterEnemyId(biomeId?: BiomeId): EnemyId {
   const pool = biomeId ? BIOME_DEFS[biomeId]?.encounterPool ?? [] : []
@@ -67,7 +68,8 @@ export function createEnemyLootTable(enemyId: EnemyId): LootEntry[] {
 
   enemy.drops.forEach((drop) => {
     if (Math.random() > drop.chance) return
-    const amount = drop.minAmount + Math.floor(Math.random() * (drop.maxAmount - drop.minAmount + 1))
+    const baseAmount = drop.minAmount + Math.floor(Math.random() * (drop.maxAmount - drop.minAmount + 1))
+    const amount = baseAmount * ENEMY_LOOT_AMOUNT_MULTIPLIER
     if (amount > 0) rows.push({ resource: drop.resource, amount })
   })
 
