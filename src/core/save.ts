@@ -6,17 +6,10 @@ import { clampResourceAmount, clampResourcesToStorageCaps, getResourceStorageCap
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { inferModuleTypeFromAlias } from '../data/modules.ts'
+import { EXPLORATION_BACKPACK_MAX_WEIGHT, normalizeBackpackEntries } from './explorationBackpack.ts'
 
 const SAVE_KEY = 'morning-save-v4'
 const AUTOSAVE_MS = 5000
-const EXPLORATION_BACKPACK_CAPACITY = 10
-const EXPLORATION_BACKPACK_STACK_MAX = 16
-const EXPLORATION_BACKPACK_HEALING_STACK_MAX = 1
-const EXPLORATION_BACKPACK_SINGLE_STACK_RESOURCES = new Set(['smallHealPotion', 'syntheticFood'])
-
-function getExplorationBackpackStackMax(resourceId: string): number {
-  return EXPLORATION_BACKPACK_SINGLE_STACK_RESOURCES.has(resourceId) ? EXPLORATION_BACKPACK_HEALING_STACK_MAX : EXPLORATION_BACKPACK_STACK_MAX
-}
 
 function clampProgress(value: unknown): number {
   if (typeof value !== 'number' || Number.isNaN(value)) return 0
@@ -29,30 +22,6 @@ function toWeaponType(value: unknown): WeaponType {
 
 function inferModuleType(value: unknown): ModuleType | null {
   return inferModuleTypeFromAlias(value)
-}
-
-function normalizeBackpackEntries(entries: unknown): GameState['exploration']['backpack'] {
-  if (!Array.isArray(entries)) return []
-
-  const normalized: GameState['exploration']['backpack'] = []
-  for (const entry of entries) {
-    if (!entry || typeof entry !== 'object') continue
-    const resource = (entry as { resource?: unknown }).resource
-    const amount = (entry as { amount?: unknown }).amount
-    if (typeof resource !== 'string' || typeof amount !== 'number' || amount <= 0) continue
-
-    let remaining = Math.floor(amount)
-    const stackMax = getExplorationBackpackStackMax(resource)
-    while (remaining > 0 && normalized.length < EXPLORATION_BACKPACK_CAPACITY) {
-      const add = Math.min(stackMax, remaining)
-      normalized.push({ resource: resource as keyof GameState['resources'], amount: add })
-      remaining -= add
-    }
-
-    if (normalized.length >= EXPLORATION_BACKPACK_CAPACITY) break
-  }
-
-  return normalized
 }
 
 type LoadedSave = Partial<GameState> & {
@@ -87,8 +56,8 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
   base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
   base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
   base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
-  base.exploration.backpackCapacity = EXPLORATION_BACKPACK_CAPACITY
-  base.exploration.backpack = normalizeBackpackEntries(exploration.backpack)
+  base.exploration.backpackMaxWeight = EXPLORATION_BACKPACK_MAX_WEIGHT
+  base.exploration.backpack = normalizeBackpackEntries(exploration.backpack, base.exploration.backpackMaxWeight)
   if (Array.isArray(exploration.pendingLoot)) {
     base.exploration.pendingLoot = exploration.pendingLoot
       .filter((entry): entry is { resource: keyof GameState['resources']; amount: number } =>

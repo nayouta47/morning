@@ -1,30 +1,24 @@
 import type { GameState } from '../../../core/state.ts'
+import { getBackpackUsedWeight, getBackpackResourceAmount } from '../../../core/explorationBackpack.ts'
 import { RESOURCE_DEFS, type ResourceId } from '../../../data/resources.ts'
 
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
 
-function getBackpackResourceAmount(state: GameState, resourceId: ResourceId): number {
-  return state.exploration.backpack.reduce((sum, entry) => (entry.resource === resourceId ? sum + entry.amount : sum), 0)
-}
+function renderBackpackHeatmap(state: GameState): string {
+  const usedWeight = getBackpackUsedWeight(state.exploration.backpack)
+  const maxWeight = state.exploration.backpackMaxWeight
+  const ratio = maxWeight > 0 ? Math.min(1, usedWeight / maxWeight) : 0
 
-function renderBackpackGrid(state: GameState): string {
-  const usedSlots = state.exploration.backpack.length
-  const slots: string[] = []
+  const cells = [...state.exploration.backpack]
+    .sort((a, b) => b.amount - a.amount)
+    .map((entry) => {
+      const def = RESOURCE_DEFS[entry.resource]
+      const share = usedWeight > 0 ? (entry.amount / usedWeight) * 100 : 0
+      return `<li class="backpack-heat-cell" style="--weight-share:${Math.max(1, entry.amount)}" aria-label="${def.label} ${entry.amount}개, 비중 ${share.toFixed(1)}%"><span class="backpack-heat-icon" aria-hidden="true">${def.emoji}</span><span class="backpack-heat-label">${def.label}</span><span class="backpack-heat-amount">${entry.amount}</span></li>`
+    })
+    .join('')
 
-  for (let i = 0; i < state.exploration.backpackCapacity; i += 1) {
-    const entry = state.exploration.backpack[i]
-    if (!entry) {
-      slots.push('<li class="backpack-slot empty" aria-label="빈 슬롯"></li>')
-      continue
-    }
-
-    const def = RESOURCE_DEFS[entry.resource]
-    slots.push(
-      `<li class="backpack-slot filled" aria-label="${def.label} x${entry.amount}"><span class="backpack-icon" aria-hidden="true">${def.emoji}</span><span class="backpack-count">${entry.amount}</span></li>`,
-    )
-  }
-
-  return `<section class="exploration-backpack" aria-label="탐험 배낭"><p class="hint">배낭 슬롯 <strong>${usedSlots}/${state.exploration.backpackCapacity}</strong> · 회복 아이템 스택 1 / 기타 16</p><ul class="backpack-grid">${slots.join('')}</ul></section>`
+  return `<section class="exploration-backpack" aria-label="탐험 배낭"><p class="hint">가방 무게 <strong>${usedWeight} / ${maxWeight}</strong></p><div class="backpack-weight-bar" role="meter" aria-valuemin="0" aria-valuemax="${maxWeight}" aria-valuenow="${usedWeight}" aria-label="가방 무게 ${usedWeight}/${maxWeight}"><span class="backpack-weight-fill" style="width:${Math.floor(ratio * 100)}%"></span></div><ul class="backpack-heatmap">${cells || '<li class="backpack-heat-empty">비어 있음</li>'}</ul></section>`
 }
 
 function renderLoadoutWeaponSelection(state: GameState): string {
@@ -44,7 +38,7 @@ function renderLoadoutWeaponSelection(state: GameState): string {
 function renderLoadoutItemRows(state: GameState): string {
   return LOADOUT_ITEM_IDS.map((resourceId) => {
     const def = RESOURCE_DEFS[resourceId]
-    const carried = getBackpackResourceAmount(state, resourceId)
+    const carried = getBackpackResourceAmount(state.exploration.backpack, resourceId)
     const owned = state.resources[resourceId]
     return `<li class="exploration-loadout-item"><span>${def.emoji} ${def.label}</span><span class="hint">적재 ${carried} · 보유 ${owned}</span><div class="exploration-loadout-item-controls"><button type="button" data-loadout-remove="${resourceId}" ${carried <= 0 ? 'disabled' : ''}>-</button><button type="button" data-loadout-add="${resourceId}" ${owned <= 0 ? 'disabled' : ''}>+</button></div></li>`
   }).join('')
@@ -54,17 +48,17 @@ export function renderLoadoutBody(state: GameState): string {
   const canStart = Boolean(state.selectedWeaponId)
   const blockReason = canStart ? '' : '<p class="hint">출발 조건: 무기 1개를 선택하세요.</p>'
 
-  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p>${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section>${renderBackpackGrid(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
+  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p>${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section>${renderBackpackHeatmap(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
 }
 
 export function getSyntheticFoodButtonState(state: GameState): { amount: number; disabled: boolean } {
-  const amount = getBackpackResourceAmount(state, 'syntheticFood')
+  const amount = getBackpackResourceAmount(state.exploration.backpack, 'syntheticFood')
   return {
     amount,
     disabled: state.exploration.phase === 'combat' || amount <= 0 || state.exploration.hp >= state.exploration.maxHp,
   }
 }
 
-export function renderExplorationBackpackGrid(state: GameState): string {
-  return renderBackpackGrid(state)
+export function renderExplorationBackpackHeatmap(state: GameState): string {
+  return renderBackpackHeatmap(state)
 }

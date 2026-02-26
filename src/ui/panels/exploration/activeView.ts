@@ -1,8 +1,9 @@
 import type { GameState } from '../../../core/state.ts'
+import { getBackpackUsedWeight } from '../../../core/explorationBackpack.ts'
 import { getBiomeAt } from '../../../data/maps/index.ts'
 import { getResourceDisplay, type ResourceId } from '../../../data/resources.ts'
 import { renderExplorationCombatOverlay } from '../combatOverlay.ts'
-import { getSyntheticFoodButtonState, renderExplorationBackpackGrid } from './loadoutView.ts'
+import { getSyntheticFoodButtonState, renderExplorationBackpackHeatmap } from './loadoutView.ts'
 
 export function renderExplorationMap(state: GameState): string {
   const size = state.exploration.mapSize
@@ -30,9 +31,9 @@ function renderSyntheticFoodControl(state: GameState): string {
 }
 
 export function renderActiveBody(state: GameState, now = Date.now()): string {
-  const backpackUsed = state.exploration.backpack.length
+  const backpackWeight = getBackpackUsedWeight(state.exploration.backpack)
   const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
-  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 배낭 슬롯 <strong>${backpackUsed}/${state.exploration.backpackCapacity}</strong></p>${renderSyntheticFoodControl(state)}${renderExplorationBackpackGrid(state)}`
+  const baseInfo = `<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong> · 위치 <strong id="exploration-pos">(${state.exploration.position.x}, ${state.exploration.position.y})</strong> · 지형 <strong>${biome.name}</strong> · 가방 무게 <strong>${backpackWeight}/${state.exploration.backpackMaxWeight}</strong></p>${renderSyntheticFoodControl(state)}${renderExplorationBackpackHeatmap(state)}`
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`

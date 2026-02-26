@@ -12,65 +12,23 @@ import { pushLog } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 import { SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
+import {
+  addResourceToBackpack,
+  getBackpackResourceAmount,
+  removeResourceFromBackpack,
+} from '../explorationBackpack.ts'
 
-const BACKPACK_STACK_MAX = 16
-const BACKPACK_HEALING_STACK_MAX = 1
-const BACKPACK_SINGLE_STACK_RESOURCES = new Set<ResourceId>(['smallHealPotion', 'syntheticFood'])
 const LOADOUT_ALLOWED_RESOURCES = new Set<ResourceId>(['syntheticFood', 'smallHealPotion'])
 
-function getBackpackStackMax(resourceId: ResourceId): number {
-  return BACKPACK_SINGLE_STACK_RESOURCES.has(resourceId) ? BACKPACK_HEALING_STACK_MAX : BACKPACK_STACK_MAX
-}
-
-function getBackpackUsedSlots(state: GameState): number {
-  return state.exploration.backpack.length
-}
-
-function getBackpackResourceAmount(state: GameState, resourceId: ResourceId): number {
-  return state.exploration.backpack.reduce((sum, entry) => (entry.resource === resourceId ? sum + entry.amount : sum), 0)
-}
-
 function addLootToBackpack(state: GameState, resourceId: ResourceId, amount: number): number {
-  let remaining = Math.max(0, Math.floor(amount))
-  if (remaining <= 0) return 0
-
-  const stackMax = getBackpackStackMax(resourceId)
-
-  state.exploration.backpack.forEach((entry) => {
-    if (entry.resource !== resourceId || remaining <= 0) return
-    const space = Math.max(0, stackMax - entry.amount)
-    if (space <= 0) return
-    const add = Math.min(space, remaining)
-    entry.amount += add
-    remaining -= add
-  })
-
-  while (remaining > 0 && getBackpackUsedSlots(state) < state.exploration.backpackCapacity) {
-    const add = Math.min(stackMax, remaining)
-    state.exploration.backpack.push({ resource: resourceId, amount: add })
-    remaining -= add
-  }
-
-  return remaining
+  const result = addResourceToBackpack(state.exploration.backpack, resourceId, amount, state.exploration.backpackMaxWeight)
+  return result.remaining
 }
 
 function removeBackpackResource(state: GameState, resourceId: ResourceId, amount: number): boolean {
-  let remaining = Math.max(0, Math.floor(amount))
-  if (remaining <= 0) return true
-
-  for (let i = state.exploration.backpack.length - 1; i >= 0 && remaining > 0; i -= 1) {
-    const entry = state.exploration.backpack[i]
-    if (!entry || entry.resource !== resourceId) continue
-
-    const removed = Math.min(entry.amount, remaining)
-    entry.amount -= removed
-    remaining -= removed
-    if (entry.amount <= 0) {
-      state.exploration.backpack.splice(i, 1)
-    }
-  }
-
-  return remaining === 0
+  const removeAmount = Math.max(0, Math.floor(amount))
+  if (removeAmount <= 0) return true
+  return removeResourceFromBackpack(state.exploration.backpack, resourceId, removeAmount) === removeAmount
 }
 
 function positionKey(x: number, y: number): string {
@@ -205,7 +163,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
 export function useSyntheticFood(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase === 'combat') return false
 
-  const backpackAmount = getBackpackResourceAmount(state, 'syntheticFood')
+  const backpackAmount = getBackpackResourceAmount(state.exploration.backpack, 'syntheticFood')
   if (backpackAmount <= 0) {
     pushLog(state, '인조식량이 없다.')
     return false
@@ -224,7 +182,7 @@ export function useSmallHealPotion(state: GameState): boolean {
   const combat = state.exploration.combat
   if (!combat) return false
 
-  const backpackAmount = getBackpackResourceAmount(state, 'smallHealPotion')
+  const backpackAmount = getBackpackResourceAmount(state.exploration.backpack, 'smallHealPotion')
   if (backpackAmount <= 0) {
     pushLog(state, '회복약(소)이 없다.')
     return false
@@ -269,7 +227,7 @@ export function takeExplorationLoot(state: GameState, resourceId: ResourceId): b
   const collected = before - remaining
 
   if (collected <= 0) {
-    pushLog(state, '배낭에 빈 칸이 없다.')
+    pushLog(state, '가방이 너무 무겁다.')
     return false
   }
 
@@ -340,7 +298,7 @@ export function addLoadoutResource(state: GameState, resourceId: ResourceId, amo
   const remaining = addLootToBackpack(state, resourceId, addAmount)
   const loaded = addAmount - remaining
   if (loaded <= 0) {
-    pushLog(state, '배낭에 빈 칸이 없다.')
+    pushLog(state, '가방이 너무 무겁다.')
     return false
   }
 

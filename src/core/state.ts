@@ -2,6 +2,7 @@ import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
+import { EXPLORATION_BACKPACK_MAX_WEIGHT } from './explorationBackpack.ts'
 
 export type Resources = Record<ResourceId, number>
 
@@ -96,7 +97,7 @@ export type ExplorationState = {
   steps: number
   visited: string[]
   movesSinceEncounter: number
-  backpackCapacity: number
+  backpackMaxWeight: number
   backpack: LootEntry[]
   pendingLoot: LootEntry[]
   carriedWeaponId: string | null
@@ -278,7 +279,7 @@ export const initialState: GameState = {
     steps: 0,
     visited: [`${EXPLORATION_MAP.start.x},${EXPLORATION_MAP.start.y}`],
     movesSinceEncounter: 0,
-    backpackCapacity: 10,
+    backpackMaxWeight: EXPLORATION_BACKPACK_MAX_WEIGHT,
     backpack: [],
     pendingLoot: [],
     carriedWeaponId: null,
