@@ -50,13 +50,23 @@ function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: P
   return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">전력 ${currentUsage}${deltaLabel} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}</div>`
 }
 
-function renderWeaponStatText(stats: ReturnType<typeof getWeaponStats>): string {
+function renderWeaponStatCards(stats: ReturnType<typeof getWeaponStats>): string {
   const finalClass = stats.power.overloaded ? 'final-stat subdued' : 'final-stat'
   const overloadLine = stats.power.overloaded
-    ? '<span class="stat-warning">⚠ 과부하 상태: 모듈 효과 차단</span>'
-    : '<span class="stat-warning normal">모듈 효과 정상 적용 중</span>'
+    ? '<p class="stat-warning">⚠ 과부하 상태: 모듈 효과 차단</p>'
+    : '<p class="stat-warning normal">모듈 효과 정상 적용 중</p>'
 
-  return `${overloadLine}<span class="base-stat">기본 공격력 ${stats.baseDamage} / 기본 쿨다운 ${stats.baseCooldownSec.toFixed(1)}s</span> | <span class="${finalClass}">최종 공격력 ${stats.finalDamage} / 최종 쿨다운 ${stats.finalCooldownSec.toFixed(1)}s (가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste})</span>`
+  return `<article class="weapon-stat-card" aria-label="선택 무기 현재 스펙">
+      <h3>현재 무기 스펙</h3>
+      ${overloadLine}
+      <div class="weapon-stat-card-grid">
+        <div class="weapon-stat-item"><span class="weapon-stat-label">기본 공격력</span><strong class="weapon-stat-value">${stats.baseDamage}</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">최종 공격력</span><strong class="weapon-stat-value ${finalClass}">${stats.finalDamage}</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">기본 쿨다운</span><strong class="weapon-stat-value">${stats.baseCooldownSec.toFixed(1)}s</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">최종 쿨다운</span><strong class="weapon-stat-value ${finalClass}">${stats.finalCooldownSec.toFixed(1)}s</strong></div>
+      </div>
+      <p class="weapon-stat-haste">가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste}</p>
+    </article>`
 }
 
 function isModuleTypeEquipped(state: GameState, moduleType: ModuleType): boolean {
@@ -90,11 +100,12 @@ export function renderAssemblyPanel(state: GameState): string {
 
   return `<section class="panel assembly ${state.activeTab === 'assembly' ? '' : 'hidden'}" id="panel-assembly">
       <h2>무기 조립</h2>
+      <section class="module-inventory module-inventory-top" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section>
       <div class="assembly-grid">
-        <aside class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></aside>
-        <div class="weapon-board-wrap"><div class="weapon-board-header"><h3>선택 무기 슬롯 (5x10)</h3><button id="copy-selected-weapon-slot-state" class="chip-state-copy-btn" type="button" ${selected ? '' : 'disabled'}>슬롯 상태 복사</button></div><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint" id="weapon-stat-text">${stats ? renderWeaponStatText(stats) : '무기를 선택하세요.'}</p><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
+        <aside class="assembly-left" aria-label="무기 인벤토리 및 현재 스펙"><section class="weapon-list" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></section><div id="weapon-stat-text" class="weapon-stat-area">${stats ? renderWeaponStatCards(stats) : '<p class="hint">무기를 선택하세요.</p>'}</div></aside>
+        <div class="weapon-board-wrap"><div class="weapon-board-header"><h3>선택 무기 슬롯 (5x10)</h3><button id="copy-selected-weapon-slot-state" class="chip-state-copy-btn" type="button" ${selected ? '' : 'disabled'}>슬롯 상태 복사</button></div><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
       </div>
-      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>
+      <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section></div>
     </section>`
 }
 
@@ -193,7 +204,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
 
   board.dataset.signature = sig
   const statText = app.querySelector<HTMLElement>('#weapon-stat-text')
-  if (statText) statText.innerHTML = renderWeaponStatText(stats)
+  if (statText) statText.innerHTML = renderWeaponStatCards(stats)
 
   const summary = app.querySelector<HTMLElement>('#power-summary-bar')
   if (summary) summary.innerHTML = renderPowerSummary(stats, powerPreview)
