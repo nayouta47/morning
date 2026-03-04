@@ -86,3 +86,7 @@ npm run build
 - 각 적은 `tier: 1 | 2 | 3` 개념 티어를 가짐
 - 실제 조우 후보는 글로벌 랜덤이 아니라 **현재 타일의 바이옴 encounterPool**에서 가중치로 선택됨
 - 바이옴 풀이 비면 기존 글로벌 랜덤 폴백을 사용함
+
+## Webhook/Commit Test
+- test branch: test/webhook-check
+- timestamp: 2026-03-04T15:07:00+09:00
