@@ -3,7 +3,7 @@ import type { ResourceId } from '../../data/resources.ts'
 import type { Handlers } from '../types.ts'
 import { getEventTargetElement } from '../view.ts'
 
-export function bindExplorationInteractions(app: HTMLDivElement, _state: GameState, handlers: Handlers): void {
+export function bindExplorationInteractions(app: HTMLDivElement, _state: GameState, handlers: Handlers, signal?: AbortSignal): void {
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
     if (!target) return
@@ -57,5 +57,5 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
       const resourceId = loadoutRemoveButton.getAttribute('data-loadout-remove') as ResourceId | null
       if (resourceId) handlers.onLoadoutRemoveItem(resourceId)
     }
-  })
+  }, { signal })
 }

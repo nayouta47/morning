@@ -4,7 +4,7 @@ import type { Handlers } from '../types.ts'
 import { getEventTargetElement } from '../view.ts'
 import { patchCodexPanel, setCodexSubTab } from '../panels/codexPanel.ts'
 
-export function bindCodexInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers): void {
+export function bindCodexInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers, signal?: AbortSignal): void {
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
     if (!target) return
@@ -38,13 +38,13 @@ export function bindCodexInteractions(app: HTMLDivElement, state: GameState, han
       const details = detailsId ? codexList.querySelector<HTMLElement>(`#${detailsId}`) : null
       details?.classList.remove('hidden')
     }
-  })
+  }, { signal })
 
   app.addEventListener('mousedown', (event) => {
     if (event.button !== 1) return
     const codexChipCard = getEventTargetElement(event.target)?.closest<HTMLElement>('#codex-chip-list [data-codex-chip-type]')
     if (codexChipCard) event.preventDefault()
-  })
+  }, { signal })
 
   app.addEventListener('auxclick', (event) => {
     if (event.button !== 1) return
@@ -59,5 +59,5 @@ export function bindCodexInteractions(app: HTMLDivElement, state: GameState, han
     if (moduleType && isModuleType(moduleType)) {
       handlers.onCheatGrantCodexChip(moduleType)
     }
-  })
+  }, { signal })
 }

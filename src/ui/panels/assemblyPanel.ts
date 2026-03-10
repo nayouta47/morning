@@ -33,7 +33,7 @@ function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: P
   const currentUsage = stats.power.usage
   const capacity = preview?.capacity ?? stats.power.capacity
   const overloaded = preview?.overloaded ?? stats.power.overloaded
-  const statusLabel = overloaded ? '과부하' : '정상'
+  const statusLabel = overloaded ? '⚠️ 과부하' : '✅ 정상'
 
   const delta = preview ? preview.usage - currentUsage : 0
   const deltaLabel = preview
@@ -48,7 +48,7 @@ function renderPowerSummary(stats: ReturnType<typeof getWeaponStats>, preview: P
     ? '<span class="power-warning-text">모듈 효과 차단</span>'
     : ''
 
-  return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">전력 ${currentUsage}${deltaLabel} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}</div>`
+  return `<div class="power-summary ${overloaded ? 'overload' : 'normal'}"><span class="power-summary-value">⚡ 전력 ${currentUsage}${deltaLabel} / ${capacity}</span><span class="power-summary-badge">${statusLabel}</span>${overloadHint}</div>`
 }
 
 function renderWeaponStatCards(stats: ReturnType<typeof getWeaponStats>, weapon: WeaponInstance): string {
@@ -107,7 +107,7 @@ export function renderAssemblyPanel(state: GameState): string {
       <h2>무기 조립</h2>
       <section class="weapon-list weapon-list-top" aria-label="무기 인벤토리"><h3>무기 인벤토리</h3><div id="weapon-list-items" data-signature=""></div></section>
       <div class="assembly-grid">
-        <div class="weapon-board-wrap"><div class="weapon-board-header"><h3>선택 무기 슬롯 (5x10)</h3><button id="copy-selected-weapon-slot-state" class="chip-state-copy-btn" type="button" ${selected ? '' : 'disabled'}>슬롯 상태 복사</button></div><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
+        <div class="weapon-board-wrap"><div class="weapon-board-header"><h3>선택 무기 슬롯 (5x10)</h3><button id="copy-selected-weapon-slot-state" class="chip-state-copy-btn" type="button" aria-label="슬롯 상태 복사" ${selected ? '' : 'disabled'}>📝</button></div><div id="weapon-board" class="weapon-board" role="grid" aria-label="무기 슬롯 보드"></div><div id="power-summary-bar">${stats ? renderPowerSummary(stats, powerPreview) : '<div class="power-summary"><span class="power-summary-value">무기를 선택하세요.</span></div>'}</div><p class="hint">장착: 모듈을 드래그 후 활성 슬롯에 드롭 / 해제: 우클릭(대체: 휠 클릭), 보유 모듈 패널로 드래그</p><div id="active-signature" data-sig="${[...active].join(',')}" hidden></div></div>
         <aside id="weapon-stat-text" class="weapon-stat-area" aria-label="선택 무기 현재 스펙">${stats && selected ? renderWeaponStatCards(stats, selected) : '<p class="hint">무기를 선택하세요.</p>'}</aside>
       </div>
       <div class="module-grid"><section class="module-detail" aria-label="모듈 상세 정보"><h3>모듈 상세</h3><div id="module-detail-content">${renderModuleDetail(selectedModuleType)}</div></section><section class="module-inventory" aria-label="모듈 인벤토리"><h3>보유 모듈</h3><div id="module-list-items" class="module-list" data-signature=""></div></section></div>

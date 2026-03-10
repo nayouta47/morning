@@ -24,11 +24,11 @@ export function dispatchInteractionIntent(handlers: Handlers, intent: Interactio
   }
 }
 
-export function bindUIInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers): void {
-  bindBaseInteractions(app, state, handlers)
-  bindAssemblyInteractions(app, state, handlers, (intent) => dispatchInteractionIntent(handlers, intent))
-  bindExplorationInteractions(app, state, handlers)
-  bindCodexInteractions(app, state, handlers)
+export function bindUIInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers, signal?: AbortSignal): void {
+  bindBaseInteractions(app, state, handlers, signal)
+  bindAssemblyInteractions(app, state, handlers, (intent) => dispatchInteractionIntent(handlers, intent), signal)
+  bindExplorationInteractions(app, state, handlers, signal)
+  bindCodexInteractions(app, state, handlers, signal)
 
   const nameInput = app.querySelector<HTMLInputElement>('#robot-name-input')
   const confirmButton = app.querySelector<HTMLButtonElement>('#robot-name-confirm')

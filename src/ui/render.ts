@@ -222,6 +222,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchLogs(app, state)
 }
 
+let _bindController: AbortController | null = null
+
 export function renderApp(state: GameState, handlers: Handlers, actionUI: ActionUI, now = Date.now()): void {
   const app = document.querySelector<HTMLDivElement>('#app')
   if (!app) return
@@ -235,7 +237,9 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')
 
-  bindUIInteractions(app, state, handlers)
+  _bindController?.abort()
+  _bindController = new AbortController()
+  bindUIInteractions(app, state, handlers, _bindController.signal)
 
   if (focusedId) {
     const nextFocus = app.querySelector<HTMLElement>(`#${focusedId}`)

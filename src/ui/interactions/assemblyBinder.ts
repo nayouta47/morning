@@ -18,6 +18,7 @@ export function bindAssemblyInteractions(
   state: GameState,
   _handlers: Handlers,
   dispatchIntent: (intent: InteractionIntent) => void,
+  signal?: AbortSignal,
 ): void {
   let activeModuleDrag: ModuleDragState | null = null
 
@@ -96,7 +97,7 @@ export function bindAssemblyInteractions(
 
   app.addEventListener('pointerdown', (event) => {
     selectModuleForDetail(event.target)
-  })
+  }, { signal })
 
   app.addEventListener('click', (event) => {
     const target = getEventTargetElement(event.target)
@@ -119,7 +120,7 @@ export function bindAssemblyInteractions(
     const button = target.closest<HTMLElement>('[data-weapon-id]')
     const id = button?.getAttribute('data-weapon-id')
     if (id) dispatchIntent({ type: 'weapon/select', weaponId: id })
-  })
+  }, { signal })
 
   app.addEventListener('dragstart', (event) => {
     resetModuleDragState()
@@ -166,7 +167,7 @@ export function bindAssemblyInteractions(
     event.dataTransfer.setData('text/module-type', moduleType)
     event.dataTransfer.setData('text/module-slot-index', String(slotIndex))
     event.dataTransfer.setData('text/module-weapon-id', state.selectedWeaponId)
-  })
+  }, { signal })
 
   app.addEventListener('dragover', (event) => {
     if (!event.dataTransfer) return
@@ -215,7 +216,7 @@ export function bindAssemblyInteractions(
       event.preventDefault()
       event.dataTransfer.dropEffect = 'move'
     }
-  })
+  }, { signal })
 
   app.addEventListener('drop', (event) => {
     clearAssemblyPreview()
@@ -273,18 +274,18 @@ export function bindAssemblyInteractions(
     }
 
     activeModuleDrag = null
-  })
+  }, { signal })
 
   app.addEventListener('dragleave', (event) => {
     if (!activeModuleDrag) return
     const nextTarget = event.relatedTarget
     if (nextTarget instanceof Node && app.contains(nextTarget)) return
     clearAssemblyPreview()
-  })
+  }, { signal })
 
   app.addEventListener('dragend', () => {
     resetModuleDragState()
-  })
+  }, { signal })
 
   app.addEventListener('contextmenu', (event) => {
     event.preventDefault()
@@ -294,7 +295,7 @@ export function bindAssemblyInteractions(
 
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (Number.isFinite(slotIndex)) dispatchIntent({ type: 'module/unequip', slotIndex })
-  })
+  }, { signal })
 
   app.addEventListener('auxclick', (event) => {
     if (event.button !== 1) return
@@ -307,5 +308,5 @@ export function bindAssemblyInteractions(
     event.preventDefault()
     const slotIndex = Number(slot.getAttribute('data-slot-index'))
     if (Number.isFinite(slotIndex)) dispatchIntent({ type: 'module/unequip', slotIndex })
-  })
+  }, { signal })
 }

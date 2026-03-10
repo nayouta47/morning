@@ -979,12 +979,13 @@ li {
 .chip-state-copy-btn {
   border: 1px solid #334047;
   border-radius: 5px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   background: #0f1418;
   color: #a6bac5;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
+  margin-left: auto;
 }
 
 .chip-state-copy-btn:hover:not(:disabled) {
