@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>탐험 맵 에디터</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a1a1a; color: #ccc; font-family: monospace; display: flex; flex-direction: column; height: 100vh; }
+
+    #toolbar {
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+      background: #111; border-bottom: 1px solid #333; flex-wrap: wrap;
+    }
+    #toolbar h1 { font-size: 14px; color: #fff; margin-right: 8px; }
+
+    .biome-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border: 2px solid #444; border-radius: 4px;
+      background: #222; color: #ccc; cursor: pointer; font-size: 13px; font-family: monospace;
+    }
+    .biome-btn.active { border-color: #fff; color: #fff; }
+    .biome-swatch { width: 14px; height: 14px; border-radius: 2px; border: 1px solid #555; flex-shrink: 0; }
+
+    #toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    button.action-btn {
+      padding: 5px 12px; background: #2a3a2a; border: 1px solid #4a7a4a;
+      border-radius: 4px; color: #8fcf8f; cursor: pointer; font-size: 12px; font-family: monospace;
+    }
+    button.action-btn:hover { background: #354535; }
+    button.action-btn.danger { background: #3a2a2a; border-color: #7a4a4a; color: #cf8f8f; }
+    button.action-btn.danger:hover { background: #453535; }
+
+    #main { display: flex; flex: 1; overflow: hidden; }
+
+    #canvas-wrap {
+      flex: 1; overflow: auto; display: flex; align-items: flex-start;
+      justify-content: flex-start; padding: 16px;
+    }
+
+    #map-canvas { cursor: crosshair; image-rendering: pixelated; }
+
+    #sidebar {
+      width: 220px; background: #111; border-left: 1px solid #333;
+      padding: 12px; display: flex; flex-direction: column; gap: 10px;
+      overflow-y: auto;
+    }
+    #sidebar h2 { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+    #info-box { font-size: 12px; line-height: 1.7; color: #999; }
+    #info-box strong { color: #ddd; }
+    #start-controls { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+    #start-controls label { color: #999; }
+    #start-controls input { width: 100%; background: #222; border: 1px solid #444; color: #ccc; padding: 4px 6px; border-radius: 3px; font-family: monospace; }
+
+    #legend { display: flex; flex-direction: column; gap: 6px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .legend-swatch { width: 16px; height: 16px; border-radius: 2px; border: 1px solid #555; flex-shrink: 0; }
+
+    #status-bar {
+      padding: 4px 12px; background: #0d0d0d; border-top: 1px solid #2a2a2a;
+      font-size: 11px; color: #666;
+    }
+
+    #zoom-controls { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+    #zoom-controls button { padding: 2px 8px; background: #2a2a2a; border: 1px solid #444; color: #ccc; cursor: pointer; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>🗺️ 맵 에디터</h1>
+  <div id="biome-palette"></div>
+  <div id="toolbar-right">
+    <div id="zoom-controls">
+      <button onclick="setZoom(zoom - 2)">−</button>
+      <span id="zoom-label">16px</span>
+      <button onclick="setZoom(zoom + 2)">+</button>
+    </div>
+    <button class="action-btn" onclick="loadFile()">📂 JSON 불러오기</button>
+    <button class="action-btn" onclick="downloadJson()">💾 JSON 저장</button>
+    <input type="file" id="file-input" accept=".json" style="display:none" onchange="onFileSelected(event)">
+  </div>
+</div>
+
+<div id="main">
+  <div id="canvas-wrap">
+    <canvas id="map-canvas"></canvas>
+  </div>
+
+  <div id="sidebar">
+    <div>
+      <h2>정보</h2>
+      <div id="info-box">커서를 맵에 올려보세요.</div>
+    </div>
+    <div>
+      <h2>출발 지점</h2>
+      <div id="start-controls">
+        <label>X: <input type="number" id="start-x" min="0" oninput="onStartChange()"></label>
+        <label>Y: <input type="number" id="start-y" min="0" oninput="onStartChange()"></label>
+        <button class="action-btn" onclick="setStartFromCursor()" style="margin-top:2px">현재 커서 위치로 설정</button>
+      </div>
+    </div>
+    <div>
+      <h2>바이옴 범례</h2>
+      <div id="legend"></div>
+    </div>
+    <div>
+      <h2>도움말</h2>
+      <div style="font-size:11px; color:#666; line-height:1.6">
+        좌클릭/드래그: 페인트<br>
+        우클릭: 바이옴 선택<br>
+        Ctrl+Z: 실행 취소<br>
+        휠: 확대/축소
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="status-bar" id="status">준비</div>
+
+<script>
+// ── 바이옴 정의 ─────────────────────────────────────────────────────────────
+const BIOMES = [
+  { id: 'boneyard',    name: '백골 분지',    emoji: '⬜', color: '#d4d0c4' },
+  { id: 'sanctuary',  name: '안식지',        emoji: '🟫', color: '#8B6914' },
+  { id: 'scrapfield', name: '고철지대',      emoji: '🪨', color: '#666060' },
+  { id: 'glasswastes',name: '유리 황무지',   emoji: '🟦', color: '#3a6898' },
+]
+const BIOME_MAP = Object.fromEntries(BIOMES.map(b => [b.id, b]))
+const FALLBACK = BIOMES[0].id
+
+// ── 상태 ─────────────────────────────────────────────────────────────────────
+let mapData = null          // { id, name, size, start, tiles }
+let selectedBiome = BIOMES[0].id
+let zoom = 16               // px per tile
+let isPainting = false
+let cursorTile = null       // { x, y }
+let undoStack = []          // array of serialized tile snapshots
+let cursorSetForStart = null
+
+// ── 기본 맵 ──────────────────────────────────────────────────────────────────
+function makeDefaultMap() {
+  const size = 33
+  return {
+    id: 'default-wastes',
+    name: '폐허 외곽',
+    size,
+    start: { x: 16, y: 16 },
+    tiles: Array.from({ length: size }, () =>
+      Array.from({ length: size }, () => ({ biome: FALLBACK }))
+    )
+  }
+}
+
+// ── 캔버스 ────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('map-canvas')
+const ctx = canvas.getContext('2d')
+
+function resizeCanvas() {
+  if (!mapData) return
+  canvas.width  = mapData.size * zoom
+  canvas.height = mapData.size * zoom
+}
+
+function render() {
+  if (!mapData) return
+  const { size, tiles, start } = mapData
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const biomeId = tiles[y]?.[x]?.biome ?? FALLBACK
+      const biome = BIOME_MAP[biomeId] ?? BIOME_MAP[FALLBACK]
+      ctx.fillStyle = biome.color
+      ctx.fillRect(x * zoom, y * zoom, zoom, zoom)
+    }
+  }
+
+  // 그리드 (zoom >= 6)
+  if (zoom >= 6) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+    ctx.lineWidth = 0.5
+    for (let i = 0; i <= size; i++) {
+      ctx.beginPath(); ctx.moveTo(i * zoom, 0); ctx.lineTo(i * zoom, size * zoom); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(0, i * zoom); ctx.lineTo(size * zoom, i * zoom); ctx.stroke()
+    }
+  }
+
+  // 출발 지점
+  const sx = start.x, sy = start.y
+  ctx.fillStyle = 'rgba(255,255,100,0.9)'
+  const m = Math.max(2, zoom * 0.3)
+  ctx.fillRect(sx * zoom + zoom/2 - m/2, sy * zoom + zoom/2 - m/2, m, m)
+  if (zoom >= 10) {
+    ctx.fillStyle = '#000'
+    ctx.font = `${Math.floor(zoom * 0.55)}px monospace`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('🏠', sx * zoom + zoom / 2, sy * zoom + zoom / 2)
+  }
+
+  // 커서 하이라이트
+  if (cursorTile) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'
+    ctx.lineWidth = Math.max(1, zoom * 0.07)
+    ctx.strokeRect(cursorTile.x * zoom + 1, cursorTile.y * zoom + 1, zoom - 2, zoom - 2)
+  }
+}
+
+// ── 페인트 ────────────────────────────────────────────────────────────────────
+function tileFromEvent(e) {
+  const rect = canvas.getBoundingClientRect()
+  const x = Math.floor((e.clientX - rect.left) / zoom)
+  const y = Math.floor((e.clientY - rect.top) / zoom)
+  if (!mapData || x < 0 || y < 0 || x >= mapData.size || y >= mapData.size) return null
+  return { x, y }
+}
+
+function pushUndo() {
+  undoStack.push(mapData.tiles.map(row => row.map(t => ({ ...t }))))
+  if (undoStack.length > 50) undoStack.shift()
+}
+
+function paintTile(tile) {
+  if (!tile || !mapData) return
+  mapData.tiles[tile.y][tile.x] = { biome: selectedBiome }
+  render()
+}
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault()
+  const tile = tileFromEvent(e)
+  if (!tile) return
+  if (e.button === 2) {
+    // 우클릭 = 바이옴 선택
+    const biomeId = mapData.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
+    setSelectedBiome(biomeId)
+    return
+  }
+  pushUndo()
+  isPainting = true
+  paintTile(tile)
+})
+
+canvas.addEventListener('mousemove', e => {
+  const tile = tileFromEvent(e)
+  cursorTile = tile
+  cursorSetForStart = tile
+  if (tile) {
+    updateInfoBox(tile)
+  }
+  if (isPainting && tile) paintTile(tile)
+  else render()
+})
+
+canvas.addEventListener('mouseup', () => { isPainting = false })
+canvas.addEventListener('mouseleave', () => { isPainting = false; cursorTile = null; render() })
+canvas.addEventListener('contextmenu', e => e.preventDefault())
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault()
+  setZoom(zoom + (e.deltaY < 0 ? 2 : -2))
+}, { passive: false })
+
+// ── 실행 취소 ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault()
+    if (undoStack.length === 0) { setStatus('되돌릴 내용 없음'); return }
+    mapData.tiles = undoStack.pop()
+    render()
+    setStatus(`실행 취소 (남은 스택: ${undoStack.length})`)
+  }
+})
+
+// ── 줌 ───────────────────────────────────────────────────────────────────────
+function setZoom(z) {
+  zoom = Math.max(4, Math.min(40, z))
+  document.getElementById('zoom-label').textContent = zoom + 'px'
+  resizeCanvas()
+  render()
+}
+
+// ── 바이옴 선택 ───────────────────────────────────────────────────────────────
+function setSelectedBiome(id) {
+  selectedBiome = id
+  document.querySelectorAll('.biome-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.biome === id)
+  })
+}
+
+// ── 출발 지점 ─────────────────────────────────────────────────────────────────
+function onStartChange() {
+  if (!mapData) return
+  const x = parseInt(document.getElementById('start-x').value)
+  const y = parseInt(document.getElementById('start-y').value)
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return
+  mapData.start.x = Math.max(0, Math.min(mapData.size - 1, x))
+  mapData.start.y = Math.max(0, Math.min(mapData.size - 1, y))
+  render()
+}
+
+function setStartFromCursor() {
+  if (!cursorSetForStart || !mapData) { setStatus('커서를 맵 위로 이동하세요'); return }
+  mapData.start.x = cursorSetForStart.x
+  mapData.start.y = cursorSetForStart.y
+  document.getElementById('start-x').value = mapData.start.x
+  document.getElementById('start-y').value = mapData.start.y
+  render()
+  setStatus(`출발 지점 → (${mapData.start.x}, ${mapData.start.y})`)
+}
+
+function syncStartInputs() {
+  document.getElementById('start-x').value = mapData.start.x
+  document.getElementById('start-y').value = mapData.start.y
+}
+
+// ── 정보 박스 ─────────────────────────────────────────────────────────────────
+function updateInfoBox(tile) {
+  const biomeId = mapData?.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
+  const biome = BIOME_MAP[biomeId]
+  document.getElementById('info-box').innerHTML =
+    `<strong>위치</strong> (${tile.x}, ${tile.y})<br>` +
+    `<strong>바이옴</strong> ${biome.emoji} ${biome.name}<br>` +
+    `<strong>ID</strong> ${biomeId}`
+}
+
+// ── 상태바 ────────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = msg
+}
+
+// ── 파일 불러오기 / 저장 ──────────────────────────────────────────────────────
+function loadFile() {
+  document.getElementById('file-input').click()
+}
+
+function onFileSelected(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = ev => {
+    try {
+      const raw = JSON.parse(ev.target.result)
+      loadMapData(raw)
+      setStatus(`불러옴: ${file.name}`)
+    } catch(err) {
+      alert('JSON 파싱 오류: ' + err.message)
+    }
+  }
+  reader.readAsText(file)
+  e.target.value = ''
+}
+
+function loadMapData(raw) {
+  const size = Math.max(8, Number(raw.size) || 33)
+  const tiles = Array.from({ length: size }, (_, y) =>
+    Array.from({ length: size }, (_, x) => {
+      const b = raw.tiles?.[y]?.[x]?.biome
+      return { biome: (typeof b === 'string' && BIOME_MAP[b]) ? b : FALLBACK }
+    })
+  )
+  mapData = {
+    id: raw.id ?? 'default-wastes',
+    name: raw.name ?? '탐험 지역',
+    size,
+    start: {
+      x: Math.max(0, Math.min(size - 1, Number(raw.start?.x) || Math.floor(size / 2))),
+      y: Math.max(0, Math.min(size - 1, Number(raw.start?.y) || Math.floor(size / 2))),
+    },
+    tiles,
+  }
+  undoStack = []
+  resizeCanvas()
+  syncStartInputs()
+  render()
+}
+
+function toJson() {
+  if (!mapData) return ''
+  // tiles를 간결하게: 각 행을 한 줄로
+  const tilesJson = '[\n' + mapData.tiles.map(row =>
+    '    [' + row.map(t => `{"biome":"${t.biome}"}`).join(',') + ']'
+  ).join(',\n') + '\n  ]'
+
+  return JSON.stringify({
+    id: mapData.id,
+    name: mapData.name,
+    size: mapData.size,
+    start: mapData.start,
+    tiles: '__TILES__'
+  }, null, 2).replace('"__TILES__"', tilesJson)
+}
+
+function downloadJson() {
+  if (!mapData) return
+  const json = toJson()
+  const blob = new Blob([json], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'default-map.json'
+  a.click()
+  setStatus('저장 완료: default-map.json')
+}
+
+// ── UI 초기화 ─────────────────────────────────────────────────────────────────
+function initPalette() {
+  const palette = document.getElementById('biome-palette')
+  const legend  = document.getElementById('legend')
+  BIOMES.forEach(b => {
+    // 팔레트 버튼
+    const btn = document.createElement('button')
+    btn.className = 'biome-btn' + (b.id === selectedBiome ? ' active' : '')
+    btn.dataset.biome = b.id
+    btn.innerHTML = `<span class="biome-swatch" style="background:${b.color}"></span>${b.emoji} ${b.name}`
+    btn.addEventListener('click', () => setSelectedBiome(b.id))
+    palette.appendChild(btn)
+
+    // 범례
+    const item = document.createElement('div')
+    item.className = 'legend-item'
+    item.innerHTML = `<span class="legend-swatch" style="background:${b.color}"></span><span>${b.emoji} ${b.name}</span>`
+    legend.appendChild(item)
+  })
+}
+
+// ── 부트 ─────────────────────────────────────────────────────────────────────
+initPalette()
+
+// default-map.json 자동 로드 시도 (같은 서버에서 열렸을 때)
+fetch('../src/data/maps/default-map.json')
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(data => { loadMapData(data); setStatus('default-map.json 자동 로드 완료') })
+  .catch(() => {
+    loadMapData(makeDefaultMap())
+    setStatus('기본 맵 생성됨 — "JSON 불러오기"로 default-map.json을 직접 로드하세요')
+  })
+</script>
+</body>
+</html>

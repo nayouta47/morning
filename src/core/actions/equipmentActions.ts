@@ -53,6 +53,14 @@ export function moveEquippedModuleBetweenSlots(
 
   const targetModuleType = weapon.slots[toSlotIndex]
 
+  // Simulate the move and check that the destination slot remains active after the swap.
+  // This prevents, e.g., moving a slotUnlocker into a slot it was itself unlocking,
+  // which would leave the module inactive once the unlock source is gone.
+  const projectedSlots = [...weapon.slots]
+  projectedSlots[fromSlotIndex] = targetModuleType ?? null
+  projectedSlots[toSlotIndex] = sourceModuleType
+  if (!getEffectiveActiveWeaponSlots({ ...weapon, slots: projectedSlots }).has(toSlotIndex)) return false
+
   weapon.slots[fromSlotIndex] = null
   weapon.slots[toSlotIndex] = sourceModuleType
 

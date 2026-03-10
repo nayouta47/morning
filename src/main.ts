@@ -401,7 +401,8 @@ function redraw(nowOverride?: number): void {
         onMoveEquippedModule: (fromSlotIndex, toSlotIndex) => {
           if (!state.selectedWeaponId) return
           syncState()
-          moveEquippedModuleBetweenSlots(state, state.selectedWeaponId, fromSlotIndex, toSlotIndex)
+          const moved = moveEquippedModuleBetweenSlots(state, state.selectedWeaponId, fromSlotIndex, toSlotIndex)
+          if (!moved) appendLog(state, `⚠️ 이동 불가: 해당 슬롯은 이동 후 비활성화됩니다.`)
           redraw()
         },
         onUnequipModule: (slotIndex) => {

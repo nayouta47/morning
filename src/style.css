@@ -986,6 +986,9 @@ li {
   line-height: 1.2;
   white-space: nowrap;
   margin-left: auto;
+  align-self: center;
+  width: fit-content;
+  height: fit-content;
 }
 
 .chip-state-copy-btn:hover:not(:disabled) {
