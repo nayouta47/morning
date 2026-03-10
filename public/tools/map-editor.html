@@ -77,7 +77,9 @@
       <button onclick="setZoom(zoom + 2)">+</button>
     </div>
     <button class="action-btn" onclick="loadFile()">📂 JSON 불러오기</button>
-    <button class="action-btn" onclick="downloadJson()">💾 JSON 저장</button>
+    <button class="action-btn" onclick="saveJson()" id="save-btn">💾 JSON 저장</button>
+    <button class="action-btn" onclick="githubSave()" id="gh-save-btn" style="border-color:#6e40c9;color:#b388ff">☁️ GitHub 저장</button>
+    <button class="action-btn" onclick="showTokenDialog()" id="gh-token-btn" title="GitHub Token 설정">🔑</button>
     <input type="file" id="file-input" accept=".json" style="display:none" onchange="onFileSelected(event)">
   </div>
 </div>
@@ -137,6 +139,7 @@ let isPainting = false
 let cursorTile = null       // { x, y }
 let undoStack = []          // array of serialized tile snapshots
 let cursorSetForStart = null
+let fileHandle = null       // FileSystemFileHandle (File System Access API)
 
 // ── 기본 맵 ──────────────────────────────────────────────────────────────────
 function makeDefaultMap() {
@@ -331,18 +334,36 @@ function setStatus(msg) {
 }
 
 // ── 파일 불러오기 / 저장 ──────────────────────────────────────────────────────
-function loadFile() {
+async function loadFile() {
+  // File System Access API 지원 시 파일 핸들 획득
+  if (window.showOpenFilePicker) {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+      })
+      fileHandle = handle
+      const file = await handle.getFile()
+      const text = await file.text()
+      loadMapData(JSON.parse(text))
+      setStatus(`불러옴: ${file.name} (저장 시 같은 파일에 덮어씁니다)`)
+      document.getElementById('save-btn').textContent = `💾 ${file.name} 에 저장`
+      return
+    } catch(e) {
+      if (e.name === 'AbortError') return
+    }
+  }
+  // 폴백: 일반 input
   document.getElementById('file-input').click()
 }
 
 function onFileSelected(e) {
   const file = e.target.files[0]
   if (!file) return
+  fileHandle = null
   const reader = new FileReader()
   reader.onload = ev => {
     try {
-      const raw = JSON.parse(ev.target.result)
-      loadMapData(raw)
+      loadMapData(JSON.parse(ev.target.result))
       setStatus(`불러옴: ${file.name}`)
     } catch(err) {
       alert('JSON 파싱 오류: ' + err.message)
@@ -392,15 +413,97 @@ function toJson() {
   }, null, 2).replace('"__TILES__"', tilesJson)
 }
 
-function downloadJson() {
+async function saveJson() {
   if (!mapData) return
   const json = toJson()
+
+  // 파일 핸들이 있으면 바로 덮어쓰기
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable()
+      await writable.write(json)
+      await writable.close()
+      setStatus(`✅ 저장 완료: ${fileHandle.name}`)
+      return
+    } catch(e) {
+      setStatus(`저장 실패: ${e.message}`)
+      return
+    }
+  }
+
+  // 핸들 없으면 다운로드
   const blob = new Blob([json], { type: 'application/json' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = 'default-map.json'
   a.click()
-  setStatus('저장 완료: default-map.json')
+  setStatus('다운로드 완료: default-map.json')
+}
+
+// ── GitHub 저장 ───────────────────────────────────────────────────────────────
+const GH_REPO  = 'nayouta47/morning'
+const GH_PATH  = 'src/data/maps/default-map.json'
+const GH_BRANCH = 'main'
+
+function getToken() { return localStorage.getItem('gh_token') ?? '' }
+function setToken(t) { localStorage.setItem('gh_token', t) }
+
+function showTokenDialog() {
+  const current = getToken()
+  const t = prompt('GitHub Personal Access Token\n(repo > contents:write 권한 필요)\n저장되면 localStorage에 보관됩니다.', current)
+  if (t === null) return
+  setToken(t.trim())
+  setStatus(t.trim() ? '토큰 저장됨' : '토큰 삭제됨')
+}
+
+async function githubSave() {
+  if (!mapData) return
+  const token = getToken()
+  if (!token) {
+    showTokenDialog()
+    if (!getToken()) return
+  }
+
+  setStatus('⏳ GitHub에 저장 중...')
+  const btn = document.getElementById('gh-save-btn')
+  btn.disabled = true
+
+  try {
+    const headers = {
+      'Authorization': `Bearer ${getToken()}`,
+      'Accept': 'application/vnd.github+json',
+    }
+
+    // 현재 파일 SHA 조회
+    const metaRes = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}?ref=${GH_BRANCH}`, { headers })
+    if (!metaRes.ok) throw new Error(`파일 조회 실패: ${metaRes.status} ${await metaRes.text()}`)
+    const meta = await metaRes.json()
+    const sha = meta.sha
+
+    // Base64 인코딩
+    const json = toJson()
+    const encoded = btoa(unescape(encodeURIComponent(json)))
+
+    // 커밋
+    const putRes = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}`, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'map: update exploration map via editor',
+        content: encoded,
+        sha,
+        branch: GH_BRANCH,
+      }),
+    })
+    if (!putRes.ok) throw new Error(`커밋 실패: ${putRes.status} ${await putRes.text()}`)
+
+    setStatus('✅ GitHub 저장 완료 — GitHub Actions 빌드가 시작됩니다')
+  } catch(e) {
+    setStatus(`❌ 오류: ${e.message}`)
+    console.error(e)
+  } finally {
+    btn.disabled = false
+  }
 }
 
 // ── UI 초기화 ─────────────────────────────────────────────────────────────────
