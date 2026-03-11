@@ -171,6 +171,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.unlocks.miner = Boolean(loaded.unlocks.miner)
     base.unlocks.electricFurnace = Boolean(loaded.unlocks.electricFurnace)
     base.unlocks.droneController = Boolean(loaded.unlocks.droneController)
+    base.unlocks.lab = Boolean(loaded.unlocks.lab)
+    base.unlocks.workbench = Boolean(loaded.unlocks.workbench)
   }
 
   const effectiveStorageCap = getResourceStorageCap(base)
@@ -292,6 +294,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.robotName = typeof loaded.robotName === 'string' ? loaded.robotName.trim().slice(0, 12) : null
   base.needsRobotNaming = Boolean(loaded.needsRobotNaming)
   base.isGuideRobotRecovered = Boolean(loaded.isGuideRobotRecovered)
+  base.companionScrapGatherCount = Math.max(0, Math.floor(Number(loaded.companionScrapGatherCount) || 0))
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
