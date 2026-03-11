@@ -1,7 +1,7 @@
 import { MODULE_METADATA } from '../../data/modules.ts'
 import type { GameState, ModuleType } from '../state.ts'
 import { getEffectiveActiveWeaponSlots } from '../moduleEffects.ts'
-import { pushLog } from './logging.ts'
+import { narrate } from './logging.ts'
 
 function moduleName(type: ModuleType): string {
   return MODULE_METADATA[type].equipmentLogName
@@ -17,7 +17,7 @@ export function equipModuleToSlot(state: GameState, weaponId: string, moduleType
 
   weapon.slots[slotIndex] = moduleType
   state.modules[moduleType] -= 1
-  pushLog(state, `장착: ${moduleName(moduleType)} -> ${weapon.id} [${slotIndex + 1}]`)
+  narrate(state, `장착: ${moduleName(moduleType)} -> ${weapon.id} [${slotIndex + 1}]`)
   return true
 }
 
@@ -31,7 +31,7 @@ export function unequipModuleFromSlot(state: GameState, weaponId: string, slotIn
 
   weapon.slots[slotIndex] = null
   state.modules[moduleType] += 1
-  pushLog(state, `해제: ${weapon.id} [${slotIndex + 1}] -> ${moduleName(moduleType)}`)
+  narrate(state, `해제: ${weapon.id} [${slotIndex + 1}] -> ${moduleName(moduleType)}`)
   return true
 }
 
@@ -66,14 +66,14 @@ export function moveEquippedModuleBetweenSlots(
 
   if (targetModuleType) {
     state.modules[targetModuleType] += 1
-    pushLog(
+    narrate(
       state,
       `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}] (${moduleName(targetModuleType)} 자동 해제)`,
     )
     return true
   }
 
-  pushLog(state, `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}]`)
+  narrate(state, `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}]`)
   return true
 }
 

@@ -67,11 +67,11 @@ function patchTabs(app: ParentNode, state: GameState): void {
   panelCodex.classList.toggle('hidden', !isCodex)
 }
 
-function patchLogs(app: ParentNode, state: GameState): void {
+function patchMessages(app: ParentNode, state: GameState): void {
   const logLists = app.querySelectorAll<HTMLUListElement>('#log-list')
   if (logLists.length <= 0) return
-  const signature = `${state.log.length}:${state.log[state.log.length - 1] ?? ''}`
-  const html = [...state.log].reverse().map((line) => `<li>${line}</li>`).join('')
+  const signature = `${state.messages.length}:${state.messages[state.messages.length - 1] ?? ''}`
+  const html = [...state.messages].reverse().map((line) => `<li>${line}</li>`).join('')
 
   logLists.forEach((logList) => {
     if (logList.dataset.signature === signature) return
@@ -232,7 +232,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
   setText(app, '#exploration-map', renderExplorationMap(state))
 
-  patchLogs(app, state)
+  patchMessages(app, state)
 }
 
 let _bindController: AbortController | null = null

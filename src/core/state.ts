@@ -147,7 +147,7 @@ export type GameState = {
   minerProcessRunning: MinerProcessRunning
   actionProgress: ActionProgress
   lastUpdate: number
-  log: string[]
+  messages: string[]
   activeTab: TabKey
   selectedWeaponId: string | null
   weapons: WeaponInstance[]
@@ -257,7 +257,7 @@ export const initialState: GameState = {
     recoverGuideRobot: 0,
   },
   lastUpdate: Date.now(),
-  log: ['게임 시작. 🪵 뗄감을 모아보자.'],
+  messages: ['게임 시작. 🪵 뗄감을 모아보자.'],
   activeTab: 'base',
   selectedWeaponId: null,
   weapons: [],

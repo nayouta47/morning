@@ -299,9 +299,14 @@ function normalizeState(raw: unknown): GameState | null {
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
-  if (Array.isArray(loaded.log)) {
-    base.log = loaded.log.filter((line): line is string => typeof line === 'string').slice(-30)
-    if (base.log.length === 0) base.log = [...initialState.log]
+  const rawMessages = Array.isArray((loaded as { messages?: unknown }).messages)
+    ? (loaded as { messages: unknown[] }).messages
+    : Array.isArray((loaded as { log?: unknown }).log)
+      ? (loaded as { log: unknown[] }).log
+      : null
+  if (rawMessages) {
+    base.messages = rawMessages.filter((line): line is string => typeof line === 'string').slice(-30)
+    if (base.messages.length === 0) base.messages = [...initialState.messages]
   }
 
   const activeTab = loaded.activeTab as TabKey

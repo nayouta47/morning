@@ -6,57 +6,57 @@ type UnlockKey = keyof GameState['unlocks']
 type UnlockDef = {
   id: UnlockKey
   requirements: Requirement[]
-  log: string
+  message: string
 }
 
 const UNLOCK_DEFS: UnlockDef[] = [
   {
     id: 'scrapAction',
     requirements: [{ kind: 'resource', resource: 'shovel', amount: 1 }],
-    log: '새 행동 해금: 🗑️ 고물 줍기',
+    message: '삽이 생겼다. 이제 폐허를 뒤질 수 있다.',
   },
   {
     id: 'lumberMill',
     requirements: [],
-    log: '건물 해금: 벌목기',
+    message: '벌목기를 세울 수 있겠다.',
   },
   {
     id: 'miner',
     requirements: [],
-    log: '건물 해금: 분쇄기',
+    message: '분쇄기를 조립할 수 있겠다.',
   },
   {
     id: 'electricFurnace',
     requirements: [{ kind: 'building', building: 'lab', count: 1 }],
-    log: '건물 해금: 전기로',
+    message: '전기로를 만들 수 있겠다.',
   },
   {
     id: 'droneController',
     requirements: [{ kind: 'building', building: 'lab', count: 1 }],
-    log: '건물 해금: 드론 컨트롤러',
+    message: '드론을 운용할 수 있겠다.',
   },
   {
     id: 'lab',
     requirements: [{ kind: 'companionGatherCount', count: 3 }],
-    log: '건물 해금: 지자 컴퓨터',
+    message: '연구할 수 있는 장비를 만들 수 있겠다.',
   },
   {
     id: 'workbench',
     requirements: [{ kind: 'companionGatherCount', count: 8 }],
-    log: '건물 해금: 금속 프린터',
+    message: '정밀 가공 장비를 만들 수 있겠다.',
   },
 ]
 
 export function evaluateUnlocks(state: GameState): string[] {
-  const newLogs: string[] = []
+  const newMessages: string[] = []
 
   UNLOCK_DEFS.forEach((unlockDef) => {
     if (state.unlocks[unlockDef.id]) return
     if (!areRequirementsMet(state, unlockDef.requirements)) return
 
     state.unlocks[unlockDef.id] = true
-    newLogs.push(unlockDef.log)
+    newMessages.push(unlockDef.message)
   })
 
-  return newLogs
+  return newMessages
 }

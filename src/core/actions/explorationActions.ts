@@ -8,7 +8,7 @@ import {
 } from '../combat.ts'
 import type { GameState } from '../state.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
-import { pushLog } from './logging.ts'
+import { narrate } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
 import { ACTION_DURATION_MS, SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
@@ -74,38 +74,38 @@ function endExplorationToLoadout(state: GameState): void {
 
 export function startRecoverGuideRobot(state: GameState): boolean {
   if (state.isGuideRobotRecovered) {
-    pushLog(state, '이미 파괴된 안내견을 확보했다.')
+    narrate(state, '이미 파괴된 안내견을 확보했다.')
     return false
   }
 
   if (state.actionProgress.recoverGuideRobot > 0) {
-    pushLog(state, '이미 파괴된 안내견을 옮기는 중이다.')
+    narrate(state, '이미 파괴된 안내견을 옮기는 중이다.')
     return false
   }
 
   state.actionProgress.recoverGuideRobot = ACTION_DURATION_MS.recoverGuideRobot
-  pushLog(state, '네 다리가 달린 고물 로봇을 발견했다.')
+  narrate(state, '네 다리가 달린 고물 로봇을 발견했다.')
   return true
 }
 
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
   if (!state.isGuideRobotRecovered) {
-    pushLog(state, '먼저 파괴된 안내견을 주워 와야 한다.')
+    narrate(state, '먼저 파괴된 안내견을 주워 와야 한다.')
     return false
   }
 
   if (state.buildings.laikaRepair <= 0) {
-    pushLog(state, `${getCompanionName(state)} 수리를 완료해야 출발할 수 있다.`)
+    narrate(state, `${getCompanionName(state)} 수리를 완료해야 출발할 수 있다.`)
     return false
   }
 
   if (state.exploration.mode === 'active') {
-    pushLog(state, '이미 탐험 중이다.')
+    narrate(state, '이미 탐험 중이다.')
     return false
   }
 
   if (!state.selectedWeaponId) {
-    if (proceedWithoutWeapon) pushLog(state, '무기 선택 없이 출발할 수 없다.')
+    if (proceedWithoutWeapon) narrate(state, '무기 선택 없이 출발할 수 없다.')
     return false
   }
 
@@ -124,7 +124,7 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.combat = null
   revealExplorationTilesInRadius(state)
   state.activeTab = 'exploration'
-  pushLog(state, `${getCompanionName(state)}와 함께 탐험 시작. 칠흑 속에서 숨소리만 들린다.`)
+  narrate(state, `${getCompanionName(state)}와 함께 탐험 시작. 칠흑 속에서 숨소리만 들린다.`)
   return true
 }
 
@@ -136,7 +136,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   const nextY = Math.max(0, Math.min(state.exploration.mapSize - 1, state.exploration.position.y + dy))
 
   if (nextX === state.exploration.position.x && nextY === state.exploration.position.y) {
-    pushLog(state, '더 이상 갈 수 없는 경계다.')
+    narrate(state, '더 이상 갈 수 없는 경계다.')
     return false
   }
 
@@ -152,7 +152,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     commitExplorationBackpack(state)
     endExplorationToLoadout(state)
     state.activeTab = 'exploration'
-    pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
+    narrate(state, '거점으로 돌아왔다.')
     return true
   }
 
@@ -172,11 +172,10 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
       if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
     }
 
-    pushLog(state, `어둠 사이에서 ${combatState.enemyName}이(가) 튀어나왔다.`)
+    narrate(state, `어둠 사이에서 ${combatState.enemyName}이(가) 튀어나왔다.`)
     return true
   }
 
-  pushLog(state, `탐험 이동: (${nextX}, ${nextY}) · ${state.exploration.steps}보`)
   return true
 }
 
@@ -185,7 +184,7 @@ export function useSyntheticFood(state: GameState): boolean {
 
   const backpackAmount = getBackpackResourceAmount(state.exploration.backpack, 'syntheticFood')
   if (backpackAmount <= 0) {
-    pushLog(state, '무작위맛 통조림이 없다.')
+    narrate(state, '무작위맛 통조림이 없다.')
     return false
   }
 
@@ -193,7 +192,7 @@ export function useSyntheticFood(state: GameState): boolean {
   const prevHp = state.exploration.hp
   state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + 5)
   const healed = state.exploration.hp - prevHp
-  pushLog(state, `무작위맛 통조림 사용. HP +${healed}`)
+  narrate(state, `무작위맛 통조림 사용. HP +${healed}`)
   return true
 }
 
@@ -204,12 +203,12 @@ export function useSmallHealPotion(state: GameState): boolean {
 
   const backpackAmount = getBackpackResourceAmount(state.exploration.backpack, 'smallHealPotion')
   if (backpackAmount <= 0) {
-    pushLog(state, '회복약(소)이 없다.')
+    narrate(state, '회복약(소)이 없다.')
     return false
   }
 
   if (combat.smallHealPotionCooldownRemainingMs > 0) {
-    pushLog(state, '회복약(소) 재사용 대기 중.')
+    narrate(state, '회복약(소) 재사용 대기 중.')
     return false
   }
 
@@ -218,7 +217,7 @@ export function useSmallHealPotion(state: GameState): boolean {
   state.exploration.hp = Math.min(state.exploration.maxHp, state.exploration.hp + SMALL_HEAL_POTION_HEAL)
   const healed = state.exploration.hp - prevHp
   combat.smallHealPotionCooldownRemainingMs = SMALL_HEAL_POTION_COOLDOWN_MS
-  pushLog(state, `회복약(소) 사용. HP +${healed}`)
+  narrate(state, `회복약(소) 사용. HP +${healed}`)
   return true
 }
 
@@ -229,7 +228,7 @@ export function startExplorationFlee(state: GameState): boolean {
 
   combat.fleeGaugeElapsedMs = 0
   combat.fleeGaugeRunning = true
-  pushLog(state, '도주를 시도한다...')
+  narrate(state, '도주를 시도한다...')
   return true
 }
 
@@ -247,18 +246,18 @@ export function takeExplorationLoot(state: GameState, resourceId: ResourceId): b
   const collected = before - remaining
 
   if (collected <= 0) {
-    pushLog(state, '가방이 너무 무겁다.')
+    narrate(state, '가방이 너무 무겁다.')
     return false
   }
 
   if (remaining > 0) {
     loot.amount = remaining
-    pushLog(state, `전리품 일부 확보: ${getResourceDisplay(resourceId)} +${collected} (남음 ${remaining})`)
+    narrate(state, `전리품 일부 확보: ${getResourceDisplay(resourceId)} +${collected} (남음 ${remaining})`)
     return true
   }
 
   state.exploration.pendingLoot.splice(lootIndex, 1)
-  pushLog(state, `전리품 확보: ${getResourceDisplay(resourceId)} +${collected}`)
+  narrate(state, `전리품 확보: ${getResourceDisplay(resourceId)} +${collected}`)
   return true
 }
 
@@ -266,7 +265,7 @@ export function continueExplorationAfterLoot(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'loot') return false
   state.exploration.pendingLoot = []
   state.exploration.phase = 'moving'
-  pushLog(state, '다시 발걸음을 옮긴다.')
+  narrate(state, '다시 발걸음을 옮긴다.')
   return true
 }
 
@@ -284,8 +283,8 @@ export function handleExplorationDeath(state: GameState): void {
   state.exploration.backpack = []
   state.activeTab = 'base'
 
-  pushLog(state, '시야가 꺼졌다. 거점에서 정신을 차렸다.')
-  pushLog(state, '들고 나간 장비와 배낭의 짐을 전부 잃었다.')
+  narrate(state, '시야가 꺼졌다. 거점에서 정신을 차렸다.')
+  narrate(state, '들고 나간 장비와 배낭의 짐을 전부 잃었다.')
 }
 
 export function tryReturnFromExploration(state: GameState): boolean {
@@ -294,14 +293,14 @@ export function tryReturnFromExploration(state: GameState): boolean {
     state.exploration.position.x === state.exploration.start.x && state.exploration.position.y === state.exploration.start.y
 
   if (!atStart) {
-    pushLog(state, '출발 지점으로 돌아와야 귀환할 수 있다.')
+    narrate(state, '출발 지점으로 돌아와야 귀환할 수 있다.')
     return false
   }
 
   commitExplorationBackpack(state)
   endExplorationToLoadout(state)
   state.activeTab = 'exploration'
-  pushLog(state, `귀환 완료. 총 이동 ${state.exploration.steps}보.`)
+  narrate(state, '거점으로 돌아왔다.')
   return true
 }
 
@@ -314,20 +313,20 @@ export function addLoadoutResource(state: GameState, resourceId: ResourceId, amo
 
   const addAmount = Math.max(1, Math.floor(amount))
   if (state.resources[resourceId] < addAmount) {
-    pushLog(state, `${getResourceDisplay(resourceId)} 보유량이 부족하다.`)
+    narrate(state, `${getResourceDisplay(resourceId)} 보유량이 부족하다.`)
     return false
   }
 
   const remaining = addLootToBackpack(state, resourceId, addAmount)
   const loaded = addAmount - remaining
   if (loaded <= 0) {
-    pushLog(state, '가방이 너무 무겁다.')
+    narrate(state, '가방이 너무 무겁다.')
     return false
   }
 
   state.resources[resourceId] -= loaded
   if (remaining > 0) {
-    pushLog(state, `${getResourceDisplay(resourceId)} +${loaded} 적재 (배낭 가득)`)
+    narrate(state, `${getResourceDisplay(resourceId)} +${loaded} 적재 (배낭 가득)`)
   }
   return true
 }
@@ -337,7 +336,7 @@ export function removeLoadoutResource(state: GameState, resourceId: ResourceId, 
 
   const removeAmount = Math.max(1, Math.floor(amount))
   if (!removeBackpackResource(state, resourceId, removeAmount)) {
-    pushLog(state, `${getResourceDisplay(resourceId)} 적재 수량이 부족하다.`)
+    narrate(state, `${getResourceDisplay(resourceId)} 적재 수량이 부족하다.`)
     return false
   }
 

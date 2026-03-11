@@ -1,6 +1,6 @@
 import './style.css'
 import {
-  appendLog,
+  narrate,
   buyBuilding,
   buyUpgrade,
   equipModuleToSlot,
@@ -234,12 +234,7 @@ function redraw(nowOverride?: number): void {
         onCheatAccelerateBaseTime: () => {
           syncState()
           advanceBaseOnlyStateByElapsed(state, BASE_CHEAT_ACCELERATION_MS)
-          const accelerationMin = BASE_CHEAT_ACCELERATION_MS / (60 * 1000)
-          if (state.exploration.mode === 'active') {
-            appendLog(state, `치트 사용: 거점 시간 +${accelerationMin}분 (탐험 전투 시간 제외)`)
-          } else {
-            appendLog(state, `치트 사용: 거점 시간 +${accelerationMin}분`)
-          }
+          narrate(state, '시간이 흘렀다.')
           simulationLastTickAt = Date.now()
           redraw()
         },
@@ -261,7 +256,7 @@ function redraw(nowOverride?: number): void {
           }
         },
         onClearLog: () => {
-          state.log = []
+          state.messages = []
           redraw()
         },
         onCheatGrantCodexChip: (moduleType) => {
@@ -277,13 +272,13 @@ function redraw(nowOverride?: number): void {
         onConfirmRobotName: (name) => {
           const result = validateCompanionName(name)
           if (!result.valid) {
-            appendLog(state, '이름은 1~12자이며 공백만 입력할 수 없다.')
+            narrate(state, '이름은 1~12자이며 공백만 입력할 수 없다.')
             redraw()
             return
           }
           state.robotName = result.normalized
           state.needsRobotNaming = false
-          appendLog(state, `안내견 로봇의 이름이 ${result.normalized}(으)로 정해졌다.`)
+          narrate(state, `안내견 로봇의 이름이 ${result.normalized}(으)로 정해졌다.`)
           appMounted = false
           redraw()
         },
@@ -402,7 +397,7 @@ function redraw(nowOverride?: number): void {
           if (!state.selectedWeaponId) return
           syncState()
           const moved = moveEquippedModuleBetweenSlots(state, state.selectedWeaponId, fromSlotIndex, toSlotIndex)
-          if (!moved) appendLog(state, `⚠️ 이동 불가: 해당 슬롯은 이동 후 비활성화됩니다.`)
+          if (!moved) narrate(state, `⚠️ 이동 불가: 해당 슬롯은 이동 후 비활성화됩니다.`)
           redraw()
         },
         onUnequipModule: (slotIndex) => {

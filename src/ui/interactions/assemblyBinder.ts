@@ -1,4 +1,4 @@
-import { appendLog } from '../../core/actions.ts'
+import { narrate } from '../../core/actions.ts'
 import { getWeaponPowerStatus, isModuleType } from '../../core/moduleEffects.ts'
 import type { GameState, ModuleType } from '../../core/state.ts'
 import type { Handlers, InteractionIntent } from '../types.ts'
@@ -107,12 +107,12 @@ export function bindAssemblyInteractions(
     if (copySlotStateButton) {
       const text = getWeaponSlotDebugText(state)
       if (!text) {
-        appendLog(state, '복사 실패: 선택된 무기가 없습니다.')
+        narrate(state, '복사 실패: 선택된 무기가 없습니다.')
         return
       }
 
       void copyTextToClipboard(text).then((copied) => {
-        appendLog(state, copied ? '선택 무기 슬롯 상태를 클립보드에 복사했습니다.' : '복사 실패: 클립보드 접근이 차단되었습니다.')
+        narrate(state, copied ? '선택 무기 슬롯 상태를 클립보드에 복사했습니다.' : '복사 실패: 클립보드 접근이 차단되었습니다.')
       })
       return
     }

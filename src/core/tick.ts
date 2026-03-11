@@ -1,6 +1,6 @@
 import { BUILDING_CYCLE_MS, SMELTING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
-import { appendLog, handleExplorationDeath } from './actions.ts'
+import { narrate, handleExplorationDeath } from './actions.ts'
 import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
@@ -185,12 +185,12 @@ function makeWeapon(state: GameState, type: WeaponType): void {
   state.nextWeaponId += 1
   state.weapons.push({ id, type, slots: Array.from({ length: 50 }, () => null) })
   if (!state.selectedWeaponId) state.selectedWeaponId = id
-  appendLog(state, `${type === 'pistol' ? '권총' : '소총'} 제작 완료: ${id}`)
+  narrate(state, `${type === 'pistol' ? '권총' : '소총'}이 완성됐다. ${id}.`)
 }
 
 function makeModule(state: GameState, type: ModuleType): void {
   state.modules[type] += 1
-  appendLog(state, `모듈 제작 완료: ${MODULE_METADATA[type].craftLogLabel}`)
+  narrate(state, `모듈이 나왔다. ${MODULE_METADATA[type].craftLogLabel}`)
 }
 
 function resolveCraftCompletion(state: GameState, key: CraftRecipeKey, storageCap: number): void {
@@ -227,7 +227,7 @@ function resolveCraftCompletion(state: GameState, key: CraftRecipeKey, storageCa
   })
 
   if (key === 'module' && moduleTier) {
-    appendLog(state, `${getModuleCraftTierLabel(moduleTier)} 제작 완료`)
+    narrate(state, `${getModuleCraftTierLabel(moduleTier)} 제작이 끝났다.`)
     state.moduleCraftTierInProgress = null
   }
 }
@@ -263,7 +263,7 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
         `${name}가 낡은 부품들을 발 앞에 가지런히 쌓아놓고 앉는다.`,
         `폐허 냄새를 잔뜩 묻힌 ${name}가 총총걸음으로 돌아왔다.`,
       ]
-      appendLog(state, returnLogs[Math.floor(Math.random() * returnLogs.length)])
+      narrate(state, returnLogs[Math.floor(Math.random() * returnLogs.length)])
     }
     logDiscardedOverflow(state, 'scrap', gain.discarded)
     return
@@ -271,8 +271,8 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
 
   state.isGuideRobotRecovered = true
   state.actionProgress.recoverGuideRobot = 0
-  appendLog(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다.')
-  appendLog(state, '구조가 생각보다 단순한 것 같다. 수리할 수 있을지도.')
+  narrate(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다.')
+  narrate(state, '구조가 생각보다 단순한 것 같다. 수리할 수 있을지도.')
 }
 
 const COMPANION_DEPART_LOGS = [
@@ -289,7 +289,7 @@ function tryAutoGatherScrap(state: GameState): void {
 
   state.actionProgress.gatherScrap = getGatherScrapDurationMs(state)
   const name = getCompanionName(state)
-  appendLog(state, name + COMPANION_DEPART_LOGS[Math.floor(Math.random() * COMPANION_DEPART_LOGS.length)])
+  narrate(state, name + COMPANION_DEPART_LOGS[Math.floor(Math.random() * COMPANION_DEPART_LOGS.length)])
 }
 
 function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
@@ -316,7 +316,7 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
   while (combat.playerAttackElapsedMs >= weaponStats.cooldownMs && combat.enemyHp > 0) {
     combat.playerAttackElapsedMs -= weaponStats.cooldownMs
     combat.enemyHp = Math.max(0, combat.enemyHp - weaponStats.damage)
-    appendLog(state, `당신이 공격했다. ${combat.enemyName} HP ${combat.enemyHp}/${combat.enemyMaxHp}`)
+    narrate(state, `${combat.enemyName}에게 타격. (${combat.enemyHp}/${combat.enemyMaxHp})`)
   }
 
   if (combat.enemyHp <= 0) {
@@ -325,8 +325,7 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
     state.exploration.pendingLoot = createEnemyLootTable(combat.enemyId)
     const codex = state.enemyCodex[combat.enemyId]
     if (codex) codex.defeatCount += 1
-    appendLog(state, `${combat.enemyName} 처치.`)
-    appendLog(state, '전리품을 고른다.')
+    narrate(state, `${combat.enemyName}을(를) 쓰러뜨렸다.`)
     return
   }
 
@@ -334,7 +333,7 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
   while (combat.enemyAttackElapsedMs >= combat.enemyAttackCooldownMs && state.exploration.hp > 0) {
     combat.enemyAttackElapsedMs -= combat.enemyAttackCooldownMs
     state.exploration.hp = Math.max(0, state.exploration.hp - combat.enemyDamage)
-    appendLog(state, `${combat.enemyName}의 타격. HP ${state.exploration.hp}/${state.exploration.maxHp}`)
+    narrate(state, `${combat.enemyName}의 공격. (${state.exploration.hp}/${state.exploration.maxHp})`)
   }
 
   if (combat.fleeGaugeRunning) {
@@ -347,11 +346,11 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
       if (Math.random() < FLEE_SUCCESS_CHANCE) {
         state.exploration.phase = 'moving'
         state.exploration.combat = null
-        appendLog(state, '도주 성공! 전투에서 벗어났다.')
+        narrate(state, '도주 성공! 전투에서 벗어났다.')
         return
       }
 
-      appendLog(state, '도주 실패... 전투를 이어간다.')
+      narrate(state, '도주 실패... 전투를 이어간다.')
     }
   }
 
@@ -393,8 +392,8 @@ export function advanceState(state: GameState, now = Date.now()): void {
   advanceBaseByElapsed(state, elapsed)
   processExplorationCombat(state, elapsed)
 
-  const unlockLogs = evaluateUnlocks(state)
-  unlockLogs.forEach((line) => appendLog(state, line))
+  const unlockMessages = evaluateUnlocks(state)
+  unlockMessages.forEach((line) => narrate(state, line))
 }
 
 export function advanceBaseOnlyStateByElapsed(state: GameState, elapsedMs: number, now = Date.now()): void {
@@ -405,8 +404,8 @@ export function advanceBaseOnlyStateByElapsed(state: GameState, elapsedMs: numbe
 
   advanceBaseByElapsed(state, elapsed)
 
-  const unlockLogs = evaluateUnlocks(state)
-  unlockLogs.forEach((line) => appendLog(state, line))
+  const unlockMessages = evaluateUnlocks(state)
+  unlockMessages.forEach((line) => narrate(state, line))
 }
 
 export function getCraftRatio(remainingMs: number): number {
