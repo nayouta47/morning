@@ -77,8 +77,6 @@
       <button onclick="setZoom(zoom + 2)">+</button>
     </div>
     <button class="action-btn" onclick="loadFile()">📂 JSON 불러오기</button>
-    <button class="action-btn" onclick="saveJson()" id="save-btn">💾 JSON 저장</button>
-    <button class="action-btn" onclick="githubSave()" id="gh-save-btn" style="border-color:#6e40c9;color:#b388ff">☁️ GitHub 저장</button>
     <button class="action-btn" onclick="showTokenDialog()" id="gh-token-btn" title="GitHub Token 설정">🔑</button>
     <input type="file" id="file-input" accept=".json" style="display:none" onchange="onFileSelected(event)">
   </div>
@@ -256,8 +254,8 @@ canvas.addEventListener('mousemove', e => {
   else render()
 })
 
-canvas.addEventListener('mouseup', () => { isPainting = false })
-canvas.addEventListener('mouseleave', () => { isPainting = false; cursorTile = null; render() })
+canvas.addEventListener('mouseup', () => { isPainting = false; scheduleAutoSave() })
+canvas.addEventListener('mouseleave', () => { if (isPainting) scheduleAutoSave(); isPainting = false; cursorTile = null; render() })
 canvas.addEventListener('contextmenu', e => e.preventDefault())
 
 canvas.addEventListener('wheel', e => {
@@ -301,6 +299,7 @@ function onStartChange() {
   mapData.start.x = Math.max(0, Math.min(mapData.size - 1, x))
   mapData.start.y = Math.max(0, Math.min(mapData.size - 1, y))
   render()
+  scheduleAutoSave()
 }
 
 function setStartFromCursor() {
@@ -311,6 +310,7 @@ function setStartFromCursor() {
   document.getElementById('start-y').value = mapData.start.y
   render()
   setStatus(`출발 지점 → (${mapData.start.x}, ${mapData.start.y})`)
+  scheduleAutoSave()
 }
 
 function syncStartInputs() {
@@ -456,6 +456,17 @@ function showTokenDialog() {
   setStatus(t.trim() ? '토큰 저장됨' : '토큰 삭제됨')
 }
 
+// ── 자동저장 ──────────────────────────────────────────────────────────────────
+let autoSaveTimer = null
+let isSaving = false
+
+function scheduleAutoSave() {
+  if (!getToken()) return
+  clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(githubSave, 2000)
+  setStatus('✏️ 변경됨 — 2초 후 자동 저장...')
+}
+
 async function githubSave() {
   if (!mapData) return
   const token = getToken()
@@ -463,10 +474,10 @@ async function githubSave() {
     showTokenDialog()
     if (!getToken()) return
   }
+  if (isSaving) return
 
+  isSaving = true
   setStatus('⏳ GitHub에 저장 중...')
-  const btn = document.getElementById('gh-save-btn')
-  btn.disabled = true
 
   try {
     const headers = {
@@ -497,12 +508,12 @@ async function githubSave() {
     })
     if (!putRes.ok) throw new Error(`커밋 실패: ${putRes.status} ${await putRes.text()}`)
 
-    setStatus('✅ GitHub 저장 완료 — GitHub Actions 빌드가 시작됩니다')
+    setStatus('✅ 자동 저장 완료')
   } catch(e) {
-    setStatus(`❌ 오류: ${e.message}`)
+    setStatus(`❌ 저장 실패: ${e.message}`)
     console.error(e)
   } finally {
-    btn.disabled = false
+    isSaving = false
   }
 }
 
