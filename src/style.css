@@ -657,10 +657,18 @@ li {
   max-width: 520px;
 }
 
+.loadout-config-grid {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
 .exploration-loadout-weapons,
 .exploration-loadout-items {
   width: 100%;
-  max-width: 520px;
 }
 
 #exploration-loadout-weapon-list {
@@ -755,6 +763,10 @@ li {
   padding: 12px;
   text-align: center;
   color: #9e9585;
+}
+
+.backpack-heat-weapon {
+  border-color: #6a7a5a;
 }
 
 .exploration-map-stage {

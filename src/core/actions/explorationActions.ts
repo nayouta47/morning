@@ -414,6 +414,12 @@ export function addLoadoutResource(state: GameState, resourceId: ResourceId, amo
   return true
 }
 
+export function fillLoadoutResource(state: GameState, resourceId: ResourceId): boolean {
+  const owned = state.resources[resourceId]
+  if (owned <= 0) return false
+  return addLoadoutResource(state, resourceId, owned)
+}
+
 export function removeLoadoutResource(state: GameState, resourceId: ResourceId, amount = 1): boolean {
   if (!isLoadoutResourceAllowed(state, resourceId)) return false
 

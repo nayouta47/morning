@@ -12,6 +12,7 @@ import {
   cancelDungeonEntry,
   addLoadoutResource,
   removeLoadoutResource,
+  fillLoadoutResource,
   moveExplorationStep,
   reorderWeapons,
   selectWeapon,
@@ -34,7 +35,7 @@ import {
 } from './core/actions.ts'
 import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
-import { validateCompanionName } from './core/companion.ts'
+import { getCompanionName, validateCompanionName } from './core/companion.ts'
 import { addResourceWithCap, getResourceStorageCap } from './core/resourceCaps.ts'
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
@@ -82,7 +83,9 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
       phase: 'cooldown' as const,
       progress,
       disabled: true,
-      label: '진행 중',
+      label: key === 'gatherScrap' && state.companionIsAutoGathering
+        ? `${getCompanionName(state)} 채집 중`
+        : '진행 중',
       timeText: `${remainingSec.toFixed(1)}s / ${(cycleDuration / 1000).toFixed(1)}s`,
     }
   }
@@ -344,6 +347,11 @@ function redraw(nowOverride?: number): void {
         onLoadoutRemoveItem: (resourceId) => {
           syncState()
           removeLoadoutResource(state, resourceId)
+          redraw()
+        },
+        onLoadoutFillItem: (resourceId) => {
+          syncState()
+          fillLoadoutResource(state, resourceId)
           redraw()
         },
         onCraftPistol: () => {

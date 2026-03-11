@@ -43,6 +43,7 @@ export type Handlers = {
   onCancelDungeonEntry: () => void
   onLoadoutAddItem: (resourceId: ResourceId) => void
   onLoadoutRemoveItem: (resourceId: ResourceId) => void
+  onLoadoutFillItem: (resourceId: ResourceId) => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void
