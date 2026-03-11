@@ -36,7 +36,7 @@ export const BUILDING_DEFS = {
     id: 'laikaRepair',
     label: '안내견 로봇 수리',
     unlockRequirements: [] as Requirement[],
-    baseCost: { chromium: 1, scrap: 100 } as ResourceCost,
+    baseCost: { scrap: 100 } as ResourceCost,
     effectsText: '탐험 출발 조건 충족',
   },
 
