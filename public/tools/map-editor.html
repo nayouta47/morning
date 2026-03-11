@@ -530,14 +530,43 @@ function initPalette() {
 // ── 부트 ─────────────────────────────────────────────────────────────────────
 initPalette()
 
-// default-map.json 자동 로드 시도 (같은 서버에서 열렸을 때)
-fetch('../src/data/maps/default-map.json')
-  .then(r => r.ok ? r.json() : Promise.reject())
-  .then(data => { loadMapData(data); setStatus('default-map.json 자동 로드 완료') })
-  .catch(() => {
-    loadMapData(makeDefaultMap())
-    setStatus('기본 맵 생성됨 — "JSON 불러오기"로 default-map.json을 직접 로드하세요')
-  })
+// GitHub API에서 맵 자동 로드, 실패 시 로컬 → 기본 맵 순으로 폴백
+async function autoLoad() {
+  const token = getToken()
+  const headers = { 'Accept': 'application/vnd.github+json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  try {
+    setStatus('⏳ GitHub에서 맵 로드 중...')
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/contents/${GH_PATH}?ref=${GH_BRANCH}`,
+      { headers }
+    )
+    if (!res.ok) throw new Error(`${res.status}`)
+    const meta = await res.json()
+    const json = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))))
+    loadMapData(JSON.parse(json))
+    setStatus('✅ GitHub에서 맵 자동 로드 완료')
+    return
+  } catch(e) {
+    console.warn('GitHub 로드 실패:', e.message)
+  }
+
+  // 로컬 서버 폴백
+  try {
+    const r = await fetch('../src/data/maps/default-map.json')
+    if (r.ok) {
+      loadMapData(await r.json())
+      setStatus('default-map.json 자동 로드 완료 (로컬)')
+      return
+    }
+  } catch(_) {}
+
+  loadMapData(makeDefaultMap())
+  setStatus('기본 맵 생성됨 — GitHub 토큰(🔑)을 설정하면 자동 로드됩니다')
+}
+
+autoLoad()
 </script>
 </body>
 </html>
