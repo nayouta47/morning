@@ -13,6 +13,24 @@
     }
     #toolbar h1 { font-size: 14px; color: #fff; margin-right: 8px; }
 
+    .palette-tabs { display: flex; gap: 0; margin-right: 8px; }
+    .palette-tab {
+      padding: 4px 12px; border: 1px solid #444; background: #1a1a1a;
+      color: #888; cursor: pointer; font-size: 12px; font-family: monospace;
+    }
+    .palette-tab:first-child { border-radius: 4px 0 0 4px; }
+    .palette-tab:last-child { border-radius: 0 4px 4px 0; }
+    .palette-tab.active { background: #2a2a2a; color: #fff; border-color: #666; }
+
+    #dungeon-palette { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .dungeon-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border: 2px solid #444; border-radius: 4px;
+      background: #222; color: #ccc; cursor: pointer; font-size: 13px; font-family: monospace;
+    }
+    .dungeon-btn.active { border-color: #f90; color: #f90; }
+    .dungeon-btn.paint-active { border-color: #4af; color: #4af; }
+
     .biome-btn {
       display: flex; align-items: center; gap: 6px;
       padding: 5px 10px; border: 2px solid #444; border-radius: 4px;
@@ -20,6 +38,37 @@
     }
     .biome-btn.active { border-color: #fff; color: #fff; }
     .biome-swatch { width: 14px; height: 14px; border-radius: 2px; border: 1px solid #555; flex-shrink: 0; }
+
+    /* Dungeon panel */
+    #dungeon-panel {
+      padding: 12px; background: #111; border-bottom: 1px solid #333;
+      display: none; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto;
+    }
+    #dungeon-panel.visible { display: flex; }
+    .dungeon-list { display: flex; flex-direction: column; gap: 6px; }
+    .dungeon-list-item {
+      display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+      background: #1a1a1a; border: 1px solid #333; border-radius: 4px; font-size: 12px;
+    }
+    .dungeon-list-item span { flex: 1; color: #ccc; }
+    .dungeon-list-item button { padding: 2px 8px; font-size: 11px; font-family: monospace; border-radius: 3px; cursor: pointer; }
+    .dungeon-list-item .btn-paint { background: #1a2a3a; border: 1px solid #3a6a9a; color: #7ab; }
+    .dungeon-list-item .btn-paint.active { background: #1a3a5a; border-color: #4af; color: #4af; }
+    .dungeon-list-item .btn-edit { background: #2a2a1a; border: 1px solid #6a6a2a; color: #aa9; }
+    .dungeon-list-item .btn-delete { background: #3a1a1a; border: 1px solid #7a3a3a; color: #c88; }
+
+    #dungeon-form-wrap { border: 1px solid #444; border-radius: 4px; padding: 10px; background: #1a1a1a; }
+    #dungeon-form-wrap h3 { font-size: 12px; color: #aaa; margin-bottom: 8px; }
+    .form-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; }
+    .form-row label { font-size: 11px; color: #888; display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 80px; }
+    .form-row input, .form-row textarea, .form-row select {
+      background: #222; border: 1px solid #444; color: #ccc; padding: 4px 6px;
+      border-radius: 3px; font-family: monospace; font-size: 12px; width: 100%;
+    }
+    .form-row textarea { resize: vertical; min-height: 40px; }
+    .floor-block { border: 1px solid #333; border-radius: 3px; padding: 8px; margin-bottom: 6px; background: #131313; }
+    .floor-block h4 { font-size: 11px; color: #777; margin-bottom: 6px; }
+    .form-actions { display: flex; gap: 8px; margin-top: 8px; }
 
     #toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 
@@ -69,7 +118,12 @@
 
 <div id="toolbar">
   <h1>🗺️ 맵 에디터</h1>
+  <div class="palette-tabs">
+    <button class="palette-tab active" id="tab-biome" onclick="switchPaletteTab('biome')">바이옴</button>
+    <button class="palette-tab" id="tab-dungeon" onclick="switchPaletteTab('dungeon')">던전 프리셋</button>
+  </div>
   <div id="biome-palette"></div>
+  <div id="dungeon-palette" style="display:none"></div>
   <div id="toolbar-right">
     <div id="zoom-controls">
       <button onclick="setZoom(zoom - 2)">−</button>
@@ -81,6 +135,7 @@
     <input type="file" id="file-input" accept=".json" style="display:none" onchange="onFileSelected(event)">
   </div>
 </div>
+<div id="dungeon-panel"></div>
 
 <div id="main">
   <div id="canvas-wrap">
@@ -147,6 +202,7 @@ function makeDefaultMap() {
     name: '폐허 외곽',
     size,
     start: { x: 16, y: 16 },
+    dungeons: [],
     tiles: Array.from({ length: size }, () =>
       Array.from({ length: size }, () => ({ biome: FALLBACK }))
     )
@@ -170,10 +226,20 @@ function render() {
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      const biomeId = tiles[y]?.[x]?.biome ?? FALLBACK
+      const tile = tiles[y]?.[x]
+      const biomeId = tile?.biome ?? FALLBACK
       const biome = BIOME_MAP[biomeId] ?? BIOME_MAP[FALLBACK]
       ctx.fillStyle = biome.color
       ctx.fillRect(x * zoom, y * zoom, zoom, zoom)
+
+      if (tile?.dungeonId && zoom >= 6) {
+        const dungeon = mapData.dungeons?.find(d => d.id === tile.dungeonId)
+        const emoji = dungeon?.emoji ?? '🏚️'
+        ctx.font = `${Math.max(8, Math.floor(zoom * 0.6))}px serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(emoji, x * zoom + zoom / 2, y * zoom + zoom / 2)
+      }
     }
   }
 
@@ -224,7 +290,13 @@ function pushUndo() {
 
 function paintTile(tile) {
   if (!tile || !mapData) return
-  mapData.tiles[tile.y][tile.x] = { biome: selectedBiome }
+  const current = mapData.tiles[tile.y][tile.x]
+  if (activePaintDungeonId !== null) {
+    // dungeon paint: set dungeonId, keep biome
+    mapData.tiles[tile.y][tile.x] = { biome: current?.biome ?? FALLBACK, dungeonId: activePaintDungeonId }
+  } else {
+    mapData.tiles[tile.y][tile.x] = { biome: selectedBiome }
+  }
   render()
 }
 
@@ -233,9 +305,17 @@ canvas.addEventListener('mousedown', e => {
   const tile = tileFromEvent(e)
   if (!tile) return
   if (e.button === 2) {
-    // 우클릭 = 바이옴 선택
-    const biomeId = mapData.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
-    setSelectedBiome(biomeId)
+    if (activePaintDungeonId !== null) {
+      // 우클릭 = dungeonId 제거 (biome 유지)
+      pushUndo()
+      const current = mapData.tiles[tile.y]?.[tile.x]
+      mapData.tiles[tile.y][tile.x] = { biome: current?.biome ?? FALLBACK }
+      render()
+    } else {
+      // 우클릭 = 바이옴 선택
+      const biomeId = mapData.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
+      setSelectedBiome(biomeId)
+    }
     return
   }
   pushUndo()
@@ -320,12 +400,14 @@ function syncStartInputs() {
 
 // ── 정보 박스 ─────────────────────────────────────────────────────────────────
 function updateInfoBox(tile) {
-  const biomeId = mapData?.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
+  const t = mapData?.tiles[tile.y]?.[tile.x]
+  const biomeId = t?.biome ?? FALLBACK
   const biome = BIOME_MAP[biomeId]
+  const dungeonLine = t?.dungeonId ? `<br><strong>던전</strong> ${t.dungeonId}` : ''
   document.getElementById('info-box').innerHTML =
     `<strong>위치</strong> (${tile.x}, ${tile.y})<br>` +
     `<strong>바이옴</strong> ${biome.emoji} ${biome.name}<br>` +
-    `<strong>ID</strong> ${biomeId}`
+    `<strong>ID</strong> ${biomeId}${dungeonLine}`
 }
 
 // ── 상태바 ────────────────────────────────────────────────────────────────────
@@ -375,10 +457,15 @@ function onFileSelected(e) {
 
 function loadMapData(raw) {
   const size = Math.max(8, Number(raw.size) || 33)
+  const dungeons = Array.isArray(raw.dungeons) ? raw.dungeons.filter(d => d && typeof d.id === 'string') : []
+  const dungeonIds = new Set(dungeons.map(d => d.id))
   const tiles = Array.from({ length: size }, (_, y) =>
     Array.from({ length: size }, (_, x) => {
-      const b = raw.tiles?.[y]?.[x]?.biome
-      return { biome: (typeof b === 'string' && BIOME_MAP[b]) ? b : FALLBACK }
+      const rawTile = raw.tiles?.[y]?.[x]
+      const b = rawTile?.biome
+      const biome = (typeof b === 'string' && BIOME_MAP[b]) ? b : FALLBACK
+      const dungeonId = typeof rawTile?.dungeonId === 'string' && dungeonIds.has(rawTile.dungeonId) ? rawTile.dungeonId : undefined
+      return dungeonId ? { biome, dungeonId } : { biome }
     })
   )
   mapData = {
@@ -389,11 +476,14 @@ function loadMapData(raw) {
       x: Math.max(0, Math.min(size - 1, Number(raw.start?.x) || Math.floor(size / 2))),
       y: Math.max(0, Math.min(size - 1, Number(raw.start?.y) || Math.floor(size / 2))),
     },
+    dungeons,
     tiles,
   }
   undoStack = []
   resizeCanvas()
   syncStartInputs()
+  renderDungeonPanel()
+  renderDungeonPalette()
   render()
 }
 
@@ -401,7 +491,10 @@ function toJson() {
   if (!mapData) return ''
   // tiles를 간결하게: 각 행을 한 줄로
   const tilesJson = '[\n' + mapData.tiles.map(row =>
-    '    [' + row.map(t => `{"biome":"${t.biome}"}`).join(',') + ']'
+    '    [' + row.map(t => {
+      if (t.dungeonId) return `{"biome":"${t.biome}","dungeonId":"${t.dungeonId}"}`
+      return `{"biome":"${t.biome}"}`
+    }).join(',') + ']'
   ).join(',\n') + '\n  ]'
 
   return JSON.stringify({
@@ -409,6 +502,7 @@ function toJson() {
     name: mapData.name,
     size: mapData.size,
     start: mapData.start,
+    dungeons: mapData.dungeons ?? [],
     tiles: '__TILES__'
   }, null, 2).replace('"__TILES__"', tilesJson)
 }
@@ -517,6 +611,216 @@ async function githubSave() {
   }
 }
 
+// ── 팔레트 탭 전환 ────────────────────────────────────────────────────────────
+let activePaletteTab = 'biome'
+let activePaintDungeonId = null   // null = biome mode, string = dungeon paint mode
+
+function switchPaletteTab(tab) {
+  activePaletteTab = tab
+  document.getElementById('tab-biome').classList.toggle('active', tab === 'biome')
+  document.getElementById('tab-dungeon').classList.toggle('active', tab === 'dungeon')
+  document.getElementById('biome-palette').style.display = tab === 'biome' ? '' : 'none'
+  document.getElementById('dungeon-palette').style.display = tab === 'dungeon' ? '' : 'none'
+  document.getElementById('dungeon-panel').classList.toggle('visible', tab === 'dungeon')
+}
+
+// ── 던전 데이터 ───────────────────────────────────────────────────────────────
+// mapData.dungeons는 DungeonDef 배열
+
+function getDungeons() {
+  return mapData?.dungeons ?? []
+}
+
+function setActivePaintDungeon(id) {
+  activePaintDungeonId = id
+  document.querySelectorAll('.dungeon-palette-btn').forEach(btn => {
+    btn.classList.toggle('paint-active', btn.dataset.dungeonId === id)
+  })
+  document.querySelectorAll('.btn-paint').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.dungeonId === id)
+  })
+  setStatus(id ? `던전 페인트 모드: ${id}` : '던전 페인트 해제')
+}
+
+function renderDungeonPanel() {
+  const panel = document.getElementById('dungeon-panel')
+  const dungeons = getDungeons()
+  let html = '<div class="dungeon-list">'
+  if (dungeons.length === 0) {
+    html += '<div style="font-size:12px;color:#666">던전 없음</div>'
+  }
+  dungeons.forEach(d => {
+    html += `<div class="dungeon-list-item">
+      <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
+      <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}')">🖌 그리기</button>
+      <button class="btn-edit" onclick="openDungeonForm('${d.id}')">편집</button>
+      <button class="btn-delete" onclick="deleteDungeon('${d.id}')">삭제</button>
+    </div>`
+  })
+  html += '</div>'
+
+  // 새 던전 추가 버튼
+  html += '<button class="action-btn" onclick="openDungeonForm(null)" style="align-self:flex-start">+ 새 던전 추가</button>'
+  html += '<div id="dungeon-form-container"></div>'
+
+  panel.innerHTML = html
+}
+
+function renderDungeonPalette() {
+  const palette = document.getElementById('dungeon-palette')
+  palette.innerHTML = ''
+  const dungeons = getDungeons()
+  dungeons.forEach(d => {
+    const btn = document.createElement('button')
+    btn.className = 'dungeon-btn dungeon-palette-btn' + (activePaintDungeonId === d.id ? ' paint-active' : '')
+    btn.dataset.dungeonId = d.id
+    btn.textContent = `${d.emoji} ${d.name}`
+    btn.addEventListener('click', () => setActivePaintDungeon(activePaintDungeonId === d.id ? null : d.id))
+    palette.appendChild(btn)
+  })
+  if (dungeons.length === 0) {
+    palette.innerHTML = '<span style="font-size:12px;color:#666">던전 없음 — 던전 프리셋 탭에서 추가하세요</span>'
+  }
+}
+
+const ENEMY_OPTIONS = [
+  { id: 'siliconLifeform', name: '실리콘 생명체' },
+  { id: 'siliconBug', name: '실리콘 벌레' },
+  { id: 'wheelBug', name: '바퀴벌레' },
+  { id: 'bareBonesMan', name: '해골인간' },
+]
+
+function openDungeonForm(editId) {
+  const container = document.getElementById('dungeon-form-container')
+  const existing = editId ? getDungeons().find(d => d.id === editId) : null
+  const floorCount = existing ? existing.floors.length : 3
+
+  let floorsHtml = ''
+  for (let i = 0; i < floorCount; i++) {
+    const f = existing?.floors[i]
+    const enemyOptions = ENEMY_OPTIONS.map(e =>
+      `<option value="${e.id}"${(f?.enemyId ?? ENEMY_OPTIONS[0].id) === e.id ? ' selected' : ''}>${e.name}</option>`
+    ).join('')
+    floorsHtml += `<div class="floor-block">
+      <h4>${i + 1}층</h4>
+      <div class="form-row">
+        <label>적<select name="floor_enemy_${i}">${enemyOptions}</select></label>
+        <label>보상 배율<input type="number" name="floor_mult_${i}" value="${f?.rewardMultiplier ?? 1}" min="0.5" max="3" step="0.5" style="width:70px"></label>
+      </div>
+      <div class="form-row">
+        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2">${f?.dialogText ?? ''}</textarea></label>
+      </div>
+    </div>`
+  }
+
+  container.innerHTML = `<div id="dungeon-form-wrap">
+    <h3>${editId ? '던전 편집' : '새 던전'}</h3>
+    <div class="form-row">
+      <label>ID<input type="text" id="df-id" value="${existing?.id ?? ''}" placeholder="dungeon-1" ${editId ? 'readonly' : ''}></label>
+      <label>이름<input type="text" id="df-name" value="${existing?.name ?? ''}" placeholder="버려진 공장"></label>
+      <label>이모지<input type="text" id="df-emoji" value="${existing?.emoji ?? '🏚️'}" style="width:60px"></label>
+    </div>
+    <div class="form-row">
+      <label style="flex:1">진입 텍스트<textarea id="df-entry" rows="2">${existing?.entryText ?? ''}</textarea></label>
+    </div>
+    <div class="form-row">
+      <label>층 수<select id="df-floors" onchange="updateFloorCount(this.value, ${editId ? `'${editId}'` : 'null'})">
+        ${[3,4,5].map(n => `<option value="${n}"${n === floorCount ? ' selected' : ''}>${n}층</option>`).join('')}
+      </select></label>
+    </div>
+    <div id="df-floors-container">${floorsHtml}</div>
+    <div class="form-actions">
+      <button class="action-btn" onclick="saveDungeonForm('${editId ?? ''}')">저장</button>
+      <button class="action-btn danger" onclick="closeDungeonForm()">취소</button>
+    </div>
+  </div>`
+}
+
+function updateFloorCount(count, editId) {
+  const existing = editId ? getDungeons().find(d => d.id === editId) : null
+  const n = parseInt(count)
+  const container = document.getElementById('df-floors-container')
+  let floorsHtml = ''
+  for (let i = 0; i < n; i++) {
+    const f = existing?.floors[i]
+    const enemyOptions = ENEMY_OPTIONS.map(e =>
+      `<option value="${e.id}"${(f?.enemyId ?? ENEMY_OPTIONS[0].id) === e.id ? ' selected' : ''}>${e.name}</option>`
+    ).join('')
+    floorsHtml += `<div class="floor-block">
+      <h4>${i + 1}층</h4>
+      <div class="form-row">
+        <label>적<select name="floor_enemy_${i}">${enemyOptions}</select></label>
+        <label>보상 배율<input type="number" name="floor_mult_${i}" value="${f?.rewardMultiplier ?? 1}" min="0.5" max="3" step="0.5" style="width:70px"></label>
+      </div>
+      <div class="form-row">
+        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2">${f?.dialogText ?? ''}</textarea></label>
+      </div>
+    </div>`
+  }
+  container.innerHTML = floorsHtml
+}
+
+function saveDungeonForm(editId) {
+  const id = editId || document.getElementById('df-id').value.trim()
+  const name = document.getElementById('df-name').value.trim()
+  const emoji = document.getElementById('df-emoji').value.trim() || '🏚️'
+  const entryText = document.getElementById('df-entry').value.trim()
+  const floorCount = parseInt(document.getElementById('df-floors').value)
+
+  if (!id) { alert('ID를 입력하세요'); return }
+  if (!name) { alert('이름을 입력하세요'); return }
+
+  if (!mapData.dungeons) mapData.dungeons = []
+
+  // Check duplicate id for new
+  if (!editId && mapData.dungeons.find(d => d.id === id)) {
+    alert(`ID "${id}"가 이미 존재합니다`)
+    return
+  }
+
+  const floors = []
+  for (let i = 0; i < floorCount; i++) {
+    const enemy = document.querySelector(`[name="floor_enemy_${i}"]`)?.value ?? ENEMY_OPTIONS[0].id
+    const mult = parseFloat(document.querySelector(`[name="floor_mult_${i}"]`)?.value ?? '1') || 1
+    const dialog = document.querySelector(`[name="floor_dialog_${i}"]`)?.value ?? ''
+    floors.push({ dialogText: dialog, enemyId: enemy, rewardMultiplier: mult })
+  }
+
+  const dungeon = { id, name, emoji, entryText, floors }
+
+  if (editId) {
+    const idx = mapData.dungeons.findIndex(d => d.id === editId)
+    if (idx >= 0) mapData.dungeons[idx] = dungeon
+    else mapData.dungeons.push(dungeon)
+  } else {
+    mapData.dungeons.push(dungeon)
+  }
+
+  closeDungeonForm()
+  renderDungeonPanel()
+  renderDungeonPalette()
+  scheduleAutoSave()
+  setStatus(`던전 "${name}" 저장됨`)
+}
+
+function closeDungeonForm() {
+  const container = document.getElementById('dungeon-form-container')
+  if (container) container.innerHTML = ''
+}
+
+function deleteDungeon(id) {
+  if (!confirm(`던전 "${id}"를 삭제할까요? 타일에 배치된 dungeonId도 제거됩니다.`)) return
+  mapData.dungeons = mapData.dungeons.filter(d => d.id !== id)
+  // Remove dungeonId from tiles
+  mapData.tiles.forEach(row => row.forEach(t => { if (t.dungeonId === id) delete t.dungeonId }))
+  if (activePaintDungeonId === id) activePaintDungeonId = null
+  renderDungeonPanel()
+  renderDungeonPalette()
+  render()
+  scheduleAutoSave()
+  setStatus(`던전 "${id}" 삭제됨`)
+}
+
 // ── UI 초기화 ─────────────────────────────────────────────────────────────────
 function initPalette() {
   const palette = document.getElementById('biome-palette')
@@ -540,6 +844,8 @@ function initPalette() {
 
 // ── 부트 ─────────────────────────────────────────────────────────────────────
 initPalette()
+renderDungeonPanel()
+renderDungeonPalette()
 
 // GitHub API에서 맵 자동 로드, 실패 시 로컬 → 기본 맵 순으로 폴백
 async function autoLoad() {

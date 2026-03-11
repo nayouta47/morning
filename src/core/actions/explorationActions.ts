@@ -6,10 +6,11 @@ import {
   getWeaponCombatStats,
   selectEncounterEnemyId,
 } from '../combat.ts'
+
 import type { GameState } from '../state.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { narrate } from './logging.ts'
-import { EXPLORATION_MAP, getBiomeAt } from '../../data/maps/index.ts'
+import { EXPLORATION_MAP, getBiomeAt, getDungeonDef, getTileAt } from '../../data/maps/index.ts'
 import { ACTION_DURATION_MS, SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
 import { getCompanionName } from '../companion.ts'
@@ -122,6 +123,8 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.pendingLoot = []
   state.exploration.carriedWeaponId = state.selectedWeaponId
   state.exploration.combat = null
+  state.exploration.activeDungeon = null
+  state.exploration.clearedDungeonIds = []
   revealExplorationTilesInRadius(state)
   state.activeTab = 'exploration'
   narrate(state, `${getCompanionName(state)}와 함께 탐험 시작. 칠흑 속에서 숨소리만 들린다.`)
@@ -153,6 +156,15 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     endExplorationToLoadout(state)
     state.activeTab = 'exploration'
     narrate(state, '거점으로 돌아왔다.')
+    return true
+  }
+
+  const tile = getTileAt(nextX, nextY)
+  if (tile?.dungeonId && !state.exploration.clearedDungeonIds.includes(tile.dungeonId)) {
+    state.exploration.activeDungeon = { id: tile.dungeonId, currentFloor: 0 }
+    state.exploration.phase = 'dungeon-entry'
+    const def = getDungeonDef(tile.dungeonId)
+    narrate(state, `${def?.emoji ?? '🏚️'} ${def?.name ?? tile.dungeonId}에 접근했다.`)
     return true
   }
 
@@ -261,9 +273,79 @@ export function takeExplorationLoot(state: GameState, resourceId: ResourceId): b
   return true
 }
 
+export function enterDungeon(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'dungeon-entry') return false
+  const { activeDungeon } = state.exploration
+  if (!activeDungeon) return false
+
+  const def = getDungeonDef(activeDungeon.id)
+  if (!def) {
+    state.exploration.activeDungeon = null
+    state.exploration.phase = 'moving'
+    return false
+  }
+
+  const floor = def.floors[activeDungeon.currentFloor]
+  if (!floor) return false
+
+  if (floor.dialogText) narrate(state, floor.dialogText)
+
+  const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
+  const combatState = createEnemyCombatState(floor.enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+  state.exploration.combat = combatState
+  state.exploration.phase = 'combat'
+
+  const codex = state.enemyCodex[floor.enemyId]
+  if (codex) {
+    codex.encountered = true
+    if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
+  }
+
+  narrate(state, `[${activeDungeon.currentFloor + 1}/${def.floors.length}층] ${combatState.enemyName}이(가) 막아선다.`)
+  return true
+}
+
+export function cancelDungeonEntry(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'dungeon-entry') return false
+  state.exploration.activeDungeon = null
+  state.exploration.phase = 'moving'
+  narrate(state, '발길을 돌렸다.')
+  return true
+}
+
 export function continueExplorationAfterLoot(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'loot') return false
   state.exploration.pendingLoot = []
+
+  const { activeDungeon } = state.exploration
+  if (activeDungeon) {
+    const def = getDungeonDef(activeDungeon.id)
+    if (def && activeDungeon.currentFloor + 1 < def.floors.length) {
+      activeDungeon.currentFloor += 1
+      const nextFloor = def.floors[activeDungeon.currentFloor]
+      if (nextFloor) {
+        if (nextFloor.dialogText) narrate(state, nextFloor.dialogText)
+        const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
+        const combatState = createEnemyCombatState(nextFloor.enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+        state.exploration.combat = combatState
+        state.exploration.phase = 'combat'
+        const codex = state.enemyCodex[nextFloor.enemyId]
+        if (codex) {
+          codex.encountered = true
+          if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
+        }
+        narrate(state, `[${activeDungeon.currentFloor + 1}/${def.floors.length}층] ${combatState.enemyName}이(가) 막아선다.`)
+      }
+    } else {
+      const dungeonName = def?.name ?? activeDungeon.id
+      state.exploration.clearedDungeonIds.push(activeDungeon.id)
+      state.exploration.activeDungeon = null
+      narrate(state, `${dungeonName} 던전을 클리어했다.`)
+      state.exploration.phase = 'moving'
+    }
+    return true
+  }
+
   state.exploration.phase = 'moving'
   narrate(state, '다시 발걸음을 옮긴다.')
   return true
@@ -279,6 +361,7 @@ export function handleExplorationDeath(state: GameState): void {
     }
   }
 
+  state.exploration.activeDungeon = null
   endExplorationToLoadout(state)
   state.exploration.backpack = []
   state.activeTab = 'base'

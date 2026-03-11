@@ -16,6 +16,22 @@ export type BiomeDef = {
   encounterPool: WeightedEnemy[]
 }
 
+export type MapTile = { biome: BiomeId; dungeonId?: string }
+
+export type DungeonFloor = {
+  dialogText: string
+  enemyId: EnemyId
+  rewardMultiplier: number
+}
+
+export type DungeonDef = {
+  id: string
+  name: string
+  emoji: string
+  entryText: string
+  floors: DungeonFloor[]
+}
+
 type RawBiomeDef = {
   id?: unknown
   name?: unknown
@@ -23,8 +39,18 @@ type RawBiomeDef = {
   encounterPool?: Array<{ enemyId?: unknown; weight?: unknown }>
 }
 
-type RawMapTile = {
-  biome?: unknown
+type RawDungeonFloor = {
+  dialogText?: unknown
+  enemyId?: unknown
+  rewardMultiplier?: unknown
+}
+
+type RawDungeonDef = {
+  id?: unknown
+  name?: unknown
+  emoji?: unknown
+  entryText?: unknown
+  floors?: RawDungeonFloor[]
 }
 
 type RawMapData = {
@@ -32,7 +58,8 @@ type RawMapData = {
   name?: unknown
   size?: unknown
   start?: { x?: unknown; y?: unknown }
-  tiles?: RawMapTile[][]
+  dungeons?: RawDungeonDef[]
+  tiles?: Array<Array<{ biome?: unknown; dungeonId?: unknown }>>
 }
 
 export type ExplorationMap = {
@@ -40,7 +67,8 @@ export type ExplorationMap = {
   name: string
   size: number
   start: { x: number; y: number }
-  tiles: Array<Array<{ biome: BiomeId }>>
+  dungeons: DungeonDef[]
+  tiles: MapTile[][]
 }
 
 function toFiniteInt(value: unknown, fallback: number): number {
@@ -77,13 +105,44 @@ export const BIOME_DEFS: Record<BiomeId, BiomeDef> = Object.fromEntries(
 
 const FALLBACK_BIOME_ID = Object.keys(BIOME_DEFS)[0] ?? 'fallback'
 
+function normalizeDungeons(raw: RawDungeonDef[]): DungeonDef[] {
+  return raw
+    .map((d): DungeonDef | null => {
+      if (typeof d?.id !== 'string' || typeof d.name !== 'string') return null
+      const floors = (d.floors ?? [])
+        .map((f): DungeonFloor | null => {
+          if (typeof f?.enemyId !== 'string' || !(f.enemyId in ENEMY_DEFS)) return null
+          return {
+            dialogText: typeof f.dialogText === 'string' ? f.dialogText : '',
+            enemyId: f.enemyId as EnemyId,
+            rewardMultiplier: Math.max(0.1, Number(f.rewardMultiplier) || 1),
+          }
+        })
+        .filter((f): f is DungeonFloor => f != null)
+      if (floors.length === 0) return null
+      return {
+        id: d.id,
+        name: d.name,
+        emoji: typeof d.emoji === 'string' ? d.emoji : '🏚️',
+        entryText: typeof d.entryText === 'string' ? d.entryText : '',
+        floors,
+      }
+    })
+    .filter((d): d is DungeonDef => d != null)
+}
+
 function normalizeMapData(raw: RawMapData): ExplorationMap {
   const requestedSize = Math.max(8, toFiniteInt(raw.size, 33))
-  const tiles: Array<Array<{ biome: BiomeId }>> = Array.from({ length: requestedSize }, (_, y) =>
+  const dungeons = normalizeDungeons(raw.dungeons ?? [])
+  const dungeonIds = new Set(dungeons.map((d) => d.id))
+
+  const tiles: MapTile[][] = Array.from({ length: requestedSize }, (_, y) =>
     Array.from({ length: requestedSize }, (_, x) => {
-      const biomeLike = raw.tiles?.[y]?.[x]?.biome
+      const rawTile = raw.tiles?.[y]?.[x]
+      const biomeLike = rawTile?.biome
       const biome = typeof biomeLike === 'string' && BIOME_DEFS[biomeLike] ? biomeLike : FALLBACK_BIOME_ID
-      return { biome }
+      const dungeonId = typeof rawTile?.dungeonId === 'string' && dungeonIds.has(rawTile.dungeonId) ? rawTile.dungeonId : undefined
+      return dungeonId ? { biome, dungeonId } : { biome }
     }),
   )
 
@@ -95,11 +154,20 @@ function normalizeMapData(raw: RawMapData): ExplorationMap {
       x: Math.max(0, Math.min(requestedSize - 1, toFiniteInt(raw.start?.x, Math.floor(requestedSize / 2)))),
       y: Math.max(0, Math.min(requestedSize - 1, toFiniteInt(raw.start?.y, Math.floor(requestedSize / 2)))),
     },
+    dungeons,
     tiles,
   }
 }
 
 export const EXPLORATION_MAP = normalizeMapData(rawMapData as RawMapData)
+
+export function getDungeonDef(id: string): DungeonDef | undefined {
+  return EXPLORATION_MAP.dungeons.find((d) => d.id === id)
+}
+
+export function getTileAt(x: number, y: number): MapTile | undefined {
+  return EXPLORATION_MAP.tiles[y]?.[x]
+}
 
 export function getBiomeAt(x: number, y: number): BiomeDef {
   const tile = EXPLORATION_MAP.tiles[y]?.[x]

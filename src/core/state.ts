@@ -58,7 +58,7 @@ export type ActionProgress = {
 export type TabKey = 'base' | 'assembly' | 'exploration' | 'codex'
 
 export type ExplorationMode = 'loadout' | 'active'
-export type ExplorationPhase = 'moving' | 'combat' | 'loot'
+export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry'
 
 export type Position = {
   x: number
@@ -107,6 +107,8 @@ export type ExplorationState = {
   pendingLoot: LootEntry[]
   carriedWeaponId: string | null
   combat: CombatState | null
+  activeDungeon: { id: string; currentFloor: number } | null
+  clearedDungeonIds: string[]
 }
 
 export type WeaponType = 'pistol' | 'rifle'
@@ -299,6 +301,8 @@ export const initialState: GameState = {
     pendingLoot: [],
     carriedWeaponId: null,
     combat: null,
+    activeDungeon: null,
+    clearedDungeonIds: [],
   },
   enemyCodex: Object.fromEntries(
     ENEMY_IDS.map((enemyId) => [enemyId, { encountered: false, firstEncounteredAt: null, defeatCount: 0 }]),

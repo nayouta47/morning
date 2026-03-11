@@ -62,14 +62,14 @@ export function getWeaponCombatStats(weapon: WeaponInstance | null): { damage: n
   }
 }
 
-export function createEnemyLootTable(enemyId: EnemyId): LootEntry[] {
+export function createEnemyLootTable(enemyId: EnemyId, multiplier = 1): LootEntry[] {
   const enemy = getEnemyDef(enemyId)
   const rows: LootEntry[] = []
 
   enemy.drops.forEach((drop) => {
     if (Math.random() > drop.chance) return
     const baseAmount = drop.minAmount + Math.floor(Math.random() * (drop.maxAmount - drop.minAmount + 1))
-    const amount = baseAmount * ENEMY_LOOT_AMOUNT_MULTIPLIER
+    const amount = Math.floor(baseAmount * ENEMY_LOOT_AMOUNT_MULTIPLIER * multiplier)
     if (amount > 0) rows.push({ resource: drop.resource, amount })
   })
 

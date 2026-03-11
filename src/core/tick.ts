@@ -2,6 +2,7 @@ import { BUILDING_CYCLE_MS, COMPANION_IDLE_MAX_MS, COMPANION_IDLE_MIN_MS, SMELTI
 import type { GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
 import { narrate, handleExplorationDeath } from './actions.ts'
 import { FLEE_SUCCESS_CHANCE, createEnemyLootTable, getSelectedWeapon, getWeaponCombatStats } from './combat.ts'
+import { getDungeonDef } from '../data/maps/index.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, getModuleCraftPoolByTier, getModuleCraftTierLabel, type CraftRecipeKey } from '../data/crafting.ts'
@@ -317,7 +318,10 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
   if (combat.enemyHp <= 0) {
     state.exploration.phase = 'loot'
     state.exploration.combat = null
-    state.exploration.pendingLoot = createEnemyLootTable(combat.enemyId)
+    const dungeonMultiplier = state.exploration.activeDungeon
+      ? (getDungeonDef(state.exploration.activeDungeon.id)?.floors[state.exploration.activeDungeon.currentFloor]?.rewardMultiplier ?? 1)
+      : 1
+    state.exploration.pendingLoot = createEnemyLootTable(combat.enemyId, dungeonMultiplier)
     const codex = state.enemyCodex[combat.enemyId]
     if (codex) codex.defeatCount += 1
     narrate(state, `${combat.enemyName}을(를) 쓰러뜨렸다.`)

@@ -55,7 +55,10 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
 
   const exploration = loaded.exploration as Partial<GameState['exploration']>
   base.exploration.mode = exploration.mode === 'active' ? 'active' : 'loadout'
-  base.exploration.phase = exploration.phase === 'combat' || exploration.phase === 'loot' ? exploration.phase : 'moving'
+  base.exploration.phase =
+    exploration.phase === 'combat' || exploration.phase === 'loot' || exploration.phase === 'dungeon-entry'
+      ? exploration.phase
+      : 'moving'
   base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize))
     ? Math.max(8, Number(exploration.mapSize))
     : EXPLORATION_MAP.size
@@ -112,6 +115,20 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
 
   const startKey = `${base.exploration.start.x},${base.exploration.start.y}`
   if (!base.exploration.visited.includes(startKey)) base.exploration.visited.push(startKey)
+
+  if (
+    exploration.activeDungeon &&
+    typeof exploration.activeDungeon === 'object' &&
+    typeof (exploration.activeDungeon as { id?: unknown }).id === 'string' &&
+    typeof (exploration.activeDungeon as { currentFloor?: unknown }).currentFloor === 'number'
+  ) {
+    const ad = exploration.activeDungeon as { id: string; currentFloor: number }
+    base.exploration.activeDungeon = { id: ad.id, currentFloor: Math.max(0, Math.floor(ad.currentFloor)) }
+  }
+
+  if (Array.isArray(exploration.clearedDungeonIds)) {
+    base.exploration.clearedDungeonIds = exploration.clearedDungeonIds.filter((v): v is string => typeof v === 'string')
+  }
 }
 
 function normalizeState(raw: unknown): GameState | null {
@@ -398,6 +415,8 @@ function normalizeState(raw: unknown): GameState | null {
     base.exploration.pendingLoot = []
     base.exploration.combat = null
     base.exploration.carriedWeaponId = null
+    base.exploration.activeDungeon = null
+    base.exploration.clearedDungeonIds = []
   }
 
   if (base.buildings.workbench <= 0 && base.activeTab === 'assembly') {

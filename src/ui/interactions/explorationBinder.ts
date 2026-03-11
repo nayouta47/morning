@@ -40,6 +40,16 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
       return
     }
 
+    if (target.closest<HTMLElement>('#dungeon-enter')) {
+      handlers.onEnterDungeon()
+      return
+    }
+
+    if (target.closest<HTMLElement>('#dungeon-cancel')) {
+      handlers.onCancelDungeonEntry()
+      return
+    }
+
     if (target.closest<HTMLElement>('#exploration-continue')) {
       handlers.onContinueAfterLoot()
       return

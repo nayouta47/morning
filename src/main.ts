@@ -8,6 +8,8 @@ import {
   gatherWood,
   moveEquippedModuleBetweenSlots,
   continueExplorationAfterLoot,
+  enterDungeon,
+  cancelDungeonEntry,
   addLoadoutResource,
   removeLoadoutResource,
   moveExplorationStep,
@@ -322,6 +324,16 @@ function redraw(nowOverride?: number): void {
         onContinueAfterLoot: () => {
           syncState()
           continueExplorationAfterLoot(state)
+          redraw()
+        },
+        onEnterDungeon: () => {
+          syncState()
+          enterDungeon(state)
+          redraw()
+        },
+        onCancelDungeonEntry: () => {
+          syncState()
+          cancelDungeonEntry(state)
           redraw()
         },
         onLoadoutAddItem: (resourceId) => {
