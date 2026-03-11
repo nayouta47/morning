@@ -59,9 +59,19 @@ export function renderActiveBody(state: GameState, now = Date.now()): string {
 
   if (state.exploration.phase === 'loot') {
     const lootRows = state.exploration.pendingLoot
-      .map((entry) => `<button data-loot-resource="${entry.resource as ResourceId}">획득: ${getResourceDisplay(entry.resource)} +${entry.amount}</button>`)
+      .map((entry) => `<button data-loot-resource="${entry.resource as ResourceId}">${getResourceDisplay(entry.resource)} +${entry.amount}</button>`)
       .join('')
-    return `<div class="exploration-active">${baseInfo}<div class="exploration-combat-box"><p>전리품 선택</p>${lootRows || '<p class="hint">가져갈 수 있는 전리품이 없다.</p>'}<button id="exploration-continue">계속 이동</button></div><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre></div>`
+    return `<div class="exploration-active">
+  ${baseInfo}
+  <pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre>
+</div>
+<div class="modal-backdrop exploration-loot-backdrop">
+  <div class="modal-card exploration-loot-card">
+    <h3 class="exploration-loot-title">⚔️ 전투 종료 — 전리품</h3>
+    <div class="exploration-loot-items">${lootRows || '<p class="hint">가져갈 수 있는 전리품이 없다.</p>'}</div>
+    <button id="exploration-continue" class="exploration-loot-continue">계속 이동 →</button>
+  </div>
+</div>`
   }
 
   return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><p class="hint">WASD/방향키 이동, 대각선은 Q/E/Z/C · 출발 지점(🏠)으로 돌아오면 자동 귀환</p></div>`
