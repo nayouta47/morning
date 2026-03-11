@@ -7,7 +7,7 @@ import { renderCompactLogPanel } from './logPanel.ts'
 
 function renderExplorationPrecondition(state: GameState, recoverGuideRobot: ActionGaugeView): string {
   if (state.isGuideRobotRecovered) return ''
-  return `<section class="panel exploration-precondition" aria-label="탐험 사전 조건"><h2>사전 조건</h2><p class="hint">천장이 보이지 않는 콘크리트 구조물들이 벽을 이루며 먼 하늘을 가리고 있다. 그러나 그간의 경험을 통해 알듯, 이 세상은 벽이 없다.</p>${renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot)}</section>`
+  return `<section class="panel exploration-precondition" aria-label="주위를 바라보다"><h2>주위를 바라보다</h2><p class="hint">천장이 보이지 않는 콘크리트 구조물들이 성벽을 이루며 매일매일 하늘을 삼키고 있다. 그러나 지표면을 뒤덮은 뼈와 사이버네틱스 쓰레기들이, 성벽의 부재를 증명하고 있다.</p>${renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot)}</section>`
 }
 
 function renderExplorationBody(state: GameState, recoverGuideRobot: ActionGaugeView, now = Date.now()): string {
