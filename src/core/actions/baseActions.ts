@@ -1,4 +1,5 @@
 import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
+import { COMPANION_DEPART_MESSAGES, getCompanionName } from '../companion.ts'
 import { ENEMY_IDS } from '../../data/enemies.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../../data/buildings.ts'
 import type { GameState, MinerProcessKey, SmeltingProcessKey, TabKey } from '../state.ts'
@@ -39,7 +40,14 @@ export function gatherScrap(state: GameState): void {
 
   const durationMs = getGatherScrapDurationMs(state)
   state.actionProgress.gatherScrap = durationMs
-  narrate(state, '어딜 파도 용도를 모를 고철 쓰레기들이 끝없이 나온다.')
+
+  if (state.buildings.laikaRepair > 0) {
+    state.companionIdleRemainingMs = 0
+    const name = getCompanionName(state)
+    narrate(state, name + COMPANION_DEPART_MESSAGES[Math.floor(Math.random() * COMPANION_DEPART_MESSAGES.length)])
+  } else {
+    narrate(state, '어딜 파도 용도를 모를 고철 쓰레기들이 끝없이 나온다.')
+  }
 }
 
 export function toggleBuildingRun(state: GameState, key: 'lumberMill' | 'scavenger'): void {

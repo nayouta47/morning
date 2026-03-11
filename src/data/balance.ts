@@ -62,6 +62,9 @@ export const UPGRADE_DEFS = {
 
 export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII', 'moduleCraftingIII', 'cannedMetalTech'] as const
 
+export const COMPANION_IDLE_MIN_MS = 15_000
+export const COMPANION_IDLE_MAX_MS = 45_000
+
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
 export const SMALL_HEAL_POTION_HEAL = 8

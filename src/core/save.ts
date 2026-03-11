@@ -3,6 +3,7 @@ import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
 import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { clampResourceAmount, clampResourcesToStorageCaps, getResourceStorageCap } from './resourceCaps.ts'
+import { COMPANION_IDLE_MAX_MS } from '../data/balance.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { inferModuleTypeFromAlias } from '../data/modules.ts'
@@ -295,6 +296,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.needsRobotNaming = Boolean(loaded.needsRobotNaming)
   base.isGuideRobotRecovered = Boolean(loaded.isGuideRobotRecovered)
   base.companionScrapGatherCount = Math.max(0, Math.floor(Number(loaded.companionScrapGatherCount) || 0))
+  base.companionIdleRemainingMs = Math.min(COMPANION_IDLE_MAX_MS, Math.max(0, Number((loaded as Partial<GameState>).companionIdleRemainingMs) || 0))
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
