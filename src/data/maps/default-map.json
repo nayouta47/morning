@@ -6,7 +6,31 @@
     "x": 16,
     "y": 16
   },
-  "dungeons": [],
+  "dungeons": [
+    {
+      "id": "firstDungeon",
+      "name": "버려진 공장",
+      "emoji": "🏭",
+      "entryText": "이히히 인간은 오랫만에 보는군.\n옆에 대리고 다니는 장난감은 외로워서인가?\n너 혹시 잠잘떄 쿠션이라도 껴안고 자는 타입?",
+      "floors": [
+        {
+          "dialogText": "",
+          "enemyId": "siliconBug",
+          "rewardMultiplier": 1
+        },
+        {
+          "dialogText": "",
+          "enemyId": "wheelBug",
+          "rewardMultiplier": 1
+        },
+        {
+          "dialogText": "",
+          "enemyId": "siliconLifeform",
+          "rewardMultiplier": 1
+        }
+      ]
+    }
+  ],
   "tiles": [
     [{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"}],
     [{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"},{"biome":"boneyard"}],
