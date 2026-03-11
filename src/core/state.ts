@@ -166,6 +166,7 @@ export type GameState = {
   isGuideRobotRecovered: boolean
   companionScrapGatherCount: number
   companionIdleRemainingMs: number
+  companionIsAutoGathering: boolean
 }
 
 export const initialState: GameState = {
@@ -314,4 +315,5 @@ export const initialState: GameState = {
   isGuideRobotRecovered: false,
   companionScrapGatherCount: 0,
   companionIdleRemainingMs: 0,
+  companionIsAutoGathering: false,
 }

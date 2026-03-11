@@ -314,6 +314,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.isGuideRobotRecovered = Boolean(loaded.isGuideRobotRecovered)
   base.companionScrapGatherCount = Math.max(0, Math.floor(Number(loaded.companionScrapGatherCount) || 0))
   base.companionIdleRemainingMs = Math.min(COMPANION_IDLE_MAX_MS, Math.max(0, Number((loaded as Partial<GameState>).companionIdleRemainingMs) || 0))
+  base.companionIsAutoGathering = Boolean((loaded as Partial<GameState>).companionIsAutoGathering)
 
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()

@@ -40,6 +40,7 @@ export function gatherScrap(state: GameState): void {
 
   const durationMs = getGatherScrapDurationMs(state)
   state.actionProgress.gatherScrap = durationMs
+  state.companionIsAutoGathering = false
 
   if (state.buildings.laikaRepair > 0) {
     state.companionIdleRemainingMs = 0

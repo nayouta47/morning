@@ -253,6 +253,7 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
   }
 
   if (key === 'gatherScrap') {
+    state.companionIsAutoGathering = false
     const amount = resolveGatherScrapReward(state)
     const gain = addResourceWithCap(state.resources, 'scrap', amount, storageCap)
     if (state.buildings.laikaRepair > 0) {
@@ -284,6 +285,7 @@ function tryAutoGatherScrap(state: GameState): void {
   if (state.companionIdleRemainingMs > 0) return
 
   state.actionProgress.gatherScrap = getGatherScrapDurationMs(state)
+  state.companionIsAutoGathering = true
   const name = getCompanionName(state)
   narrate(state, name + COMPANION_DEPART_MESSAGES[Math.floor(Math.random() * COMPANION_DEPART_MESSAGES.length)])
 }

@@ -45,12 +45,12 @@ export const UPGRADE_DEFS = {
   },
   moduleCraftingII: {
     name: '배선:코발트 라이너',
-    baseCost: { wood: 240, iron: 120 },
+    baseCost: { wood: 240, iron: 120, chromium: 40, molybdenum: 12, cobalt: 8 },
     effectText: '모듈 제작 II 해금',
   },
   moduleCraftingIII: {
     name: '패키징:고합금강',
-    baseCost: { wood: 320, iron: 180 },
+    baseCost: { wood: 320, iron: 180, cobalt: 20, highAlloySteel: 4 },
     effectText: '모듈 제작 III 해금',
   },
   cannedMetalTech: {

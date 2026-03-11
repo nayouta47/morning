@@ -1,8 +1,9 @@
 import type { GameState } from '../../core/state.ts'
 import { ENEMY_IDS, getEnemyDef } from '../../data/enemies.ts'
 import { getBiomesForEnemy } from '../../data/maps/index.ts'
-import { MODULE_CODEX_ENTRIES } from '../../data/modules.ts'
+import { MODULE_CODEX_ENTRIES, MODULE_METADATA } from '../../data/modules.ts'
 import { getResourceDisplay } from '../../data/resources.ts'
+import { renderInfluenceMiniGrid } from './assembly/influenceView.ts'
 
 type CodexSubTab = 'enemy' | 'chip'
 
@@ -63,7 +64,9 @@ function renderChipRows(state: GameState): string {
     .map((chip) => {
       const owned = state.modules[chip.type]
       const isOwned = owned > 0
-      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" data-codex-chip-type="${chip.type}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><p class="codex-chip-effect">${chip.effect}</p><p class="codex-chip-power">전력 소모 ⚡${chip.powerCost}</p></article>`
+      const detail = MODULE_METADATA[chip.type]
+      const miniGrid = renderInfluenceMiniGrid(chip.type)
+      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" data-codex-chip-type="${chip.type}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div><div class="module-effect-cards"><article class="module-effect-card module-effect-base" aria-label="기본효과"><h4>기본효과</h4><p class="hint">${detail.baseDescription}</p></article><article class="module-effect-card module-effect-amp" aria-label="증폭효과"><h4>증폭효과</h4><p class="hint">${detail.amplifiedDescription}</p></article></div>${miniGrid}<p class="codex-chip-power">전력 소모 ⚡${chip.powerCost}</p></article>`
     })
     .join('')
 }

@@ -24,7 +24,6 @@ export type ModuleMetadata = {
   shortLabel: string
   baseDescription: string
   amplifiedDescription: string
-  codexEffect: string
   equipmentLogName: string
   craftLogLabel: string
   aliases?: ModuleAliasMeta
@@ -39,7 +38,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
     baseDescription: '공격력 +1',
     amplifiedDescription: '공격력 +1',
-    codexEffect: '기본효과: 공격력 +1 / 증폭효과: 공격력 +1',
     equipmentLogName: '공격력 모듈(+1)',
     craftLogLabel: '💥 공격력(+1)',
     aliases: { prefixes: ['DMG-'] },
@@ -52,7 +50,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '기본 가속 +10, 증폭 시 추가 +10 · 전력 ⚡5',
     baseDescription: '가속 +10',
     amplifiedDescription: '가속 +10',
-    codexEffect: '기본효과: 가속 +10 / 증폭효과: 가속 +10',
     equipmentLogName: '쿨다운 모듈(가속 +10)',
     craftLogLabel: '⏱️ 쿨다운 가속(+10)',
     aliases: { prefixes: ['CDN-'] },
@@ -65,7 +62,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '전력 ⚡2',
     baseDescription: '증폭(중첩) + 차단 패널티 부여',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 위쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음',
     equipmentLogName: '차단 증폭기(상)',
     craftLogLabel: '📡▲ 차단 증폭기(상)',
     aliases: { exact: ['amplifierUp'], prefixes: ['AMP-U-'] },
@@ -78,7 +74,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '전력 ⚡2',
     baseDescription: '증폭(중첩) + 차단 패널티 부여',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 아래쪽 1칸 증폭(중첩) + 좌/우 슬롯 차단 패널티 10(슬롯 정지) / 증폭효과: 해당 없음',
     equipmentLogName: '차단 증폭기(하)',
     craftLogLabel: '📡▼ 차단 증폭기(하)',
     aliases: { exact: ['amplifierDown'], prefixes: ['AMP-D-'] },
@@ -91,7 +86,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
     baseDescription: '전투 시작 즉시 발사 준비',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 전투 시작 즉시 발사 준비 / 증폭효과: 해당 없음',
     equipmentLogName: '예열기(전투 시작 즉시 발사)',
     craftLogLabel: '🔥 예열기(전투 시작 즉시 발사)',
     aliases: { prefixes: ['PRE-'] },
@@ -104,7 +98,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '전력 ⚡4',
     baseDescription: '즉시 증폭 +2 + 열기 패널티 부여',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 즉시 왼쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 오른쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지',
     equipmentLogName: '열 증폭기(좌)',
     craftLogLabel: '♨️◀ 열 증폭기(좌)',
     aliases: { exact: ['heatAmplifier'], prefixes: ['HEAT-L-', 'HEAT-'] },
@@ -117,7 +110,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '전력 ⚡4',
     baseDescription: '즉시 증폭 +2 + 열기 패널티 부여',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 즉시 오른쪽 1칸 증폭 +2 + 열기 패널티 부여 / 증폭효과: 해당 없음 / 열기 패널티: 왼쪽 1칸 10 + 위/아래 1칸 5, 총 열기 패널티 기준 ⌊열기 패널티/10⌋만큼 증폭 감소 및 총 패널티 10 이상 슬롯 정지',
     equipmentLogName: '열 증폭기(우)',
     craftLogLabel: '♨️▶ 열 증폭기(우)',
     aliases: { prefixes: ['HEAT-R-'] },
@@ -130,7 +122,6 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     shortLabel: '활성화 시 좌측 비활성 슬롯 2칸 해제 · 전력 ⚡6',
     baseDescription: '작동 중 좌측 슬롯 2칸 임시 해제',
     amplifiedDescription: '해당 없음',
-    codexEffect: '기본효과: 작동 중 좌측 비활성 슬롯 2칸 임시 해제 / 증폭효과: 해당 없음',
     equipmentLogName: '해금기(좌측 슬롯 해제)',
     craftLogLabel: '🗝️ 해금기(좌측 슬롯 2칸 해제)',
     aliases: { prefixes: ['UNL-'] },
@@ -201,7 +192,6 @@ export type ModuleCodexEntry = {
   type: ModuleType
   name: string
   icon: string
-  effect: string
   powerCost: number
 }
 
@@ -211,7 +201,6 @@ export const MODULE_CODEX_ENTRIES: ModuleCodexEntry[] = MODULE_TYPES.map((type) 
     type,
     name: meta.nameKr,
     icon: meta.emoji,
-    effect: meta.codexEffect,
     powerCost: meta.powerCost,
   }
 })
