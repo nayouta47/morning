@@ -5,7 +5,7 @@ import type { ActionGaugeView } from '../../types.ts'
 
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
 
-function renderBackpackHeatmap(state: GameState): string {
+export function renderBackpackHeatmap(state: GameState): string {
   const usedWeight = getBackpackUsedWeight(state.exploration.backpack)
   const maxWeight = state.exploration.backpackMaxWeight
   const ratio = maxWeight > 0 ? Math.min(1, usedWeight / maxWeight) : 0
@@ -63,8 +63,4 @@ export function getSyntheticFoodButtonState(state: GameState): { amount: number;
     amount,
     disabled: state.exploration.phase === 'combat' || amount <= 0 || state.exploration.hp >= state.exploration.maxHp,
   }
-}
-
-export function renderExplorationBackpackHeatmap(state: GameState): string {
-  return renderBackpackHeatmap(state)
 }

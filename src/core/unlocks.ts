@@ -35,6 +35,16 @@ const UNLOCK_DEFS: UnlockDef[] = [
     requirements: [{ kind: 'building', building: 'lab', count: 1 }],
     log: '건물 해금: 드론 컨트롤러',
   },
+  {
+    id: 'lab',
+    requirements: [{ kind: 'companionGatherCount', count: 3 }],
+    log: '건물 해금: 지자 컴퓨터',
+  },
+  {
+    id: 'workbench',
+    requirements: [{ kind: 'companionGatherCount', count: 8 }],
+    log: '건물 해금: 금속 프린터',
+  },
 ]
 
 export function evaluateUnlocks(state: GameState): string[] {

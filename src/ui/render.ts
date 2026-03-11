@@ -5,7 +5,7 @@ import { getResourceStorageCap } from '../core/resourceCaps.ts'
 import { getCompanionName } from '../core/companion.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
-import { formatCost, formatResourceAmount, formatResourceValue, type ResourceId } from '../data/resources.ts'
+import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
 import type { ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
 import { setHidden, setText } from './view.ts'
@@ -80,9 +80,6 @@ function patchLogs(app: ParentNode, state: GameState): void {
   })
 }
 
-function formatBaseResourceAmount(resourceId: ResourceId, amount: number): string {
-  return formatResourceValue(resourceId, amount)
-}
 
 export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date.now()): void {
   const app = document.querySelector<HTMLDivElement>('#app')
@@ -95,22 +92,38 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchActionGauge(app, 'recover-guide-robot', actionUI.recoverGuideRobot)
 
   setText(app, '#resource-storage-cap-label', `자원 (최대 ${getResourceStorageCap(state)})`)
-  setText(app, '#res-wood', formatBaseResourceAmount('wood', state.resources.wood))
-  setText(app, '#res-scrap', formatBaseResourceAmount('scrap', state.resources.scrap))
-  setText(app, '#res-iron', formatBaseResourceAmount('iron', state.resources.iron))
-  setText(app, '#res-chromium', formatBaseResourceAmount('chromium', state.resources.chromium))
-  setText(app, '#res-molybdenum', formatBaseResourceAmount('molybdenum', state.resources.molybdenum))
-  setText(app, '#res-cobalt', formatBaseResourceAmount('cobalt', state.resources.cobalt))
+  setText(app, '#res-wood', formatResourceValue('wood', state.resources.wood))
+  setHidden(app, '[data-resource-id="wood"]', state.resources.wood <= 0)
+  setText(app, '#res-scrap', formatResourceValue('scrap', state.resources.scrap))
+  setHidden(app, '[data-resource-id="scrap"]', state.resources.scrap <= 0)
+  setText(app, '#res-iron', formatResourceValue('iron', state.resources.iron))
+  setHidden(app, '[data-resource-id="iron"]', state.resources.iron <= 0)
+  setText(app, '#res-chromium', formatResourceValue('chromium', state.resources.chromium))
+  setHidden(app, '[data-resource-id="chromium"]', state.resources.chromium <= 0)
+  setText(app, '#res-molybdenum', formatResourceValue('molybdenum', state.resources.molybdenum))
+  setHidden(app, '[data-resource-id="molybdenum"]', state.resources.molybdenum <= 0)
+  setText(app, '#res-cobalt', formatResourceValue('cobalt', state.resources.cobalt))
+  setHidden(app, '[data-resource-id="cobalt"]', state.resources.cobalt <= 0)
   setText(app, '#res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)
-  setText(app, '#res-scavenger-drone', formatBaseResourceAmount('scavengerDrone', state.resources.scavengerDrone))
-  setText(app, '#res-synthetic-food', formatBaseResourceAmount('syntheticFood', state.resources.syntheticFood))
-  setText(app, '#res-small-heal-potion', formatBaseResourceAmount('smallHealPotion', state.resources.smallHealPotion))
-  setText(app, '#res-silicon-mass', formatBaseResourceAmount('siliconMass', state.resources.siliconMass))
-  setText(app, '#res-carbon', formatBaseResourceAmount('carbon', state.resources.carbon))
-  setText(app, '#res-silicon-ingot', formatBaseResourceAmount('siliconIngot', state.resources.siliconIngot))
-  setText(app, '#res-nickel', formatBaseResourceAmount('nickel', state.resources.nickel))
-  setText(app, '#res-low-alloy-steel', formatBaseResourceAmount('lowAlloySteel', state.resources.lowAlloySteel))
-  setText(app, '#res-high-alloy-steel', formatBaseResourceAmount('highAlloySteel', state.resources.highAlloySteel))
+  setHidden(app, '[data-resource-id="shovel"]', state.resources.shovel <= 0)
+  setText(app, '#res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))
+  setHidden(app, '[data-resource-id="scavengerDrone"]', state.resources.scavengerDrone <= 0)
+  setText(app, '#res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood))
+  setHidden(app, '[data-resource-id="syntheticFood"]', state.resources.syntheticFood <= 0)
+  setText(app, '#res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))
+  setHidden(app, '[data-resource-id="smallHealPotion"]', state.resources.smallHealPotion <= 0)
+  setText(app, '#res-silicon-mass', formatResourceValue('siliconMass', state.resources.siliconMass))
+  setHidden(app, '[data-resource-id="siliconMass"]', state.resources.siliconMass <= 0)
+  setText(app, '#res-carbon', formatResourceValue('carbon', state.resources.carbon))
+  setHidden(app, '[data-resource-id="carbon"]', state.resources.carbon <= 0)
+  setText(app, '#res-silicon-ingot', formatResourceValue('siliconIngot', state.resources.siliconIngot))
+  setHidden(app, '[data-resource-id="siliconIngot"]', state.resources.siliconIngot <= 0)
+  setText(app, '#res-nickel', formatResourceValue('nickel', state.resources.nickel))
+  setHidden(app, '[data-resource-id="nickel"]', state.resources.nickel <= 0)
+  setText(app, '#res-low-alloy-steel', formatResourceValue('lowAlloySteel', state.resources.lowAlloySteel))
+  setHidden(app, '[data-resource-id="lowAlloySteel"]', state.resources.lowAlloySteel <= 0)
+  setText(app, '#res-high-alloy-steel', formatResourceValue('highAlloySteel', state.resources.highAlloySteel))
+  setHidden(app, '[data-resource-id="highAlloySteel"]', state.resources.highAlloySteel <= 0)
 
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`)
@@ -183,8 +196,8 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   const lumberGauge = getBuildingGaugeView(state, 'lumberMill', now)
   const scavengerGauge = getBuildingGaugeView(state, 'scavenger', now)
-  patchBuildingGauge(app, 'lumber-progress', lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase)
-  patchBuildingGauge(app, 'scavenger-progress', scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase)
+  patchBuildingGauge(app, 'lumber-progress', lumberGauge)
+  patchBuildingGauge(app, 'scavenger-progress', scavengerGauge)
 
   setText(app, '#lumber-progress .gauge-title', `벌목기 가동 x${state.buildings.lumberMill}`)
   setText(app, '#scavenger-progress .gauge-title', `스캐빈저 가동 x${state.resources.scavengerDrone}`)

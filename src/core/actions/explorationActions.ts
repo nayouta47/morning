@@ -305,9 +305,12 @@ export function tryReturnFromExploration(state: GameState): boolean {
   return true
 }
 
+function isLoadoutResourceAllowed(state: GameState, resourceId: ResourceId): boolean {
+  return state.exploration.mode === 'loadout' && LOADOUT_ALLOWED_RESOURCES.has(resourceId)
+}
+
 export function addLoadoutResource(state: GameState, resourceId: ResourceId, amount = 1): boolean {
-  if (state.exploration.mode !== 'loadout') return false
-  if (!LOADOUT_ALLOWED_RESOURCES.has(resourceId)) return false
+  if (!isLoadoutResourceAllowed(state, resourceId)) return false
 
   const addAmount = Math.max(1, Math.floor(amount))
   if (state.resources[resourceId] < addAmount) {
@@ -330,8 +333,7 @@ export function addLoadoutResource(state: GameState, resourceId: ResourceId, amo
 }
 
 export function removeLoadoutResource(state: GameState, resourceId: ResourceId, amount = 1): boolean {
-  if (state.exploration.mode !== 'loadout') return false
-  if (!LOADOUT_ALLOWED_RESOURCES.has(resourceId)) return false
+  if (!isLoadoutResourceAllowed(state, resourceId)) return false
 
   const removeAmount = Math.max(1, Math.floor(amount))
   if (!removeBackpackResource(state, resourceId, removeAmount)) {

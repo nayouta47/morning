@@ -25,6 +25,8 @@ export type Unlocks = {
   miner: boolean
   electricFurnace: boolean
   droneController: boolean
+  lab: boolean
+  workbench: boolean
 }
 
 export type ProductionProgress = {
@@ -160,6 +162,7 @@ export type GameState = {
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
+  companionScrapGatherCount: number
 }
 
 export const initialState: GameState = {
@@ -207,6 +210,8 @@ export const initialState: GameState = {
     miner: true,
     electricFurnace: false,
     droneController: false,
+    lab: false,
+    workbench: false,
   },
   productionProgress: {
     lumberMill: 0,
@@ -302,4 +307,5 @@ export const initialState: GameState = {
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,
+  companionScrapGatherCount: 0,
 }

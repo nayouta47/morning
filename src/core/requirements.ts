@@ -9,6 +9,7 @@ export type Requirement =
   | { kind: 'unlock'; unlock: keyof GameState['unlocks']; expected?: boolean }
   | { kind: 'all'; requirements: Requirement[] }
   | { kind: 'any'; requirements: Requirement[] }
+  | { kind: 'companionGatherCount'; count: number }
 
 export function isRequirementMet(state: GameState, requirement: Requirement): boolean {
   switch (requirement.kind) {
@@ -22,6 +23,8 @@ export function isRequirementMet(state: GameState, requirement: Requirement): bo
       return requirement.requirements.every((entry) => isRequirementMet(state, entry))
     case 'any':
       return requirement.requirements.some((entry) => isRequirementMet(state, entry))
+    case 'companionGatherCount':
+      return state.companionScrapGatherCount >= requirement.count
   }
 }
 
@@ -47,6 +50,8 @@ export function getRequirementMissingText(state: GameState, requirement: Require
         .filter((text): text is string => Boolean(text))
       return options.length > 0 ? options.join(' 또는 ') : '조건 필요'
     }
+    case 'companionGatherCount':
+      return isRequirementMet(state, requirement) ? null : `안내견 고물줍기 ${requirement.count}회 필요`
   }
 }
 

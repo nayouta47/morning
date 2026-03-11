@@ -82,23 +82,16 @@ export function renderGaugeButton(id: string, text: string, ariaLabel: string, a
   `
 }
 
-export function renderBuildingGauge(
-  id: string,
-  title: string,
-  progress: number,
-  stateText: string,
-  timeText: string,
-  phase: BuildingGaugeView['phase'],
-): string {
-  const width = Math.round(clamp01(progress) * 100)
+export function renderBuildingGauge(id: string, title: string, gauge: BuildingGaugeView): string {
+  const width = Math.round(clamp01(gauge.progress) * 100)
   return `
-    <button class="building-gauge gauge-${phase}" aria-label="${title} 가동 토글" id="${id}" ${phase === 'idle' ? 'disabled' : ''}>
+    <button class="building-gauge gauge-${gauge.phase}" aria-label="${title} 가동 토글" id="${id}" ${gauge.phase === 'idle' ? 'disabled' : ''}>
       <span class="gauge-fill" style="width:${width}%"></span>
       <span class="gauge-content gauge-text-stack">
         <span class="gauge-title gauge-text-title">${title}</span>
         <span class="gauge-meta gauge-text-meta">
-          <span class="gauge-state gauge-text-state">${stateText}</span>
-          <span class="gauge-time gauge-text-time">${timeText}</span>
+          <span class="gauge-state gauge-text-state">${gauge.percentText}</span>
+          <span class="gauge-time gauge-text-time">${gauge.timeText}</span>
         </span>
       </span>
     </button>
@@ -230,8 +223,8 @@ function formatBaseResourceValue(resource: keyof GameState['resources'], amount:
   return formatResourceValue(resource, amount)
 }
 
-function renderResourceRow(resource: keyof GameState['resources'], id: string, value: string): string {
-  return `<p class="resource-row" data-resource-row="true" data-resource-id="${resource}">${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
+function renderResourceRow(resource: keyof GameState['resources'], id: string, value: string, amount: number): string {
+  return `<p class="resource-row" data-resource-row="true" data-resource-id="${resource}"${amount <= 0 ? ' hidden' : ''}>${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
 }
 
 function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
@@ -315,10 +308,10 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
 
   const runRows: string[] = []
   if (state.buildings.lumberMill > 0) {
-    runRows.push(renderBuildingGauge('lumber-progress', `벌목기 가동 x${state.buildings.lumberMill}`, lumberGauge.progress, lumberGauge.percentText, lumberGauge.timeText, lumberGauge.phase))
+    runRows.push(renderBuildingGauge('lumber-progress', `벌목기 가동 x${state.buildings.lumberMill}`, lumberGauge))
   }
   if (state.buildings.droneController > 0) {
-    runRows.push(renderBuildingGauge('scavenger-progress', `스캐빈저 가동 x${state.resources.scavengerDrone}`, scavengerGauge.progress, scavengerGauge.percentText, scavengerGauge.timeText, scavengerGauge.phase))
+    runRows.push(renderBuildingGauge('scavenger-progress', `스캐빈저 가동 x${state.resources.scavengerDrone}`, scavengerGauge))
   }
   const runSection = runRows.length > 0
     ? `<section class="action-group" aria-label="가동 행동"><h3 class="subheading">가동</h3>${runRows.join('')}</section>`
@@ -340,8 +333,12 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
     buildingRows.push(`<button id="buy-miner" aria-label="건물 설치"><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button>`)
   }
   buildingRows.push(`<button id="buy-laika-repair" aria-label="건물 설치" ${singletonInstalled.laikaRepair || !state.isGuideRobotRecovered ? 'disabled' : ''}><span id="buy-laika-repair-label">${singletonInstalled.laikaRepair ? `${companionName} 수리 (설치 완료)` : state.isGuideRobotRecovered ? `${companionName} 수리 (${formatCost(laikaRepairCost)})` : `${companionName} 수리 (안내견 회수 필요)`}</span></button>`)
-  buildingRows.push(`<button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button>`)
-  buildingRows.push(`<button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button>`)
+  if (state.unlocks.lab || singletonInstalled.lab) {
+    buildingRows.push(`<button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button>`)
+  }
+  if (state.unlocks.workbench || singletonInstalled.workbench) {
+    buildingRows.push(`<button id="buy-workbench" aria-label="건물 설치" ${singletonInstalled.workbench ? 'disabled' : ''}><span id="buy-workbench-label">${singletonInstalled.workbench ? `${getBuildingLabel('workbench')} (설치 완료)` : `금속 프린터 설치 (${formatCost(workbenchCost)})`}</span></button>`)
+  }
   if (electricFurnaceUnlocked || state.buildings.electricFurnace > 0) {
     buildingRows.push(`<button id="buy-electric-furnace" aria-label="건물 설치" ${state.buildings.lab <= 0 ? 'disabled' : ''}><span id="buy-electric-furnace-label">전기로 설치 (${formatCost(electricFurnaceCost)})</span></button>`)
   }
@@ -350,7 +347,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   }
 
   return `<section id="panel-base" class="panel-stack ${state.activeTab === 'base' ? '' : 'hidden'}">
-      <div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel resources"><h2>창고</h2><section class="warehouse-grid" aria-label="창고"><div class="warehouse-column" aria-label="자원"><p class="resource-group-label" id="resource-storage-cap-label">자원 (최대 ${storageCap})</p><div class="resource-group resource-group--major">${renderResourceRow('wood', 'res-wood', formatBaseResourceValue('wood', state.resources.wood))}${renderResourceRow('scrap', 'res-scrap', formatBaseResourceValue('scrap', state.resources.scrap))}${renderResourceRow('siliconMass', 'res-silicon-mass', formatBaseResourceValue('siliconMass', state.resources.siliconMass))}</div><div class="resource-group resource-group--major">${renderResourceRow('iron', 'res-iron', formatBaseResourceValue('iron', state.resources.iron))}${renderResourceRow('lowAlloySteel', 'res-low-alloy-steel', formatBaseResourceValue('lowAlloySteel', state.resources.lowAlloySteel))}${renderResourceRow('highAlloySteel', 'res-high-alloy-steel', formatBaseResourceValue('highAlloySteel', state.resources.highAlloySteel))}</div><div class="resource-group resource-group--major">${renderResourceRow('chromium', 'res-chromium', formatBaseResourceValue('chromium', state.resources.chromium))}${renderResourceRow('molybdenum', 'res-molybdenum', formatBaseResourceValue('molybdenum', state.resources.molybdenum))}${renderResourceRow('cobalt', 'res-cobalt', formatBaseResourceValue('cobalt', state.resources.cobalt))}${renderResourceRow('nickel', 'res-nickel', formatBaseResourceValue('nickel', state.resources.nickel))}</div><div class="resource-group resource-group--major">${renderResourceRow('carbon', 'res-carbon', formatBaseResourceValue('carbon', state.resources.carbon))}${renderResourceRow('siliconIngot', 'res-silicon-ingot', formatBaseResourceValue('siliconIngot', state.resources.siliconIngot))}</div></div><div class="warehouse-column" aria-label="장비"><p class="resource-group-label">장비</p><div class="resource-group resource-group--major">${renderResourceRow('shovel', 'res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`)}${renderResourceRow('scavengerDrone', 'res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone))}${renderResourceRow('syntheticFood', 'res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood))}${renderResourceRow('smallHealPotion', 'res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion))}</div></div></section></section></div>
+      <div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel resources"><h2>창고</h2><section class="warehouse-grid" aria-label="창고"><div class="warehouse-column" aria-label="자원"><p class="resource-group-label" id="resource-storage-cap-label">자원 (최대 ${storageCap})</p><div class="resource-group resource-group--major">${renderResourceRow('wood', 'res-wood', formatBaseResourceValue('wood', state.resources.wood), state.resources.wood)}${renderResourceRow('scrap', 'res-scrap', formatBaseResourceValue('scrap', state.resources.scrap), state.resources.scrap)}${renderResourceRow('siliconMass', 'res-silicon-mass', formatBaseResourceValue('siliconMass', state.resources.siliconMass), state.resources.siliconMass)}</div><div class="resource-group resource-group--major">${renderResourceRow('iron', 'res-iron', formatBaseResourceValue('iron', state.resources.iron), state.resources.iron)}${renderResourceRow('lowAlloySteel', 'res-low-alloy-steel', formatBaseResourceValue('lowAlloySteel', state.resources.lowAlloySteel), state.resources.lowAlloySteel)}${renderResourceRow('highAlloySteel', 'res-high-alloy-steel', formatBaseResourceValue('highAlloySteel', state.resources.highAlloySteel), state.resources.highAlloySteel)}</div><div class="resource-group resource-group--major">${renderResourceRow('chromium', 'res-chromium', formatBaseResourceValue('chromium', state.resources.chromium), state.resources.chromium)}${renderResourceRow('molybdenum', 'res-molybdenum', formatBaseResourceValue('molybdenum', state.resources.molybdenum), state.resources.molybdenum)}${renderResourceRow('cobalt', 'res-cobalt', formatBaseResourceValue('cobalt', state.resources.cobalt), state.resources.cobalt)}${renderResourceRow('nickel', 'res-nickel', formatBaseResourceValue('nickel', state.resources.nickel), state.resources.nickel)}</div><div class="resource-group resource-group--major">${renderResourceRow('carbon', 'res-carbon', formatBaseResourceValue('carbon', state.resources.carbon), state.resources.carbon)}${renderResourceRow('siliconIngot', 'res-silicon-ingot', formatBaseResourceValue('siliconIngot', state.resources.siliconIngot), state.resources.siliconIngot)}</div></div><div class="warehouse-column" aria-label="장비"><p class="resource-group-label">장비</p><div class="resource-group resource-group--major">${renderResourceRow('shovel', 'res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`, state.resources.shovel)}${renderResourceRow('scavengerDrone', 'res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone), state.resources.scavengerDrone)}${renderResourceRow('syntheticFood', 'res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood), state.resources.syntheticFood)}${renderResourceRow('smallHealPotion', 'res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion), state.resources.smallHealPotion)}</div></div></section></section></div>
       <section class="panel actions"><h2>행동</h2>${gatherSection}${runSection}${minerSection}${smeltingSection}</section>
       <section class="panel production"><h2>생산</h2><section id="crafting-panel" class="production-group" aria-label="제작"><h3 class="subheading">제작</h3>${renderCraftActions(state)}</section><section class="production-group" aria-label="건설"><h3 class="subheading">건설</h3>${buildingRows.join('')}</section></section>
       <section id="upgrades-panel" class="panel upgrades" ${state.buildings.lab > 0 ? '' : 'hidden'}><h2>연구</h2>${RESEARCH_PANEL_UPGRADE_KEYS.map((key) => {
@@ -377,19 +374,19 @@ export function patchActionGauge(app: ParentNode, id: string, action: ActionGaug
   if (time) time.textContent = action.timeText
 }
 
-export function patchBuildingGauge(app: ParentNode, id: string, progress: number, stateText: string, timeText: string, phase: BuildingGaugeView['phase']): void {
+export function patchBuildingGauge(app: ParentNode, id: string, gaugeView: BuildingGaugeView): void {
   const gauge = app.querySelector<HTMLElement>(`#${id}`)
   if (!gauge) return
   gauge.classList.remove('gauge-running', 'gauge-paused', 'gauge-idle')
-  gauge.classList.add(`gauge-${phase}`)
-  if (gauge instanceof HTMLButtonElement) gauge.disabled = phase === 'idle'
-  const width = Math.round(clamp01(progress) * 100)
+  gauge.classList.add(`gauge-${gaugeView.phase}`)
+  if (gauge instanceof HTMLButtonElement) gauge.disabled = gaugeView.phase === 'idle'
+  const width = Math.round(clamp01(gaugeView.progress) * 100)
   const fill = gauge.querySelector<HTMLElement>('.gauge-fill')
   if (fill) fill.style.width = `${width}%`
   const state = gauge.querySelector<HTMLElement>('.gauge-state')
-  if (state) state.textContent = stateText
+  if (state) state.textContent = gaugeView.percentText
   const time = gauge.querySelector<HTMLElement>('.gauge-time')
-  if (time) time.textContent = timeText
+  if (time) time.textContent = gaugeView.timeText
 }
 
 export function patchSmeltingPanel(app: ParentNode, state: GameState, now = Date.now()): void {
@@ -400,7 +397,7 @@ export function patchSmeltingPanel(app: ParentNode, state: GameState, now = Date
 
   ;(['burnWood', 'meltScrap', 'meltIron', 'meltSiliconMass'] as SmeltingProcessKey[]).forEach((key) => {
     const gauge = getSmeltingGaugeMeta(state, key, now)
-    patchBuildingGauge(app, `smelting-gauge-${key}`, gauge.progress, gauge.percentText, gauge.timeText, gauge.phase)
+    patchBuildingGauge(app, `smelting-gauge-${key}`, gauge)
 
     const allocated = state.smeltingAllocation[key]
     const title = getSmeltingTitle(key)
@@ -427,7 +424,7 @@ export function patchMinerPanel(app: ParentNode, state: GameState, now = Date.no
 
   ;(['crushScrap', 'crushSiliconMass'] as MinerProcessKey[]).forEach((key) => {
     const gauge = getMinerGaugeMeta(state, key, now)
-    patchBuildingGauge(app, `miner-gauge-${key}`, gauge.progress, gauge.percentText, gauge.timeText, gauge.phase)
+    patchBuildingGauge(app, `miner-gauge-${key}`, gauge)
 
     const allocated = state.minerAllocation[key]
     const title = getMinerTitle(key)

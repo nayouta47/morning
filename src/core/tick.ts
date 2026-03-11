@@ -7,7 +7,8 @@ import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
 import { CRAFT_RECIPE_DEFS, getModuleCraftPoolByTier, getModuleCraftTierLabel, type CraftRecipeKey } from '../data/crafting.ts'
 import { MODULE_METADATA } from '../data/modules.ts'
 import { addResourceWithCap, getResourceStorageCap } from './resourceCaps.ts'
-import { SHOVEL_MAX_STACK, getGatherWoodReward, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
+import { SHOVEL_MAX_STACK, getGatherWoodReward, getGatherScrapDurationMs, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
+import { getCompanionName } from './companion.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -253,6 +254,17 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
   if (key === 'gatherScrap') {
     const amount = resolveGatherScrapReward(state)
     const gain = addResourceWithCap(state.resources, 'scrap', amount, storageCap)
+    if (state.buildings.laikaRepair > 0) {
+      state.companionScrapGatherCount += 1
+      const name = getCompanionName(state)
+      const returnLogs = [
+        `${name}가 고철을 잔뜩 물고 돌아왔다.`,
+        `${name}가 꼬리를 흔들며 고물 더미를 내려놓는다.`,
+        `${name}가 낡은 부품들을 발 앞에 가지런히 쌓아놓고 앉는다.`,
+        `폐허 냄새를 잔뜩 묻힌 ${name}가 총총걸음으로 돌아왔다.`,
+      ]
+      appendLog(state, returnLogs[Math.floor(Math.random() * returnLogs.length)])
+    }
     logDiscardedOverflow(state, 'scrap', gain.discarded)
     return
   }
@@ -261,6 +273,23 @@ function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherSc
   state.actionProgress.recoverGuideRobot = 0
   appendLog(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다.')
   appendLog(state, '구조가 생각보다 단순한 것 같다. 수리할 수 있을지도.')
+}
+
+const COMPANION_DEPART_LOGS = [
+  '가 코를 킁킁거리며 잔해 속으로 사라진다.',
+  '가 꼬리를 흔들며 골목 저편으로 달려나갔다.',
+  '가 낑낑거리며 고물 냄새를 따라간다.',
+  '가 먼지 투성이 폐허를 향해 총총 걸어 들어간다.',
+]
+
+function tryAutoGatherScrap(state: GameState): void {
+  if (state.buildings.laikaRepair <= 0) return
+  if (!state.unlocks.scrapAction) return
+  if (state.actionProgress.gatherScrap > 0) return
+
+  state.actionProgress.gatherScrap = getGatherScrapDurationMs(state)
+  const name = getCompanionName(state)
+  appendLog(state, name + COMPANION_DEPART_LOGS[Math.floor(Math.random() * COMPANION_DEPART_LOGS.length)])
 }
 
 function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
@@ -350,6 +379,7 @@ function advanceBaseByElapsed(state: GameState, elapsed: number): void {
 
   processActionElapsed(state, 'gatherWood', elapsed, storageCap)
   processActionElapsed(state, 'gatherScrap', elapsed, storageCap)
+  tryAutoGatherScrap(state)
   processActionElapsed(state, 'recoverGuideRobot', elapsed, storageCap)
 }
 
