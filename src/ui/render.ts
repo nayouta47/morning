@@ -71,7 +71,7 @@ function patchTabs(app: ParentNode, state: GameState): void {
   const isCodex = state.activeTab === 'codex'
   const explorationActive = state.exploration.mode === 'active'
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const codexUnlocked = state.buildings.lab >= 1
+  const codexUnlocked = state.collapseEventDismissed
 
   baseTab.classList.toggle('active', isBase)
   assTab.classList.toggle('active', isAssembly)
@@ -292,7 +292,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
 
   const focusedId = (document.activeElement as HTMLElement | null)?.id ?? null
   const assemblyUnlocked = state.buildings.workbench >= 1
-  const codexUnlocked = state.buildings.lab >= 1
+  const codexUnlocked = state.collapseEventDismissed
 
   app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '일기' : '일기(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}${renderDogNamingModal(state)}${renderCollapseEventModal(state)}${renderTerminalIllnessModal(state, actionUI.cryoSleep)}${renderTimePassedModal(state)}${renderRelapseModal(state, actionUI.cryoSleep)}`
 

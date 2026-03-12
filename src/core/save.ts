@@ -424,7 +424,7 @@ function normalizeState(raw: unknown): GameState | null {
     base.activeTab = 'base'
   }
 
-  if (base.buildings.lab <= 0 && base.activeTab === 'codex') {
+  if (!base.collapseEventDismissed && base.activeTab === 'codex') {
     base.activeTab = 'base'
   }
 
