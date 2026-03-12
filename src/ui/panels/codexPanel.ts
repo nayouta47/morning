@@ -106,7 +106,11 @@ function renderEventRows(state: GameState): string {
 }
 
 function renderChipRows(state: GameState): string {
-  return CHIP_CODEX_ENTRIES
+  const entries = state.codexRevealAll ? CHIP_CODEX_ENTRIES : CHIP_CODEX_ENTRIES.filter((chip) => state.modules[chip.type] > 0)
+  if (entries.length === 0) {
+    return '<p class="codex-empty">아직 획득한 장비가 없습니다.</p>'
+  }
+  return entries
     .map((chip) => {
       const owned = state.modules[chip.type]
       const isOwned = owned > 0
@@ -137,8 +141,8 @@ function renderCodexBody(state: GameState): string {
   return `<div class="codex-list" id="codex-list">${renderEnemyRows(state)}</div>`
 }
 
-function renderCodexHint(): string {
-  if (selectedCodexSubTab === 'chip') return '모든 칩을 표시합니다. 미보유 칩도 잠김 상태로 확인할 수 있습니다.'
+function renderCodexHint(state: GameState): string {
+  if (selectedCodexSubTab === 'chip') return state.codexRevealAll ? '모든 장비를 표시합니다. 미보유 장비도 잠김 상태로 확인할 수 있습니다.' : '획득한 장비만 기록됩니다.'
   if (selectedCodexSubTab === 'event') return '경험한 사건이 순서대로 기록됩니다.'
   return '마주친 것들만 기록됩니다. 눌러서 상세 정보 확인.'
 }
@@ -148,7 +152,7 @@ function renderSubTabs(): string {
 }
 
 export function renderCodexPanel(state: GameState): string {
-  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>일기</h2>${renderSubTabs()}<p class="hint" id="codex-hint">${renderCodexHint()}</p><div id="codex-content" data-signature="${codexSignature(state)}">${renderCodexBody(state)}</div></section>`
+  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>일기</h2>${renderSubTabs()}<p class="hint" id="codex-hint">${renderCodexHint(state)}</p><div id="codex-content" data-signature="${codexSignature(state)}">${renderCodexBody(state)}</div></section>`
 }
 
 export function patchCodexPanel(app: ParentNode, state: GameState): void {
@@ -162,7 +166,7 @@ export function patchCodexPanel(app: ParentNode, state: GameState): void {
   content.innerHTML = renderCodexBody(state)
 
   const hint = app.querySelector<HTMLElement>('#codex-hint')
-  if (hint) hint.textContent = renderCodexHint()
+  if (hint) hint.textContent = renderCodexHint(state)
 
   const enemyTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="enemy"]')
   const chipTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="chip"]')
