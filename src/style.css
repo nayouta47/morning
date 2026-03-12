@@ -1671,23 +1671,6 @@ li {
   color: #bdb6a7;
 }
 
-.codex-chip-power {
-  margin: 4px 0 0;
-  font-size: 11px;
-  color: #9fc2d6;
-}
-
-.codex-power-list { display: grid; gap: 10px; }
-.codex-power-entry { border: 1px solid #2e2b26; border-radius: 8px; padding: 10px 12px; }
-.codex-power-entry.overloaded { border-color: #6b3535; }
-.codex-power-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.codex-power-badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #1e3a1e; color: #7db87d; }
-.codex-power-badge.overloaded { background: #3a1e1e; color: #c07070; }
-.codex-power-bar-wrap { height: 4px; background: #222; border-radius: 2px; margin-bottom: 6px; overflow: hidden; }
-.codex-power-bar { height: 100%; background: #5a8fa0; border-radius: 2px; }
-.codex-power-bar.overloaded { background: #9b4a4a; }
-.codex-power-modules { margin: 4px 0 0; padding: 0; list-style: none; font-size: 12px; color: #a09890; }
-.codex-power-modules li { padding: 1px 0; }
 
 .exploration-loot-card {
   width: min(400px, calc(100vw - 24px));

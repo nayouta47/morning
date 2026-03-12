@@ -16,5 +16,13 @@ export function renderModuleDetail(moduleType: ModuleType | null): string {
       <h4>증폭효과</h4>
       <p class="hint">${detail.amplifiedDescription}</p>
     </article>
+    <article class="module-effect-card module-effect-power" aria-label="전력">
+      <h4>전력</h4>
+      <p class="hint">⚡ ${detail.powerCost}</p>
+    </article>
+    <article class="module-effect-card module-effect-weight" aria-label="무게">
+      <h4>무게</h4>
+      <p class="hint">⚖️ ${detail.weight}</p>
+    </article>
   </div>${miniGrid}`
 }
