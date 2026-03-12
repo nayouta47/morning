@@ -3,4 +3,5 @@ export const EVENT_NAMES = {
   terminalIllness: '불치병',
   timePassed: '얼마나 흐른거지?',
   relapse: '재발작',
+  lookAround: '주위를 바라보다',
 } as const

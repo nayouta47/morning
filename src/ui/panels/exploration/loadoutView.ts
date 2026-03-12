@@ -2,8 +2,6 @@ import type { GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight, getBackpackResourceAmount } from '../../../core/explorationBackpack.ts'
 import { RESOURCE_DEFS, type ResourceId } from '../../../data/resources.ts'
 import { WEAPON_DISPLAY_STATS } from '../../../data/balance.ts'
-import type { ActionGaugeView } from '../../types.ts'
-
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
 
 export function renderBackpackHeatmap(state: GameState): string {
@@ -63,7 +61,7 @@ function getBlockReason(canStart: boolean): string {
   return ''
 }
 
-export function renderLoadoutBody(state: GameState, _recoverGuideRobot: ActionGaugeView): string {
+export function renderLoadoutBody(state: GameState): string {
   const canStart = Boolean(state.selectedWeaponId) && state.isGuideRobotRecovered && state.buildings.laikaRepair > 0
   const blockReason = getBlockReason(Boolean(state.selectedWeaponId))
 

@@ -40,6 +40,12 @@ const EVENT_CODEX_ENTRIES: EventCodexEntry[] = [
     description: '시야가 흐려졌다. 바닥이 기울어졌다. 다시.',
     isUnlocked: (state) => state.relapseEventDismissed,
   },
+  {
+    key: 'lookAround',
+    name: EVENT_NAMES.lookAround,
+    description: '천장이 보이지 않는 콘크리트 구조물들이 성벽을 이루고 있었다. 뼈와 사이버네틱스 쓰레기들 사이에서 무언가를 발견했다.',
+    isUnlocked: (state) => state.isGuideRobotRecovered,
+  },
 ]
 
 const CHIP_CODEX_ENTRIES = MODULE_CODEX_ENTRIES
