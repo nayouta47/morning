@@ -42,7 +42,7 @@ export const ORGAN_DEFS: Record<string, OrganDef> = {
     name: '인간의 내장',
     emoji: '🫁',
     organType: 'intestines',
-    flavorText: '복잡하게 얽힌 소화기관. 먹은 것들이 어디선가 정리되고 있다.',
+    flavorText: '순환계통. 피가 어디선가 돌고 있다.',
   },
 }
 

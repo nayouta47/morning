@@ -607,6 +607,16 @@ document.addEventListener('keydown', (event) => {
   if (event.repeat || isTypingTarget(event.target)) return
   if (state.needsRobotNaming || state.needsDogNaming) return
 
+  if (event.key.toLowerCase() === 'z' && state.exploration.mode !== 'active') {
+    event.preventDefault()
+    syncState()
+    advanceBaseOnlyStateByElapsed(state, BASE_CHEAT_ACCELERATION_MS)
+    narrate(state, '시간이 흘렀다.')
+    simulationLastTickAt = Date.now()
+    redraw()
+    return
+  }
+
   const isCodexRevealHotkey = event.key.toLowerCase() === 'p'
   if (isCodexRevealHotkey) {
     event.preventDefault()
@@ -638,6 +648,25 @@ document.addEventListener('visibilitychange', () => {
   simulationLastTickAt = now
   redraw(now)
   startFrameLoop()
+})
+
+document.addEventListener('mousedown', (event) => {
+  const el = (event.target as HTMLElement).closest<HTMLElement>('#log-list')
+  if (!el) return
+  const startY = event.clientY
+  const startScrollTop = el.scrollTop
+  el.classList.add('is-dragging')
+
+  const onMove = (e: MouseEvent) => {
+    el.scrollTop = startScrollTop - (e.clientY - startY)
+  }
+  const onUp = () => {
+    el.classList.remove('is-dragging')
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+  }
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('mouseup', onUp)
 })
 
 window.addEventListener('beforeunload', () => {
