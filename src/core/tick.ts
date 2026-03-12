@@ -290,7 +290,7 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
   if (key === 'contactFamily') {
     // 사건 발생 순서 역순으로 체크 — 새 사건이 생기면 맨 위에 else if 추가
     if (state.timePassedEventDismissed) {
-      narrate(state, '신호가 갔다. 아무도 받지 않았다.')
+      narrate(state, '신호가 끊겼다. 아무도 받지 않았다.')
     } else if (state.collapseEventDismissed) {
       state.resources.cash += 5
       narrate(state, '어머니가 병원비를 보태주셨다. 💵현금 5를 받았다.')
