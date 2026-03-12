@@ -1751,6 +1751,25 @@ li {
   padding: 2px 0;
 }
 
+.codex-event-head {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid #2e2b26;
+}
+
+.codex-event-head .codex-card-title {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.codex-event-desc {
+  margin: 0;
+  padding: 10px 14px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #9b9690;
+  font-style: italic;
+}
+
 .codex-chip-card {
   padding: 10px 12px;
   height: 100%;

@@ -63,9 +63,9 @@ export function renderInfluenceMiniGrid(moduleType: ModuleType): string {
     empty: '',
     center: '●',
     amp: '+',
-    heatMinor: `열${SLOT_PENALTY_MINOR}`,
-    heatMajor: `열${SLOT_PENALTY_MAJOR}`,
-    blockMajor: `차${SLOT_PENALTY_MAJOR}`,
+    heatMinor: `${SLOT_PENALTY_MINOR}`,
+    heatMajor: `${SLOT_PENALTY_MAJOR}`,
+    blockMajor: `${SLOT_PENALTY_MAJOR}`,
   }
 
   const gridCells = cells
