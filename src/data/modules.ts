@@ -21,6 +21,7 @@ export type ModuleMetadata = {
   nameKr: string
   emoji: string
   powerCost: number
+  weight: number
   shortLabel: string
   baseDescription: string
   amplifiedDescription: string
@@ -35,6 +36,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '공격력 칩',
     emoji: '💥',
     powerCost: 5,
+    weight: 1,
     shortLabel: '기본 공격력 +1, 증폭 시 추가 +1 · 전력 ⚡5',
     baseDescription: '공격력 +1',
     amplifiedDescription: '공격력 +1',
@@ -47,6 +49,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '가속 칩',
     emoji: '⏱️',
     powerCost: 5,
+    weight: 1,
     shortLabel: '기본 가속 +10, 증폭 시 추가 +10 · 전력 ⚡5',
     baseDescription: '가속 +10',
     amplifiedDescription: '가속 +10',
@@ -59,6 +62,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '차단 증폭기(상)',
     emoji: '📡▲',
     powerCost: 2,
+    weight: 1,
     shortLabel: '전력 ⚡2',
     baseDescription: '증폭(중첩) + 차단 패널티 부여',
     amplifiedDescription: '해당 없음',
@@ -71,6 +75,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '차단 증폭기(하)',
     emoji: '📡▼',
     powerCost: 2,
+    weight: 1,
     shortLabel: '전력 ⚡2',
     baseDescription: '증폭(중첩) + 차단 패널티 부여',
     amplifiedDescription: '해당 없음',
@@ -83,6 +88,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '예열기 칩',
     emoji: '🔥',
     powerCost: 7,
+    weight: 1,
     shortLabel: '전투 시작 즉시 발사 준비 · 전력 ⚡7',
     baseDescription: '전투 시작 즉시 발사 준비',
     amplifiedDescription: '해당 없음',
@@ -95,6 +101,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '열 증폭기(좌)',
     emoji: '♨️◀',
     powerCost: 4,
+    weight: 1,
     shortLabel: '전력 ⚡4',
     baseDescription: '즉시 증폭 +2 + 열기 패널티 부여',
     amplifiedDescription: '해당 없음',
@@ -107,6 +114,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '열 증폭기(우)',
     emoji: '♨️▶',
     powerCost: 4,
+    weight: 1,
     shortLabel: '전력 ⚡4',
     baseDescription: '즉시 증폭 +2 + 열기 패널티 부여',
     amplifiedDescription: '해당 없음',
@@ -119,6 +127,7 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     nameKr: '해금기',
     emoji: '🗝️',
     powerCost: 6,
+    weight: 1,
     shortLabel: '활성화 시 좌측 비활성 슬롯 2칸 해제 · 전력 ⚡6',
     baseDescription: '작동 중 좌측 슬롯 2칸 임시 해제',
     amplifiedDescription: '해당 없음',
@@ -161,6 +170,17 @@ export const MODULE_EMOJI: Record<ModuleType, string> = {
   slotUnlocker: MODULE_METADATA.slotUnlocker.emoji,
 }
 
+export const MODULE_WEIGHT: Record<ModuleType, number> = {
+  damage: MODULE_METADATA.damage.weight,
+  cooldown: MODULE_METADATA.cooldown.weight,
+  blockAmplifierUp: MODULE_METADATA.blockAmplifierUp.weight,
+  blockAmplifierDown: MODULE_METADATA.blockAmplifierDown.weight,
+  preheater: MODULE_METADATA.preheater.weight,
+  heatAmplifierLeft: MODULE_METADATA.heatAmplifierLeft.weight,
+  heatAmplifierRight: MODULE_METADATA.heatAmplifierRight.weight,
+  slotUnlocker: MODULE_METADATA.slotUnlocker.weight,
+}
+
 export function isKnownModuleType(value: unknown): value is ModuleType {
   return typeof value === 'string' && (MODULE_TYPES as readonly string[]).includes(value)
 }
@@ -193,6 +213,7 @@ export type ModuleCodexEntry = {
   name: string
   icon: string
   powerCost: number
+  weight: number
 }
 
 export const MODULE_CODEX_ENTRIES: ModuleCodexEntry[] = MODULE_TYPES.map((type) => {
@@ -202,5 +223,6 @@ export const MODULE_CODEX_ENTRIES: ModuleCodexEntry[] = MODULE_TYPES.map((type) 
     name: meta.nameKr,
     icon: meta.emoji,
     powerCost: meta.powerCost,
+    weight: meta.weight,
   }
 })
