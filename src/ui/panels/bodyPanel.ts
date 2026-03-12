@@ -54,7 +54,7 @@ export function renderBodyPanel(state: GameState): string {
     <div class="body-panel-inner">
       ${renderSilhouette(state)}
       <div class="body-detail-col">
-        <h2>신체 조립</h2>
+        <h2>신체</h2>
         <div id="organ-detail-panel">${renderOrganDetail(state)}</div>
       </div>
     </div>
