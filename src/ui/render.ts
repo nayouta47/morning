@@ -6,11 +6,11 @@ import { getCompanionName } from '../core/companion.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
 import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
-import type { ActionUI, Handlers } from './types.ts'
+import type { ActionGaugeView, ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
 import { setHidden, setText } from './view.ts'
 import { patchModuleDetail, patchModuleInventory, patchWeaponBoard, patchWeaponInventory, renderAssemblyPanel } from './panels/assemblyPanel.ts'
-import { patchActionGauge, patchBuildingGauge, patchCraftButtons, patchMinerPanel, patchSmeltingPanel, renderBasePanel, getBuildingGaugeView } from './panels/basePanel.ts'
+import { patchActionGauge, patchBuildingGauge, patchCraftButtons, patchMinerPanel, patchSmeltingPanel, renderBasePanel, getBuildingGaugeView, renderGaugeButton } from './panels/basePanel.ts'
 import { patchExplorationCombatOverlay } from './panels/combatOverlay.ts'
 import { patchExplorationBody, renderExplorationMap, renderExplorationPanel } from './panels/explorationPanel.ts'
 import { patchCodexPanel, renderCodexPanel } from './panels/codexPanel.ts'
@@ -27,6 +27,11 @@ function renderDogNamingModal(state: GameState): string {
 function renderCollapseEventModal(state: GameState): string {
   if (state.walkCount < 3 || state.collapseEventDismissed) return ''
   return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 발작</span></h2><p>시야에 어둠이 내려앉는다.<br>가까이 짖는 소리가 들린다.</p><button id="collapse-event-dismiss" type="button">의식을 잃는다</button></div></div>`
+}
+
+function renderTerminalIllnessModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
+  if (!state.upgrades.visitHospital || state.terminalIllnessEventDismissed) return ''
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 불치병</span></h2><p>담당의는 종이를 내려놓았다. 말이 필요 없었다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
 }
 
 function renderRobotNamingModal(state: GameState): string {
@@ -112,6 +117,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchActionGauge(app, 'recover-guide-robot', actionUI.recoverGuideRobot)
   patchActionGauge(app, 'contact-family', actionUI.contactFamily)
   patchActionGauge(app, 'go-for-walk', actionUI.goForWalk)
+  patchActionGauge(app, 'cryo-sleep-confirm', actionUI.cryoSleep)
 
   setText(app, '#resource-storage-cap-label', `자원 (최대 ${getResourceStorageCap(state)})`)
   setText(app, '#res-cash', formatResourceValue('cash', state.resources.cash))
@@ -273,7 +279,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const assemblyUnlocked = state.buildings.workbench >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
-  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}${renderDogNamingModal(state)}${renderCollapseEventModal(state)}`
+  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}${renderDogNamingModal(state)}${renderCollapseEventModal(state)}${renderTerminalIllnessModal(state, actionUI.cryoSleep)}`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')

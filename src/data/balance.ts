@@ -9,6 +9,7 @@ export const ACTION_DURATION_MS = {
   recoverGuideRobot: 7000,
   goForWalk: 10000,
   contactFamily: 6000,
+  cryoSleep: 4000,
 } as const
 
 export const BUILDING_CYCLE_MS = 10000

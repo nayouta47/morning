@@ -71,6 +71,7 @@ export type Handlers = {
   onContactFamily: () => void
   onConfirmDogName: (name: string) => void
   onDismissCollapseEvent: () => void
+  onStartCryoSleep: () => void
 }
 
 export type ActionUI = {
@@ -80,6 +81,7 @@ export type ActionUI = {
   recoverGuideRobot: ActionGaugeView
   goForWalk: ActionGaugeView
   contactFamily: ActionGaugeView
+  cryoSleep: ActionGaugeView
 }
 
 export type InteractionIntent =

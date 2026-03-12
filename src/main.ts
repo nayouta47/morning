@@ -53,7 +53,7 @@ const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
-type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily'
+type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -132,7 +132,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -150,6 +150,7 @@ function redraw(nowOverride?: number): void {
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
     contactFamily: toActionView('contactFamily', false, now),
     goForWalk: toActionView('goForWalk', !state.upgrades.adoptDog || state.collapseEventDismissed, now),
+    cryoSleep: toActionView('cryoSleep', false, now),
   }
 
   if (!appMounted) {
@@ -336,6 +337,13 @@ function redraw(nowOverride?: number): void {
         onDismissCollapseEvent: () => {
           state.collapseEventDismissed = true
           appMounted = false
+          redraw()
+        },
+        onStartCryoSleep: () => {
+          syncState()
+          const view = toActionView('cryoSleep', false)
+          if (view.disabled) return
+          state.actionProgress.cryoSleep = ACTION_DURATION_MS.cryoSleep
           redraw()
         },
         onStartRecoverGuideRobot: () => {

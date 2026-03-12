@@ -60,6 +60,7 @@ export type ActionProgress = {
   recoverGuideRobot: number
   goForWalk: number
   contactFamily: number
+  cryoSleep: number
 }
 
 export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex'
@@ -172,6 +173,7 @@ export type GameState = {
   needsDogNaming: boolean
   walkCount: number
   collapseEventDismissed: boolean
+  terminalIllnessEventDismissed: boolean
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
@@ -278,6 +280,7 @@ export const initialState: GameState = {
     recoverGuideRobot: 0,
     goForWalk: 0,
     contactFamily: 0,
+    cryoSleep: 0,
   },
   lastUpdate: Date.now(),
   messages: ['게임 시작. 직장에 가자.'],
@@ -333,6 +336,7 @@ export const initialState: GameState = {
   needsDogNaming: false,
   walkCount: 0,
   collapseEventDismissed: false,
+  terminalIllnessEventDismissed: false,
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,
