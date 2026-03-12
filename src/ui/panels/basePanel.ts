@@ -300,7 +300,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   const storageCap = getResourceStorageCap(state)
   const companionName = getCompanionName(state)
 
-  const dailySection = `<section class="action-group" aria-label="일과 행동"><h3 class="subheading">일과</h3>${renderGaugeButton('go-to-work', '💵 일 나가기 (+2)', '일 나가기 행동', actionUI.goToWork)}</section>`
+  const dailySection = `<section class="action-group" aria-label="일과 행동"><h3 class="subheading">일과</h3>${renderGaugeButton('go-to-work', '💵 일 나가기 (+2)', '일 나가기 행동', actionUI.goToWork)}${renderGaugeButton('contact-family', '📞 가족에게 연락하기', '가족에게 연락하기 행동', actionUI.contactFamily)}${state.upgrades.adoptDog ? renderGaugeButton('go-for-walk', `🐕🚶 산책하기`, '산책하기 행동', actionUI.goForWalk) : ''}</section>`
 
   const gatherRows: string[] = [renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)]
   if (state.unlocks.scrapAction) {
@@ -352,15 +352,19 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
       <div class="tab-top-row">${renderCompactLogPanel(state)}<section class="panel resources"><h2>창고</h2><section class="warehouse-grid" aria-label="창고"><div class="warehouse-column" aria-label="자원"><p class="resource-group-label" id="resource-storage-cap-label">자원 (최대 ${storageCap})</p><div class="resource-group resource-group--major">${renderResourceRow('cash', 'res-cash', formatBaseResourceValue('cash', state.resources.cash), state.resources.cash)}${renderResourceRow('wood', 'res-wood', formatBaseResourceValue('wood', state.resources.wood), state.resources.wood)}${renderResourceRow('scrap', 'res-scrap', formatBaseResourceValue('scrap', state.resources.scrap), state.resources.scrap)}${renderResourceRow('siliconMass', 'res-silicon-mass', formatBaseResourceValue('siliconMass', state.resources.siliconMass), state.resources.siliconMass)}</div><div class="resource-group resource-group--major">${renderResourceRow('iron', 'res-iron', formatBaseResourceValue('iron', state.resources.iron), state.resources.iron)}${renderResourceRow('lowAlloySteel', 'res-low-alloy-steel', formatBaseResourceValue('lowAlloySteel', state.resources.lowAlloySteel), state.resources.lowAlloySteel)}${renderResourceRow('highAlloySteel', 'res-high-alloy-steel', formatBaseResourceValue('highAlloySteel', state.resources.highAlloySteel), state.resources.highAlloySteel)}</div><div class="resource-group resource-group--major">${renderResourceRow('chromium', 'res-chromium', formatBaseResourceValue('chromium', state.resources.chromium), state.resources.chromium)}${renderResourceRow('molybdenum', 'res-molybdenum', formatBaseResourceValue('molybdenum', state.resources.molybdenum), state.resources.molybdenum)}${renderResourceRow('cobalt', 'res-cobalt', formatBaseResourceValue('cobalt', state.resources.cobalt), state.resources.cobalt)}${renderResourceRow('nickel', 'res-nickel', formatBaseResourceValue('nickel', state.resources.nickel), state.resources.nickel)}</div><div class="resource-group resource-group--major">${renderResourceRow('carbon', 'res-carbon', formatBaseResourceValue('carbon', state.resources.carbon), state.resources.carbon)}${renderResourceRow('siliconIngot', 'res-silicon-ingot', formatBaseResourceValue('siliconIngot', state.resources.siliconIngot), state.resources.siliconIngot)}</div></div><div class="warehouse-column" aria-label="장비"><p class="resource-group-label">장비</p><div class="resource-group resource-group--major">${renderResourceRow('shovel', 'res-shovel', `${formatResourceValue('shovel', state.resources.shovel)}/${SHOVEL_MAX_STACK}`, state.resources.shovel)}${renderResourceRow('scavengerDrone', 'res-scavenger-drone', formatResourceValue('scavengerDrone', state.resources.scavengerDrone), state.resources.scavengerDrone)}${renderResourceRow('syntheticFood', 'res-synthetic-food', formatResourceValue('syntheticFood', state.resources.syntheticFood), state.resources.syntheticFood)}${renderResourceRow('smallHealPotion', 'res-small-heal-potion', formatResourceValue('smallHealPotion', state.resources.smallHealPotion), state.resources.smallHealPotion)}</div></div></section></section></div>
       <div class="base-left-col">
       <section class="panel actions"><h2>행동</h2>${dailySection}${gatherSection}${runSection}${minerSection}${smeltingSection}</section>
-      <section id="upgrades-panel" class="panel upgrades" ${(state.buildings.lab <= 0 && state.upgrades.visitHospital) ? 'hidden' : ''}><h2>연구</h2>${RESEARCH_PANEL_GROUPS.map((group) => {
+      <section id="upgrades-panel" class="panel upgrades" ${(state.buildings.lab <= 0 && state.upgrades.visitHospital && state.collapseEventDismissed) ? 'hidden' : ''}><h2>연구</h2>${RESEARCH_PANEL_GROUPS.map((group) => {
         if (group.requiresLab && state.buildings.lab <= 0) return ''
-        const items = group.keys.map((key) => {
-          const def = UPGRADE_DEFS[key]
-          const done = state.upgrades[key]
-          const cost = getUpgradeCost(key)
-          return `<button data-upgrade="${key}" aria-label="연구 ${def.name}" ${done ? 'disabled' : ''}>${def.name} (${formatCost(cost)})</button><p class="hint" id="upgrade-hint-${key}">${def.effectText}${done ? ' (완료)' : ''}</p>`
+        const items = (group.keys as readonly string[]).filter((key) => {
+          if (key === 'visitHospital') return state.collapseEventDismissed
+          return true
+        }).map((key) => {
+          const typedKey = key as keyof typeof UPGRADE_DEFS
+          const def = UPGRADE_DEFS[typedKey]
+          const done = state.upgrades[typedKey]
+          const cost = getUpgradeCost(typedKey)
+          return `<button data-upgrade="${typedKey}" aria-label="연구 ${def.name}" ${done ? 'disabled' : ''}>${def.name} (${formatCost(cost)})</button><p class="hint" id="upgrade-hint-${typedKey}">${def.effectText}${done ? ' (완료)' : ''}</p>`
         }).join('')
-        return `<section class="upgrade-group"><h3 class="subheading">${group.label}</h3>${items}</section>`
+        return items ? `<section class="upgrade-group"><h3 class="subheading">${group.label}</h3>${items}</section>` : ''
       }).join('')}</section>
       </div>
       <section class="panel production"><h2>생산</h2><section id="crafting-panel" class="production-group" aria-label="제작"><h3 class="subheading">제작</h3>${renderCraftActions(state)}</section><section class="production-group" aria-label="건설"><h3 class="subheading">건설</h3>${buildingRows.join('')}</section></section>

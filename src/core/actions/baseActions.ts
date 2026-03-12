@@ -216,7 +216,7 @@ export function setMinerAllocation(state: GameState, key: MinerProcessKey, reque
   setProcessAllocation(state.minerAllocation, key, requestedValue, state.buildings.miner)
 }
 
-const NO_LAB_UPGRADE_KEYS: ReadonlySet<UpgradeKey> = new Set(['visitHospital'])
+const NO_LAB_UPGRADE_KEYS: ReadonlySet<UpgradeKey> = new Set(['visitHospital', 'adoptDog'])
 
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {
   if (state.buildings.lab <= 0 && !NO_LAB_UPGRADE_KEYS.has(key)) return
@@ -232,7 +232,36 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
   payCost(state.resources, cost)
   state.upgrades[key] = true
   narrate(state, `${def.name} 연구가 끝났다.`)
+
+  if (key === 'adoptDog') {
+    state.needsDogNaming = true
+  }
 }
+
+const CONTACT_FAMILY_LOGS = [
+  '목소리를 들었다. 잠시 괜찮았다.',
+  '엄마가 밥은 먹었냐고 물었다. 먹었다고 했다.',
+  '통화를 마치고 나서 조금 따뜻한 기분이 들었다.',
+  '아무 말도 하지 않았지만, 연결되어 있다는 것을 알았다.',
+]
+
+export function contactFamily(state: GameState): void {
+  if (state.actionProgress.contactFamily > 0) return
+  state.actionProgress.contactFamily = ACTION_DURATION_MS.contactFamily
+}
+
+export function goForWalk(state: GameState): void {
+  if (!state.upgrades.adoptDog) return
+  if (state.actionProgress.goForWalk > 0) {
+    narrate(state, '이미 산책 중입니다.')
+    return
+  }
+  const name = state.dogName ?? '강아지'
+  state.actionProgress.goForWalk = ACTION_DURATION_MS.goForWalk
+  narrate(state, `${name}와(과) 산책을 나간다.`)
+}
+
+export { CONTACT_FAMILY_LOGS }
 
 export function unlockAllEnemyCodex(state: GameState): void {
   let changed = !state.codexRevealAll

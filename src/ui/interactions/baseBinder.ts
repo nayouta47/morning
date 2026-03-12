@@ -49,6 +49,13 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   app.querySelector<HTMLButtonElement>('#go-to-work')?.addEventListener('click', handlers.onGoToWork)
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)
   app.querySelector<HTMLButtonElement>('#gather-scrap')?.addEventListener('click', handlers.onGatherScrap)
+  app.querySelector<HTMLButtonElement>('#contact-family')?.addEventListener('click', handlers.onContactFamily)
+  app.querySelector<HTMLButtonElement>('#go-for-walk')?.addEventListener('click', handlers.onGoForWalk)
+  app.querySelector<HTMLButtonElement>('#dog-name-confirm')?.addEventListener('click', () => {
+    const input = app.querySelector<HTMLInputElement>('#dog-name-input')
+    handlers.onConfirmDogName(input?.value ?? '')
+  })
+  app.querySelector<HTMLButtonElement>('#collapse-event-dismiss')?.addEventListener('click', handlers.onDismissCollapseEvent)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)
   app.querySelector<HTMLButtonElement>('#buy-workbench')?.addEventListener('click', handlers.onBuyWorkbench)

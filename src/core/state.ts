@@ -11,6 +11,7 @@ export type Resources = Record<ResourceId, number>
 export type Buildings = Record<BuildingId, number>
 
 export type Upgrades = {
+  adoptDog: boolean
   visitHospital: boolean
   betterAxe: boolean
   sortingWork: boolean
@@ -57,6 +58,8 @@ export type ActionProgress = {
   gatherWood: number
   gatherScrap: number
   recoverGuideRobot: number
+  goForWalk: number
+  contactFamily: number
 }
 
 export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex'
@@ -165,6 +168,10 @@ export type GameState = {
   enemyCodex: Record<EnemyId, EnemyCodexEntry>
   selectedModuleCraftTier: ModuleCraftTier
   moduleCraftTierInProgress: ModuleCraftTier | null
+  dogName: string | null
+  needsDogNaming: boolean
+  walkCount: number
+  collapseEventDismissed: boolean
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
@@ -206,6 +213,7 @@ export const initialState: GameState = {
     electricFurnace: 0,
   },
   upgrades: {
+    adoptDog: false,
     visitHospital: false,
     betterAxe: false,
     sortingWork: false,
@@ -268,6 +276,8 @@ export const initialState: GameState = {
     gatherWood: 0,
     gatherScrap: 0,
     recoverGuideRobot: 0,
+    goForWalk: 0,
+    contactFamily: 0,
   },
   lastUpdate: Date.now(),
   messages: ['게임 시작. 🪵 뗄감을 모아보자.'],
@@ -319,6 +329,10 @@ export const initialState: GameState = {
   ) as Record<EnemyId, EnemyCodexEntry>,
   selectedModuleCraftTier: 1,
   moduleCraftTierInProgress: null,
+  dogName: null,
+  needsDogNaming: false,
+  walkCount: 0,
+  collapseEventDismissed: false,
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,

@@ -10,6 +10,7 @@ import { MODULE_METADATA } from '../data/modules.ts'
 import { addResourceWithCap, getResourceStorageCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getGatherScrapDurationMs, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
 import { COMPANION_DEPART_MESSAGES, getCompanionName } from './companion.ts'
+import { CONTACT_FAMILY_LOGS } from './actions/baseActions.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -244,7 +245,7 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key, storageCap)
 }
 
-function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', storageCap: number): void {
+function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily', storageCap: number): void {
   if (key === 'goToWork') {
     state.resources.cash += 2
     narrate(state, '일을 마치고 돌아왔다. 💵현금 2를 벌었다.')
@@ -277,6 +278,18 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
     return
   }
 
+  if (key === 'contactFamily') {
+    narrate(state, CONTACT_FAMILY_LOGS[Math.floor(Math.random() * CONTACT_FAMILY_LOGS.length)])
+    return
+  }
+
+  if (key === 'goForWalk') {
+    state.walkCount += 1
+    const name = state.dogName ?? '강아지'
+    narrate(state, `🐕🚶 ${name}와(과) 산책을 마쳤다.`)
+    return
+  }
+
   state.isGuideRobotRecovered = true
   state.actionProgress.recoverGuideRobot = 0
   narrate(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다.')
@@ -295,7 +308,7 @@ function tryAutoGatherScrap(state: GameState): void {
   narrate(state, name + COMPANION_DEPART_MESSAGES[Math.floor(Math.random() * COMPANION_DEPART_MESSAGES.length)])
 }
 
-function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
+function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily', elapsedMs: number, storageCap: number): void {
   const current = state.actionProgress[key]
   if (current <= 0) return
 
@@ -385,6 +398,8 @@ function advanceBaseByElapsed(state: GameState, elapsed: number): void {
   processActionElapsed(state, 'goToWork', elapsed, storageCap)
   processActionElapsed(state, 'gatherWood', elapsed, storageCap)
   processActionElapsed(state, 'gatherScrap', elapsed, storageCap)
+  processActionElapsed(state, 'contactFamily', elapsed, storageCap)
+  processActionElapsed(state, 'goForWalk', elapsed, storageCap)
   if (state.companionIdleRemainingMs > 0) {
     state.companionIdleRemainingMs = Math.max(0, state.companionIdleRemainingMs - elapsed)
   }

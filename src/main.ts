@@ -7,6 +7,8 @@ import {
   gatherScrap,
   gatherWood,
   goToWork,
+  contactFamily,
+  goForWalk,
   moveEquippedModuleBetweenSlots,
   continueExplorationAfterLoot,
   enterDungeon,
@@ -51,7 +53,7 @@ const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
-type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot'
+type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -62,7 +64,7 @@ let isHardResetting = false
 let lastStructureSignature = ''
 
 function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
-  const duration = key === 'gatherScrap' ? getGatherScrapDurationMs(state) : ACTION_DURATION_MS[key]
+  const duration = key === 'gatherScrap' ? getGatherScrapDurationMs(state) : ACTION_DURATION_MS[key as keyof typeof ACTION_DURATION_MS]
   const totalSecText = `${(duration / 1000).toFixed(1)}s`
 
   if (locked) {
@@ -130,7 +132,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -146,6 +148,8 @@ function redraw(nowOverride?: number): void {
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
+    contactFamily: toActionView('contactFamily', false, now),
+    goForWalk: toActionView('goForWalk', !state.upgrades.adoptDog, now),
   }
 
   if (!appMounted) {
@@ -299,6 +303,38 @@ function redraw(nowOverride?: number): void {
           state.robotName = result.normalized
           state.needsRobotNaming = false
           narrate(state, `안내견 로봇의 이름이 ${result.normalized}(으)로 정해졌다.`)
+          appMounted = false
+          redraw()
+        },
+        onGoForWalk: () => {
+          syncState()
+          const view = toActionView('goForWalk', !state.upgrades.adoptDog)
+          if (view.disabled) return
+          goForWalk(state)
+          redraw()
+        },
+        onContactFamily: () => {
+          syncState()
+          const view = toActionView('contactFamily', false)
+          if (view.disabled) return
+          contactFamily(state)
+          redraw()
+        },
+        onConfirmDogName: (name) => {
+          const trimmed = name.trim()
+          if (trimmed.length === 0 || trimmed.length > 12) {
+            narrate(state, '이름은 1~12자이며 공백만 입력할 수 없다.')
+            redraw()
+            return
+          }
+          state.dogName = trimmed
+          state.needsDogNaming = false
+          narrate(state, `강아지 이름이 ${trimmed}(으)로 정해졌다.`)
+          appMounted = false
+          redraw()
+        },
+        onDismissCollapseEvent: () => {
+          state.collapseEventDismissed = true
           appMounted = false
           redraw()
         },
@@ -531,7 +567,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 document.addEventListener('keydown', (event) => {
   if (event.repeat || isTypingTarget(event.target)) return
-  if (state.needsRobotNaming) return
+  if (state.needsRobotNaming || state.needsDogNaming) return
 
   const isCodexRevealHotkey = event.key.toLowerCase() === 'p'
   if (isCodexRevealHotkey) {

@@ -67,6 +67,10 @@ export type Handlers = {
   onCheatGrantCodexChip: (moduleType: ModuleType) => void
   onCheatGrantResource: (resourceId: ResourceId) => void
   onConfirmRobotName: (name: string) => void
+  onGoForWalk: () => void
+  onContactFamily: () => void
+  onConfirmDogName: (name: string) => void
+  onDismissCollapseEvent: () => void
 }
 
 export type ActionUI = {
@@ -74,6 +78,8 @@ export type ActionUI = {
   gatherWood: ActionGaugeView
   gatherScrap: ActionGaugeView
   recoverGuideRobot: ActionGaugeView
+  goForWalk: ActionGaugeView
+  contactFamily: ActionGaugeView
 }
 
 export type InteractionIntent =

@@ -7,6 +7,8 @@ export const ACTION_DURATION_MS = {
   gatherWood: 5000,
   gatherScrap: 35000,
   recoverGuideRobot: 7000,
+  goForWalk: 10000,
+  contactFamily: 6000,
 } as const
 
 export const BUILDING_CYCLE_MS = 10000
@@ -19,6 +21,11 @@ function discountCost(value: number): number {
 }
 
 export const UPGRADE_DEFS = {
+  adoptDog: {
+    name: '강아지 분양받기',
+    cost: { cash: 3 },
+    effectText: '산책하기 해금',
+  },
   visitHospital: {
     name: '병원가기',
     cost: { cash: 3 },
@@ -69,7 +76,7 @@ export const UPGRADE_DEFS = {
 export const RESEARCH_PANEL_GROUPS = [
   {
     label: '일과',
-    keys: ['visitHospital'] as const,
+    keys: ['adoptDog', 'visitHospital'] as const,
     requiresLab: false,
   },
   {
