@@ -23,6 +23,7 @@
     .palette-tab.active { background: #2a2a2a; color: #fff; border-color: #666; }
 
     #dungeon-palette { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .palette-divider { width: 1px; height: 28px; background: #444; flex-shrink: 0; }
     .dungeon-btn {
       display: flex; align-items: center; gap: 6px;
       padding: 5px 10px; border: 2px solid #444; border-radius: 4px;
@@ -125,8 +126,11 @@
     <button class="palette-tab active" id="tab-biome" onclick="switchPaletteTab('biome')">바이옴</button>
     <button class="palette-tab" id="tab-dungeon" onclick="switchPaletteTab('dungeon')">던전 프리셋</button>
   </div>
-  <div id="biome-palette"></div>
-  <div id="dungeon-palette" style="display:none"></div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div id="biome-palette"></div>
+    <div class="palette-divider"></div>
+    <div id="dungeon-palette"></div>
+  </div>
   <div id="toolbar-right">
     <div id="zoom-controls">
       <button onclick="setZoom(zoom - 2)">−</button>
@@ -622,8 +626,6 @@ function switchPaletteTab(tab) {
   activePaletteTab = tab
   document.getElementById('tab-biome').classList.toggle('active', tab === 'biome')
   document.getElementById('tab-dungeon').classList.toggle('active', tab === 'dungeon')
-  document.getElementById('biome-palette').style.display = tab === 'biome' ? '' : 'none'
-  document.getElementById('dungeon-palette').style.display = tab === 'dungeon' ? '' : 'none'
   document.getElementById('dungeon-panel').classList.toggle('visible', tab === 'dungeon')
   document.getElementById('main').style.display = tab === 'biome' ? '' : 'none'
 }
@@ -657,7 +659,6 @@ function renderDungeonPanel() {
     html += `<div class="dungeon-list-item" data-id="${d.id}">
       <div class="dungeon-item-header" onclick="openDungeonForm('${d.id}')">
         <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
-        <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}'); event.stopPropagation()">🖌 그리기</button>
         <button class="btn-delete" onclick="deleteDungeon('${d.id}'); event.stopPropagation()">삭제</button>
       </div>
       <div class="dungeon-item-form"></div>
@@ -685,7 +686,7 @@ function renderDungeonPalette() {
     palette.appendChild(btn)
   })
   if (dungeons.length === 0) {
-    palette.innerHTML = '<span style="font-size:12px;color:#666">던전 없음 — 던전 프리셋 탭에서 추가하세요</span>'
+    palette.innerHTML = '<span style="font-size:12px;color:#666">던전 없음</span>'
   }
 }
 
@@ -743,10 +744,7 @@ function buildDungeonFormHTML(editId) {
       </select></label>
     </div>
     <div id="df-floors-container">${floorsHtml}</div>
-    <div class="form-actions">
-      <button class="action-btn" onclick="saveDungeonForm('${editId ?? ''}')">저장</button>
-      <button class="action-btn danger" onclick="closeDungeonForm()">취소</button>
-    </div>
+    ${editId ? '' : '<div class="form-actions"><button class="action-btn" onclick="saveDungeonForm(\'\')">추가</button></div>'}
   </div>`
 }
 
@@ -773,9 +771,16 @@ function openDungeonForm(editId) {
   const item = document.querySelector(`.dungeon-list-item[data-id="${editId}"]`)
   if (!item) return
   const formDiv = item.querySelector('.dungeon-item-form')
+  if (formDiv.classList.contains('open')) {
+    formDiv.classList.remove('open')
+    formDiv.innerHTML = ''
+    return
+  }
   formDiv.innerHTML = buildDungeonFormHTML(editId)
   formDiv.classList.add('open')
   document.querySelectorAll('.form-row textarea').forEach(autoResize)
+  formDiv.addEventListener('input', () => scheduleDungeonAutoSave(editId))
+  formDiv.addEventListener('change', () => scheduleDungeonAutoSave(editId))
 }
 
 function updateFloorCount(count, editId) {
@@ -853,6 +858,40 @@ function closeDungeonForm() {
   })
   const newForm = document.getElementById('dungeon-form-new')
   if (newForm) newForm.innerHTML = ''
+}
+
+let _dungeonAutoSaveTimer = null
+function scheduleDungeonAutoSave(editId) {
+  clearTimeout(_dungeonAutoSaveTimer)
+  _dungeonAutoSaveTimer = setTimeout(() => doAutoSaveDungeon(editId), 600)
+}
+
+function doAutoSaveDungeon(editId) {
+  const name = document.getElementById('df-name')?.value.trim()
+  if (!name) return
+  const emoji = document.getElementById('df-emoji')?.value.trim() || '🏚️'
+  const entryText = document.getElementById('df-entry')?.value.trim() ?? ''
+  const floorCount = parseInt(document.getElementById('df-floors')?.value ?? '3')
+  if (!mapData.dungeons) mapData.dungeons = []
+  const floors = []
+  for (let i = 0; i < floorCount; i++) {
+    const enemy = document.querySelector(`[name="floor_enemy_${i}"]`)?.value ?? ENEMY_OPTIONS[0].id
+    const mult = parseFloat(document.querySelector(`[name="floor_mult_${i}"]`)?.value ?? '1') || 1
+    const dialog = document.querySelector(`[name="floor_dialog_${i}"]`)?.value ?? ''
+    floors.push({ dialogText: dialog, enemyId: enemy, rewardMultiplier: mult })
+  }
+  const dungeon = { id: editId, name, emoji, entryText, floors }
+  const idx = mapData.dungeons.findIndex(d => d.id === editId)
+  if (idx >= 0) mapData.dungeons[idx] = dungeon
+  // Update header text in-place (don't re-render panel — would destroy the open form)
+  const item = document.querySelector(`.dungeon-list-item[data-id="${editId}"]`)
+  if (item) {
+    const span = item.querySelector('.dungeon-item-header span')
+    if (span) span.innerHTML = `${emoji} <strong>${name}</strong> (${floors.length}층, id: ${editId})`
+  }
+  renderDungeonPalette()
+  scheduleAutoSave()
+  setStatus(`✏️ "${name}" 자동 저장됨`)
 }
 
 function deleteDungeon(id) {
