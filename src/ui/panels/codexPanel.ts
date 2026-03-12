@@ -82,7 +82,7 @@ function renderEnemyBiomes(enemyId: (typeof ENEMY_IDS)[number]): string {
 function renderEnemyRows(state: GameState): string {
   const encounteredEnemyIds = getEncounteredEnemyIds(state)
   if (encounteredEnemyIds.length === 0) {
-    return '<p class="codex-empty">아직 조우한 적이 없습니다. 탐험에서 적을 만나면 도감에 기록됩니다.</p>'
+    return '<p class="codex-empty">아직 마주친 것이 없습니다. 탐험에서 적을 만나면 기록됩니다.</p>'
   }
 
   return encounteredEnemyIds.map((enemyId) => {
@@ -90,7 +90,7 @@ function renderEnemyRows(state: GameState): string {
     const codex = state.enemyCodex[enemyId]
     const defeated = codex && codex.defeatCount > 0 ? '예' : '아니오'
     const detailsId = `codex-card-body-${enemyId}`
-    return `<article class="codex-card" aria-label="${enemy.name} 도감 항목"><button class="codex-card-toggle" type="button" data-codex-toggle="${enemyId}" aria-expanded="false" aria-controls="${detailsId}"><span class="codex-card-title">${enemy.name}</span><span class="codex-card-summary">처치 ${codex?.defeatCount ?? 0}회</span></button><div class="codex-card-body hidden" id="${detailsId}"><ul><li>조우 여부: 예</li><li>처치 여부: ${defeated}</li><li>개념 티어: ${enemy.tier}</li><li>HP: ${enemy.hp}</li><li>피해량: ${enemy.damage}</li><li>공격 쿨다운: ${(enemy.attackCooldownMs / 1000).toFixed(1)}초</li><li>출현 지형: ${renderEnemyBiomes(enemyId)}</li><li>첫 조우 시각: ${formatEncounterText(codex?.firstEncounteredAt ?? null)}</li><li>처치 수: ${codex?.defeatCount ?? 0}</li><li>드롭 후보:<ul>${renderDropCandidates(enemyId)}</ul></li></ul></div></article>`
+    return `<article class="codex-card" aria-label="${enemy.name} 조우 기록"><button class="codex-card-toggle" type="button" data-codex-toggle="${enemyId}" aria-expanded="false" aria-controls="${detailsId}"><span class="codex-card-title">${enemy.name}</span><span class="codex-card-summary">처치 ${codex?.defeatCount ?? 0}회</span></button><div class="codex-card-body hidden" id="${detailsId}"><ul><li>조우 여부: 예</li><li>처치 여부: ${defeated}</li><li>개념 티어: ${enemy.tier}</li><li>HP: ${enemy.hp}</li><li>피해량: ${enemy.damage}</li><li>공격 쿨다운: ${(enemy.attackCooldownMs / 1000).toFixed(1)}초</li><li>출현 지형: ${renderEnemyBiomes(enemyId)}</li><li>첫 조우 시각: ${formatEncounterText(codex?.firstEncounteredAt ?? null)}</li><li>처치 수: ${codex?.defeatCount ?? 0}</li><li>드롭 후보:<ul>${renderDropCandidates(enemyId)}</ul></li></ul></div></article>`
   }).join('')
 }
 
@@ -101,7 +101,7 @@ function renderEventRows(state: GameState): string {
     return '<p class="codex-empty">아직 기록된 사건이 없습니다.</p>'
   }
   return unlocked.map((entry) =>
-    `<article class="codex-card" aria-label="${entry.name} 사건 항목"><div class="codex-event-head"><span class="codex-card-title">${entry.name}</span></div><p class="codex-event-desc">${entry.description}</p></article>`
+    `<article class="codex-card" aria-label="${entry.name} 사건 기록"><div class="codex-event-head"><span class="codex-card-title">${entry.name}</span></div><p class="codex-event-desc">${entry.description}</p></article>`
   ).join('')
 }
 
@@ -114,7 +114,7 @@ function renderChipRows(state: GameState): string {
       const miniGrid = renderInfluenceMiniGrid(chip.type)
       const effectCards = `<article class="module-effect-card module-effect-base" aria-label="기본효과"><h4>기본효과</h4><p class="hint">${detail.baseDescription}</p></article><article class="module-effect-card module-effect-amp" aria-label="증폭효과"><h4>증폭효과</h4><p class="hint">${detail.amplifiedDescription}</p></article><article class="module-effect-card module-effect-specs" aria-label="규격"><h4>규격</h4><p class="hint">⚡ ${chip.powerCost} · ⚖️ ${chip.weight}</p></article>`
       const body = `<div class="module-effect-cards">${effectCards}</div>${miniGrid ?? ''}`
-      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" data-codex-chip-type="${chip.type}" aria-label="${chip.name} 도감 항목 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div>${body}</article>`
+      return `<article class="codex-card codex-chip-card ${isOwned ? '' : 'codex-chip-locked'}" data-codex-chip-type="${chip.type}" aria-label="${chip.name} 장비 기록 ${isOwned ? '보유' : '미보유'}"><div class="codex-chip-head"><div class="codex-chip-name-wrap"><span class="codex-chip-icon" aria-hidden="true">${chip.icon}</span><span class="codex-card-title">${chip.name}</span>${isOwned ? '' : '<span class="codex-chip-lock">잠김</span>'}</div><span class="codex-card-summary">보유 ${owned}개</span></div>${body}</article>`
     })
     .join('')
 }
@@ -140,15 +140,15 @@ function renderCodexBody(state: GameState): string {
 function renderCodexHint(): string {
   if (selectedCodexSubTab === 'chip') return '모든 칩을 표시합니다. 미보유 칩도 잠김 상태로 확인할 수 있습니다.'
   if (selectedCodexSubTab === 'event') return '경험한 사건이 순서대로 기록됩니다.'
-  return '조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.'
+  return '마주친 것들만 기록됩니다. 눌러서 상세 정보 확인.'
 }
 
 function renderSubTabs(): string {
-  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button><button class="codex-subtab ${selectedCodexSubTab === 'event' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'event'}" data-codex-subtab="event">사건</button></div>`
+  return `<div class="codex-subtabs" role="tablist" aria-label="일기 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">조우</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">장비</button><button class="codex-subtab ${selectedCodexSubTab === 'event' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'event'}" data-codex-subtab="event">사건</button></div>`
 }
 
 export function renderCodexPanel(state: GameState): string {
-  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>도감</h2>${renderSubTabs()}<p class="hint" id="codex-hint">${renderCodexHint()}</p><div id="codex-content" data-signature="${codexSignature(state)}">${renderCodexBody(state)}</div></section>`
+  return `<section class="panel codex ${state.activeTab === 'codex' ? '' : 'hidden'}" id="panel-codex"><h2>일기</h2>${renderSubTabs()}<p class="hint" id="codex-hint">${renderCodexHint()}</p><div id="codex-content" data-signature="${codexSignature(state)}">${renderCodexBody(state)}</div></section>`
 }
 
 export function patchCodexPanel(app: ParentNode, state: GameState): void {

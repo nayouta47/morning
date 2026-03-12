@@ -316,7 +316,7 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     return
   }
   if (tab === 'codex' && state.buildings.lab <= 0) {
-    narrate(state, '지자 컴퓨터를 설치해야 도감 탭을 사용할 수 있다.')
+    narrate(state, '지자 컴퓨터를 설치해야 일기 탭을 사용할 수 있다.')
     return
   }
   if (state.exploration.mode === 'active' && tab !== 'exploration') {
