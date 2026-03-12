@@ -334,7 +334,9 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   if (state.unlocks.miner || state.buildings.miner > 0) {
     buildingRows.push(`<button id="buy-miner" aria-label="건물 설치"><span id="buy-miner-label">분쇄기 설치 (${formatResourceAmount('wood', minerCost.wood ?? 0)}, ${formatResourceAmount('scrap', minerCost.scrap ?? 0)})</span></button>`)
   }
-  buildingRows.push(`<button id="buy-laika-repair" aria-label="건물 설치" ${singletonInstalled.laikaRepair || !state.isGuideRobotRecovered ? 'disabled' : ''}><span id="buy-laika-repair-label">${singletonInstalled.laikaRepair ? `${companionName} 수리 (설치 완료)` : state.isGuideRobotRecovered ? `${companionName} 수리 (${formatCost(laikaRepairCost)})` : `${companionName} 수리 (안내견 회수 필요)`}</span></button>`)
+  if (state.isGuideRobotRecovered || singletonInstalled.laikaRepair) {
+    buildingRows.push(`<button id="buy-laika-repair" aria-label="건물 설치" ${singletonInstalled.laikaRepair ? 'disabled' : ''}><span id="buy-laika-repair-label">${singletonInstalled.laikaRepair ? `${companionName} 수리 (설치 완료)` : `${companionName} 수리 (${formatCost(laikaRepairCost)})`}</span></button>`)
+  }
   if (state.unlocks.lab || singletonInstalled.lab) {
     buildingRows.push(`<button id="buy-lab" aria-label="건물 설치" ${singletonInstalled.lab ? 'disabled' : ''}><span id="buy-lab-label">${singletonInstalled.lab ? `${getBuildingLabel('lab')} (설치 완료)` : `지자 컴퓨터 설치 (${formatCost(labCost)})`}</span></button>`)
   }
