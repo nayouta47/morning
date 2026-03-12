@@ -239,10 +239,9 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 }
 
 const CONTACT_FAMILY_LOGS = [
-  '목소리를 들었다. 잠시 괜찮았다.',
-  '엄마가 밥은 먹었냐고 물었다. 먹었다고 했다.',
-  '통화를 마치고 나서 조금 따뜻한 기분이 들었다.',
-  '아무 말도 하지 않았지만, 연결되어 있다는 것을 알았다.',
+  '전화를 끊고 핸드폰을 내려놓았다. 방이 조금 전보다 조용해졌다. 이상하게도 아까보다 덜 외로웠다.',
+  '다음엔 더 자주 전화해야지, 라고 매번 생각한다. 매번이라는 게 문제다.',
+  '할머니가 이름을 한 번에 맞추셨다. 오늘은 좋은 날이다.',
 ]
 
 export function contactFamily(state: GameState): void {
