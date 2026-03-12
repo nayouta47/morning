@@ -40,7 +40,7 @@ export const ORGAN_DEFS: Record<string, OrganDef> = {
   humanIntestines: {
     id: 'humanIntestines',
     name: '인간의 내장',
-    emoji: '🫀',
+    emoji: '🫁',
     organType: 'intestines',
     flavorText: '복잡하게 얽힌 소화기관. 먹은 것들이 어디선가 정리되고 있다.',
   },
@@ -69,8 +69,8 @@ export const ORGAN_SLOT_LABELS: Record<OrganType, string> = {
  * legs x=48/84 y=148 w=28 h=124
  */
 export const ORGAN_SLOT_POSITIONS: Record<OrganType, [number, number]> = {
-  brain: [50, 6],       // 상단 머리 내부 (cy≈17)
-  eyes: [50, 15],       // 얼굴 중앙 (cy≈42)
+  brain: [35, 10],      // 머리 좌측 (cx≈56, cy=28)
+  eyes: [65, 10],       // 머리 우측 (cx≈104, cy=28)
   heart: [38, 29],      // 좌상 흉부 (cx≈61, cy≈81)
   intestines: [50, 44], // 하복부 (cy≈123)
   arms: [83, 36],       // 오른팔 중앙 (cx≈133, cy≈101)
