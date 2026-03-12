@@ -37,6 +37,7 @@ import {
   useSmallHealPotion,
   useSyntheticFood,
   unlockAllEnemyCodex,
+  toggleCodexRevealAll,
 } from './core/actions.ts'
 import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
@@ -266,6 +267,11 @@ function redraw(nowOverride?: number): void {
         },
         onSelectOrganSlot: (slot) => {
           selectOrganSlot(state, slot)
+          redraw()
+        },
+        onCheatToggleCodexReveal: () => {
+          syncState()
+          toggleCodexRevealAll(state)
           redraw()
         },
         onCheatAccelerateBaseTime: () => {

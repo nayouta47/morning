@@ -96,7 +96,7 @@ function renderEnemyRows(state: GameState): string {
 
 
 function renderEventRows(state: GameState): string {
-  const unlocked = EVENT_CODEX_ENTRIES.filter((entry) => entry.isUnlocked(state))
+  const unlocked = state.codexRevealAll ? EVENT_CODEX_ENTRIES : EVENT_CODEX_ENTRIES.filter((entry) => entry.isUnlocked(state))
   if (unlocked.length === 0) {
     return '<p class="codex-empty">아직 기록된 사건이 없습니다.</p>'
   }

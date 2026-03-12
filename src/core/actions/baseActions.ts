@@ -290,6 +290,11 @@ export function getRandomDogContactFamilyLog(name: string): string {
 
 export { CONTACT_FAMILY_LOGS }
 
+export function toggleCodexRevealAll(state: GameState): void {
+  state.codexRevealAll = !state.codexRevealAll
+  narrate(state, state.codexRevealAll ? '일기 전체 공개 ON' : '일기 전체 공개 OFF')
+}
+
 export function unlockAllEnemyCodex(state: GameState): void {
   let changed = !state.codexRevealAll
   state.codexRevealAll = true

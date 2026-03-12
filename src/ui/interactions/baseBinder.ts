@@ -18,6 +18,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     })
   })
   app.querySelector<HTMLButtonElement>('#cheat-accelerate-base-time')?.addEventListener('click', handlers.onCheatAccelerateBaseTime)
+  app.querySelector<HTMLButtonElement>('#cheat-codex-reveal')?.addEventListener('click', handlers.onCheatToggleCodexReveal)
   app.querySelector<HTMLButtonElement>('#delete-data')?.addEventListener('click', handlers.onDeleteData)
 
   app.querySelectorAll<HTMLButtonElement>('button[data-clear-log]').forEach((button) => {
