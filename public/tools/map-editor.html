@@ -47,10 +47,13 @@
     #dungeon-panel.visible { display: flex; }
     .dungeon-list { display: flex; flex-direction: column; gap: 6px; }
     .dungeon-list-item {
-      display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+      display: flex; flex-direction: column; align-items: stretch; padding: 6px 8px;
       background: #1a1a1a; border: 1px solid #333; border-radius: 4px; font-size: 12px;
     }
-    .dungeon-list-item span { flex: 1; color: #ccc; }
+    .dungeon-item-header { display: flex; align-items: center; gap: 6px; }
+    .dungeon-item-header span { flex: 1; color: #ccc; }
+    .dungeon-item-form { display: none; margin-top: 8px; }
+    .dungeon-item-form.open { display: block; }
     .dungeon-list-item button { padding: 2px 8px; font-size: 11px; font-family: monospace; border-radius: 3px; cursor: pointer; }
     .dungeon-list-item .btn-paint { background: #1a2a3a; border: 1px solid #3a6a9a; color: #7ab; }
     .dungeon-list-item .btn-paint.active { background: #1a3a5a; border-color: #4af; color: #4af; }
@@ -651,18 +654,21 @@ function renderDungeonPanel() {
     html += '<div style="font-size:12px;color:#666">던전 없음</div>'
   }
   dungeons.forEach(d => {
-    html += `<div class="dungeon-list-item">
-      <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
-      <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}')">🖌 그리기</button>
-      <button class="btn-edit" onclick="openDungeonForm('${d.id}')">편집</button>
-      <button class="btn-delete" onclick="deleteDungeon('${d.id}')">삭제</button>
+    html += `<div class="dungeon-list-item" data-id="${d.id}">
+      <div class="dungeon-item-header">
+        <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
+        <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}')">🖌 그리기</button>
+        <button class="btn-edit" onclick="openDungeonForm('${d.id}')">편집</button>
+        <button class="btn-delete" onclick="deleteDungeon('${d.id}')">삭제</button>
+      </div>
+      <div class="dungeon-item-form"></div>
     </div>`
   })
   html += '</div>'
 
   // 새 던전 추가 버튼
   html += '<button class="action-btn" onclick="openDungeonForm(null)" style="align-self:flex-start">+ 새 던전 추가</button>'
-  html += '<div id="dungeon-form-container"></div>'
+  html += '<div id="dungeon-form-new"></div>'
 
   panel.innerHTML = html
 }
@@ -696,8 +702,7 @@ function autoResize(el) {
   el.style.height = el.scrollHeight + 'px'
 }
 
-function openDungeonForm(editId) {
-  const container = document.getElementById('dungeon-form-container')
+function buildDungeonFormHTML(editId) {
   const existing = editId ? getDungeons().find(d => d.id === editId) : null
   const floorCount = existing ? existing.floors.length : 3
 
@@ -719,7 +724,7 @@ function openDungeonForm(editId) {
     </div>`
   }
 
-  container.innerHTML = `<div id="dungeon-form-wrap">
+  return `<div id="dungeon-form-wrap">
     <h3>${editId ? '던전 편집' : '새 던전'}</h3>
     <div class="form-row">
       <label>ID<input type="text" id="df-id" value="${existing?.id ?? ''}" placeholder="dungeon-1" ${editId ? 'readonly' : ''}></label>
@@ -740,6 +745,33 @@ function openDungeonForm(editId) {
       <button class="action-btn danger" onclick="closeDungeonForm()">취소</button>
     </div>
   </div>`
+}
+
+function openDungeonForm(editId) {
+  // 기존에 열려있는 폼 모두 닫기
+  document.querySelectorAll('.dungeon-item-form.open').forEach(el => {
+    el.classList.remove('open')
+    el.innerHTML = ''
+  })
+  const newFormContainer = document.getElementById('dungeon-form-new')
+  if (newFormContainer) newFormContainer.innerHTML = ''
+
+  if (!editId) {
+    // 새 던전: 목록 하단 고정 영역에 렌더
+    const container = document.getElementById('dungeon-form-new')
+    if (container) {
+      container.innerHTML = buildDungeonFormHTML(null)
+      document.querySelectorAll('.form-row textarea').forEach(autoResize)
+    }
+    return
+  }
+
+  // 편집: 해당 아이템의 .dungeon-item-form 찾아 open
+  const item = document.querySelector(`.dungeon-list-item[data-id="${editId}"]`)
+  if (!item) return
+  const formDiv = item.querySelector('.dungeon-item-form')
+  formDiv.innerHTML = buildDungeonFormHTML(editId)
+  formDiv.classList.add('open')
   document.querySelectorAll('.form-row textarea').forEach(autoResize)
 }
 
@@ -812,8 +844,12 @@ function saveDungeonForm(editId) {
 }
 
 function closeDungeonForm() {
-  const container = document.getElementById('dungeon-form-container')
-  if (container) container.innerHTML = ''
+  document.querySelectorAll('.dungeon-item-form.open').forEach(el => {
+    el.classList.remove('open')
+    el.innerHTML = ''
+  })
+  const newForm = document.getElementById('dungeon-form-new')
+  if (newForm) newForm.innerHTML = ''
 }
 
 function deleteDungeon(id) {
