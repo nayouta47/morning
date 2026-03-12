@@ -134,7 +134,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 3 ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -146,7 +146,7 @@ function redraw(nowOverride?: number): void {
   }
 
   const actionUI = {
-    goToWork: toActionView('goToWork', (state.collapseEventDismissed && !state.timePassedEventDismissed) || (state.timePassedEventDismissed && state.goToWorkPostEventCount >= 3 && !state.relapseEventDismissed), now),
+    goToWork: toActionView('goToWork', (state.collapseEventDismissed && !state.timePassedEventDismissed) || (state.timePassedEventDismissed && state.goToWorkPostEventCount >= 5 && !state.relapseEventDismissed), now),
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),

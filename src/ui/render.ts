@@ -41,7 +41,7 @@ function renderTimePassedModal(state: GameState): string {
 }
 
 function renderRelapseModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
-  if (!state.timePassedEventDismissed || state.goToWorkPostEventCount < 3 || state.relapseEventDismissed) return ''
+  if (!state.timePassedEventDismissed || state.goToWorkPostEventCount < 5 || state.relapseEventDismissed) return ''
   return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="재발작 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.relapse}</span></h2><p>시야가 흐려졌다. 바닥이 기울어진다.<br>다시.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
 }
 
