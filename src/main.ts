@@ -321,9 +321,14 @@ function redraw(nowOverride?: number): void {
         },
         onGoForWalk: () => {
           syncState()
-          if (state.upgrades.adoptDog && state.collapseEventDismissed) {
+          if (state.upgrades.adoptDog && state.terminalIllnessEventDismissed) {
             const name = state.dogName ?? '강아지'
             narrate(state, `이제 ${name}는 없다.`)
+            redraw()
+            return
+          }
+          if (state.upgrades.adoptDog && state.collapseEventDismissed) {
+            narrate(state, '몸이 성치 않아 산책은 무리다.')
             redraw()
             return
           }
