@@ -238,10 +238,12 @@ export function buyUpgrade(state: GameState, key: UpgradeKey): void {
 
   payCost(state.resources, cost)
   state.upgrades[key] = true
-  narrate(state, `${def.name} 연구가 끝났다.`)
 
   if (key === 'adoptDog') {
+    narrate(state, '작고 따뜻한 것이 품 안으로 들어왔다.')
     state.needsDogNaming = true
+  } else {
+    narrate(state, `${def.name} 연구가 끝났다.`)
   }
 }
 

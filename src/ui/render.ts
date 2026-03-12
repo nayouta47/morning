@@ -155,6 +155,9 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   setText(app, '#res-high-alloy-steel', formatResourceValue('highAlloySteel', state.resources.highAlloySteel))
   setHidden(app, '[data-resource-id="highAlloySteel"]', state.resources.highAlloySteel <= 0)
 
+  const dogStrong = app.querySelector<HTMLElement>('#dog-equipment-row strong')
+  if (dogStrong) dogStrong.textContent = `(산책 ${state.walkCount}회)`
+
   setText(app, '#gather-wood-title', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`)
   setText(app, '#gather-scrap-title', `🗑️ 고물 줍기 (+${getGatherScrapRewardPreview(state)})`)
 
