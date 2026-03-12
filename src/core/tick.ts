@@ -279,7 +279,13 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
   }
 
   if (key === 'contactFamily') {
-    narrate(state, CONTACT_FAMILY_LOGS[Math.floor(Math.random() * CONTACT_FAMILY_LOGS.length)])
+    // 사건 발생 순서 역순으로 체크 — 새 사건이 생기면 맨 위에 else if 추가
+    if (state.collapseEventDismissed) {
+      state.resources.cash += 5
+      narrate(state, '어머니가 병원비를 보태주셨다. 💵현금 5를 받았다.')
+    } else {
+      narrate(state, CONTACT_FAMILY_LOGS[Math.floor(Math.random() * CONTACT_FAMILY_LOGS.length)])
+    }
     return
   }
 

@@ -144,12 +144,12 @@ function redraw(nowOverride?: number): void {
   }
 
   const actionUI = {
-    goToWork: toActionView('goToWork', false, now),
+    goToWork: toActionView('goToWork', state.collapseEventDismissed, now),
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
     contactFamily: toActionView('contactFamily', false, now),
-    goForWalk: toActionView('goForWalk', !state.upgrades.adoptDog, now),
+    goForWalk: toActionView('goForWalk', !state.upgrades.adoptDog || state.collapseEventDismissed, now),
   }
 
   if (!appMounted) {
