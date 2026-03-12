@@ -309,6 +309,7 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
   if (key === 'cryoSleep') {
     state.terminalIllnessEventDismissed = true
     narrate(state, '냉동 캡슐이 닫혔다.')
+    narrate(state, '사건 — 불치병')
     return
   }
 

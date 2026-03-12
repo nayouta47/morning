@@ -336,11 +336,13 @@ function redraw(nowOverride?: number): void {
         },
         onDismissCollapseEvent: () => {
           state.collapseEventDismissed = true
+          narrate(state, '사건 — 발작')
           appMounted = false
           redraw()
         },
         onDismissTimePassedEvent: () => {
           state.timePassedEventDismissed = true
+          narrate(state, '사건 — 얼마나 흐른거지?')
           appMounted = false
           redraw()
         },
