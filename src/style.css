@@ -176,10 +176,13 @@ h1 {
   grid-column: 1 / -1;
 }
 
-.actions {
+.base-left-col {
   grid-column: 1;
   grid-row: 2;
-  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .production {
@@ -187,6 +190,7 @@ h1 {
   grid-row: 2;
   display: grid;
   gap: 10px;
+  align-self: start;
 }
 
 .production-group {
@@ -290,8 +294,6 @@ h1 {
 }
 
 .upgrades {
-  grid-column: 1;
-  grid-row: 3;
 }
 
 .resources-split {
@@ -1726,9 +1728,8 @@ li {
     grid-row: auto;
   }
 
-  .actions,
-  .production,
-  .upgrades {
+  .base-left-col,
+  .production {
     grid-column: auto;
     grid-row: auto;
   }
