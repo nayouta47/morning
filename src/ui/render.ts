@@ -31,7 +31,7 @@ function renderCollapseEventModal(state: GameState): string {
 
 function renderTerminalIllnessModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
   if (!state.upgrades.visitHospital || state.terminalIllnessEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 불치병</span></h2><p>담당의는 종이를 내려놓았다. 말이 필요 없었다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 불치병</span></h2><p>담당의는 종이를 내려놓았다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
 }
 
 function renderTimePassedModal(state: GameState): string {
