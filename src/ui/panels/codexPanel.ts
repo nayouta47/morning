@@ -1,11 +1,12 @@
-import type { GameState } from '../../core/state.ts'
+import type { GameState, ModuleType } from '../../core/state.ts'
+import { getWeaponPowerStatus } from '../../core/moduleEffects.ts'
 import { ENEMY_IDS, getEnemyDef } from '../../data/enemies.ts'
 import { getBiomesForEnemy } from '../../data/maps/index.ts'
-import { MODULE_CODEX_ENTRIES, MODULE_METADATA } from '../../data/modules.ts'
+import { MODULE_CODEX_ENTRIES, MODULE_EMOJI, MODULE_METADATA, MODULE_NAME_KR, MODULE_POWER_COST } from '../../data/modules.ts'
 import { getResourceDisplay } from '../../data/resources.ts'
 import { renderInfluenceMiniGrid } from './assembly/influenceView.ts'
 
-type CodexSubTab = 'enemy' | 'chip'
+type CodexSubTab = 'enemy' | 'chip' | 'power'
 
 const CHIP_CODEX_ENTRIES = MODULE_CODEX_ENTRIES
 
@@ -59,6 +60,40 @@ function renderEnemyRows(state: GameState): string {
   }).join('')
 }
 
+function renderPowerTab(state: GameState): string {
+  if (state.weapons.length === 0) {
+    return '<p class="codex-empty">보유 무기가 없습니다.</p>'
+  }
+  const entries = state.weapons.map((weapon) => {
+    const { usage, capacity, overloaded } = getWeaponPowerStatus(weapon)
+    const weaponName = weapon.type === 'pistol' ? '권총' : '소총'
+    const barPct = Math.min(100, capacity > 0 ? Math.round((usage / capacity) * 100) : 0)
+    const badgeClass = overloaded ? 'codex-power-badge overloaded' : 'codex-power-badge'
+    const badgeText = overloaded ? '과부하' : '정상'
+    const barClass = overloaded ? 'codex-power-bar overloaded' : 'codex-power-bar'
+    const entryClass = overloaded ? 'codex-power-entry overloaded' : 'codex-power-entry'
+
+    const moduleCounts = new Map<ModuleType, number>()
+    for (const slot of weapon.slots) {
+      if (slot != null) moduleCounts.set(slot, (moduleCounts.get(slot) ?? 0) + 1)
+    }
+    const moduleItems = [...moduleCounts.entries()]
+      .map(([type, count]) => `<li>${MODULE_EMOJI[type]} ${MODULE_NAME_KR[type]} ×${count} — ⚡${MODULE_POWER_COST[type] * count}</li>`)
+      .join('')
+
+    return `<div class="${entryClass}">
+      <div class="codex-power-head">
+        <span>${weaponName} <span class="hint">#${weapon.id.slice(-4)}</span></span>
+        <span>⚡ ${usage} / ${capacity}</span>
+        <span class="${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="codex-power-bar-wrap"><div class="${barClass}" style="width:${barPct}%"></div></div>
+      ${moduleItems ? `<ul class="codex-power-modules">${moduleItems}</ul>` : ''}
+    </div>`
+  }).join('')
+  return `<div class="codex-power-list">${entries}</div>`
+}
+
 function renderChipRows(state: GameState): string {
   return CHIP_CODEX_ENTRIES
     .map((chip) => {
@@ -83,21 +118,24 @@ function codexSignature(state: GameState): string {
   }).join('|')
 
   const chipSig = CHIP_CODEX_ENTRIES.map((chip) => `${chip.type}:${state.modules[chip.type]}`).join('|')
-  return `${selectedCodexSubTab}|${state.codexRevealAll ? 1 : 0}|${enemySig}|${chipSig}`
+  const powerSig = state.weapons.map((w) => `${w.id}:${w.slots.join('|')}`).join('|')
+  return `${selectedCodexSubTab}|${state.codexRevealAll ? 1 : 0}|${enemySig}|${chipSig}|${powerSig}`
 }
 
 function renderCodexBody(state: GameState): string {
   if (selectedCodexSubTab === 'chip') return `<div class="codex-list" id="codex-chip-list">${renderChipRows(state)}</div>`
+  if (selectedCodexSubTab === 'power') return `<div class="codex-list" id="codex-power-list">${renderPowerTab(state)}</div>`
   return `<div class="codex-list" id="codex-list">${renderEnemyRows(state)}</div>`
 }
 
 function renderCodexHint(): string {
   if (selectedCodexSubTab === 'chip') return '모든 칩을 표시합니다. 미보유 칩도 잠김 상태로 확인할 수 있습니다.'
+  if (selectedCodexSubTab === 'power') return '무기별 전력 소모 현황을 표시합니다.'
   return '조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.'
 }
 
 function renderSubTabs(): string {
-  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button></div>`
+  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button><button class="codex-subtab ${selectedCodexSubTab === 'power' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'power'}" data-codex-subtab="power">전력</button></div>`
 }
 
 export function renderCodexPanel(state: GameState): string {
@@ -119,6 +157,7 @@ export function patchCodexPanel(app: ParentNode, state: GameState): void {
 
   const enemyTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="enemy"]')
   const chipTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="chip"]')
+  const powerTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="power"]')
   if (enemyTab) {
     enemyTab.classList.toggle('active', selectedCodexSubTab === 'enemy')
     enemyTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'enemy'))
@@ -126,5 +165,9 @@ export function patchCodexPanel(app: ParentNode, state: GameState): void {
   if (chipTab) {
     chipTab.classList.toggle('active', selectedCodexSubTab === 'chip')
     chipTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'chip'))
+  }
+  if (powerTab) {
+    powerTab.classList.toggle('active', selectedCodexSubTab === 'power')
+    powerTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'power'))
   }
 }
