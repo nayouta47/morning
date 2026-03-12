@@ -5,6 +5,7 @@ import { getResourceStorageCap } from '../core/resourceCaps.ts'
 import { getCompanionName } from '../core/companion.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
+import { EVENT_NAMES } from '../data/events.ts'
 import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
 import type { ActionGaugeView, ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
@@ -26,17 +27,17 @@ function renderDogNamingModal(state: GameState): string {
 
 function renderCollapseEventModal(state: GameState): string {
   if (state.walkCount < 3 || state.collapseEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 발작</span></h2><p>시야에 어둠이 내려앉는다.<br>가까이 짖는 소리가 들린다.</p><button id="collapse-event-dismiss" type="button">의식을 잃는다</button></div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.collapse}</span></h2><p>시야에 어둠이 내려앉는다.<br>가까이 짖는 소리가 들린다.</p><button id="collapse-event-dismiss" type="button">의식을 잃는다</button></div></div>`
 }
 
 function renderTerminalIllnessModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
   if (!state.upgrades.visitHospital || state.terminalIllnessEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 불치병</span></h2><p>담당의는 종이를 내려놓았다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.terminalIllness}</span></h2><p>담당의는 종이를 내려놓았다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
 }
 
 function renderTimePassedModal(state: GameState): string {
   if (!state.terminalIllnessEventDismissed || state.timePassedEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="시간 경과 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— 얼마나 흐른거지?</span></h2><p>눈을 떴다. 천장이 낯설다.<br>캡슐 밖은 조용했다. 너무 조용했다.<br>화면에는 숫자가 하나 떠 있었다. 72.<br>${state.dogName ?? '강아지'}는 없었다.</p><button id="time-passed-dismiss" type="button">현재를 받아들인다</button></div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="시간 경과 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.timePassed}</span></h2><p>눈을 떴다. 천장이 낯설다.<br>캡슐 밖은 조용했다. 너무 조용했다.<br>화면에는 숫자가 하나 떠 있었다. 72.<br>${state.dogName ?? '강아지'}는 없었다.</p><button id="time-passed-dismiss" type="button">현재를 받아들인다</button></div></div>`
 }
 
 function renderRobotNamingModal(state: GameState): string {

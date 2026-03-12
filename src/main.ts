@@ -45,6 +45,7 @@ import { addResourceWithCap, getResourceStorageCap } from './core/resourceCaps.t
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
+import { EVENT_NAMES } from './data/events.ts'
 import { getGatherScrapDurationMs } from './core/rewards.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
@@ -336,13 +337,13 @@ function redraw(nowOverride?: number): void {
         },
         onDismissCollapseEvent: () => {
           state.collapseEventDismissed = true
-          narrate(state, '사건 — 발작')
+          narrate(state, `사건 — ${EVENT_NAMES.collapse}`)
           appMounted = false
           redraw()
         },
         onDismissTimePassedEvent: () => {
           state.timePassedEventDismissed = true
-          narrate(state, '사건 — 얼마나 흐른거지?')
+          narrate(state, `사건 — ${EVENT_NAMES.timePassed}`)
           appMounted = false
           redraw()
         },
