@@ -23,7 +23,12 @@ export function goToWork(state: GameState): void {
     return
   }
   state.actionProgress.goToWork = ACTION_DURATION_MS.goToWork
-  narrate(state, '생명을 돈으로 치환하는 절차를 수행한다.')
+  const goToWorkLogs = [
+    '생명을 돈으로 치환하는 절차를 수행한다.',
+    '걱정을 멈추고 노동을 사랑하는 법을 배웠다. 아직 배우는 중이다.',
+    '면도를 마치고 벽을 쳐다보자 형상이 보였다. 그에게 잘 다녀오겠다 인사하였다. 그는 답하지 않았다.',
+  ]
+  narrate(state, goToWorkLogs[Math.floor(Math.random() * goToWorkLogs.length)])
 }
 
 export function gatherWood(state: GameState): void {
