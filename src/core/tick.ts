@@ -248,6 +248,9 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
 
 function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep', storageCap: number): void {
   if (key === 'goToWork') {
+    if (state.timePassedEventDismissed && !state.relapseEventDismissed) {
+      state.goToWorkPostEventCount += 1
+    }
     if (state.timePassedEventDismissed) {
       state.resources.cash += 200
       narrate(state, '일을 마치고 돌아왔다. 💵현금 200을 벌었다.')
@@ -308,9 +311,17 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
   }
 
   if (key === 'cryoSleep') {
-    state.terminalIllnessEventDismissed = true
-    narrate(state, '냉동 캡슐이 닫혔다.')
-    narrate(state, `사건 — ${EVENT_NAMES.terminalIllness}`)
+    if (state.terminalIllnessEventDismissed) {
+      // 두 번째 수면 (재발작 후)
+      state.relapseEventDismissed = true
+      narrate(state, '냉동 캡슐이 닫혔다.')
+      narrate(state, `사건 — ${EVENT_NAMES.relapse}`)
+    } else {
+      // 첫 번째 수면 (불치병 후)
+      state.terminalIllnessEventDismissed = true
+      narrate(state, '냉동 캡슐이 닫혔다.')
+      narrate(state, `사건 — ${EVENT_NAMES.terminalIllness}`)
+    }
     return
   }
 

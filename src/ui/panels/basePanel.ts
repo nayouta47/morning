@@ -356,6 +356,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
         if (group.requiresLab && state.buildings.lab <= 0) return ''
         const items = (group.keys as readonly string[]).filter((key) => {
           if (key === 'visitHospital') return state.collapseEventDismissed
+          if (key === 'comfortRobot') return state.timePassedEventDismissed
           return true
         }).map((key) => {
           const typedKey = key as keyof typeof UPGRADE_DEFS

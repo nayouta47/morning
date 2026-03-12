@@ -13,6 +13,7 @@ export type Buildings = Record<BuildingId, number>
 export type Upgrades = {
   adoptDog: boolean
   visitHospital: boolean
+  comfortRobot: boolean
   betterAxe: boolean
   sortingWork: boolean
   sharpSaw: boolean
@@ -175,6 +176,8 @@ export type GameState = {
   collapseEventDismissed: boolean
   terminalIllnessEventDismissed: boolean
   timePassedEventDismissed: boolean
+  goToWorkPostEventCount: number
+  relapseEventDismissed: boolean
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
@@ -218,6 +221,7 @@ export const initialState: GameState = {
   upgrades: {
     adoptDog: false,
     visitHospital: false,
+    comfortRobot: false,
     betterAxe: false,
     sortingWork: false,
     sharpSaw: false,
@@ -339,6 +343,8 @@ export const initialState: GameState = {
   collapseEventDismissed: false,
   terminalIllnessEventDismissed: false,
   timePassedEventDismissed: false,
+  goToWorkPostEventCount: 0,
+  relapseEventDismissed: false,
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,

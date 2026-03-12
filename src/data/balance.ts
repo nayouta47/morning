@@ -72,12 +72,17 @@ export const UPGRADE_DEFS = {
     cost: { iron: 1200, lowAlloySteel: 12 },
     effectText: '창고 상한 5000',
   },
+  comfortRobot: {
+    name: '위안 로봇',
+    cost: { cash: 2100 },
+    effectText: '',
+  },
 } as const
 
 export const RESEARCH_PANEL_GROUPS = [
   {
     label: '일상',
-    keys: ['adoptDog', 'visitHospital'] as const,
+    keys: ['adoptDog', 'visitHospital', 'comfortRobot'] as const,
     requiresLab: false,
   },
   {

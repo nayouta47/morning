@@ -133,7 +133,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 3 ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -145,12 +145,18 @@ function redraw(nowOverride?: number): void {
   }
 
   const actionUI = {
-    goToWork: toActionView('goToWork', state.collapseEventDismissed && !state.timePassedEventDismissed, now),
+    goToWork: toActionView('goToWork', (state.collapseEventDismissed && !state.timePassedEventDismissed) || (state.timePassedEventDismissed && state.goToWorkPostEventCount >= 3 && !state.relapseEventDismissed), now),
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
     contactFamily: toActionView('contactFamily', false, now),
-    goForWalk: toActionView('goForWalk', !state.upgrades.adoptDog || state.collapseEventDismissed, now),
+    goForWalk: (() => {
+      if (!state.upgrades.adoptDog) return toActionView('goForWalk', true, now)
+      if (state.collapseEventDismissed) {
+        return { phase: 'locked' as const, progress: 0, disabled: false, label: '잠김', timeText: `- / ${ACTION_DURATION_MS.goForWalk / 1000}s` }
+      }
+      return toActionView('goForWalk', false, now)
+    })(),
     cryoSleep: toActionView('cryoSleep', false, now),
   }
 
@@ -246,6 +252,11 @@ function redraw(nowOverride?: number): void {
         },
         onBuyUpgrade: (key) => {
           syncState()
+          if (key === 'comfortRobot') {
+            narrate(state, '생전의 가족의 기억을 바탕으로 인격을 재구성해서 함께 지낼 수 있다고 한다. 가격은 몹시 비싸다.')
+            redraw()
+            return
+          }
           buyUpgrade(state, key)
           redraw()
         },
@@ -310,6 +321,12 @@ function redraw(nowOverride?: number): void {
         },
         onGoForWalk: () => {
           syncState()
+          if (state.upgrades.adoptDog && state.collapseEventDismissed) {
+            const name = state.dogName ?? '강아지'
+            narrate(state, `이제 ${name}는 없다.`)
+            redraw()
+            return
+          }
           const view = toActionView('goForWalk', !state.upgrades.adoptDog)
           if (view.disabled) return
           goForWalk(state)
