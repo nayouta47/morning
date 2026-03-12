@@ -280,7 +280,7 @@ export const initialState: GameState = {
     contactFamily: 0,
   },
   lastUpdate: Date.now(),
-  messages: ['게임 시작. 🪵 뗄감을 모아보자.'],
+  messages: ['게임 시작. 직장에 가자.'],
   activeTab: 'base',
   selectedWeaponId: null,
   weapons: [],
