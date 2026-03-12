@@ -1,4 +1,5 @@
 export const RESOURCE_DEFS = {
+  cash: { id: 'cash', label: '현금', emoji: '💵', order: 0, precision: 0 },
   wood: { id: 'wood', label: '뗄감', emoji: '🪵', order: 1, precision: 1 },
   scrap: { id: 'scrap', label: '고물', emoji: '🗑️', order: 2, precision: 1 },
   iron: { id: 'iron', label: '철', emoji: '⛓️', order: 3, precision: 1 },

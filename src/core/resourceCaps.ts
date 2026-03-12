@@ -4,7 +4,7 @@ import type { GameState, Resources } from './state.ts'
 export const BASE_RESOURCE_STORAGE_CAP = 2000
 export const EXPANDED_RESOURCE_STORAGE_CAP = 5000
 
-const EXCLUDED_FROM_GLOBAL_CAP = new Set<ResourceId>(['shovel', 'scavengerDrone', 'smallHealPotion', 'syntheticFood'])
+const EXCLUDED_FROM_GLOBAL_CAP = new Set<ResourceId>(['cash', 'shovel', 'scavengerDrone', 'smallHealPotion', 'syntheticFood'])
 
 export function getResourceStorageCap(state: Pick<GameState, 'upgrades'>): number {
   return state.upgrades.cannedMetalTech ? EXPANDED_RESOURCE_STORAGE_CAP : BASE_RESOURCE_STORAGE_CAP

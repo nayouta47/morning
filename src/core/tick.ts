@@ -244,7 +244,12 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key, storageCap)
 }
 
-function resolveGatherCompletion(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', storageCap: number): void {
+function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', storageCap: number): void {
+  if (key === 'goToWork') {
+    state.resources.cash += 2
+    narrate(state, '일을 마치고 돌아왔다. 💵현금 2를 벌었다.')
+    return
+  }
   if (key === 'gatherWood') {
     const amount = getGatherWoodReward(state)
     const gain = addResourceWithCap(state.resources, 'wood', amount, storageCap)
@@ -290,7 +295,7 @@ function tryAutoGatherScrap(state: GameState): void {
   narrate(state, name + COMPANION_DEPART_MESSAGES[Math.floor(Math.random() * COMPANION_DEPART_MESSAGES.length)])
 }
 
-function processActionElapsed(state: GameState, key: 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
+function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot', elapsedMs: number, storageCap: number): void {
   const current = state.actionProgress[key]
   if (current <= 0) return
 
@@ -377,6 +382,7 @@ function advanceBaseByElapsed(state: GameState, elapsed: number): void {
 
   ;(Object.keys(CRAFT_RECIPE_DEFS) as CraftRecipeKey[]).forEach((recipeKey) => processCraftElapsed(state, recipeKey, elapsed, storageCap))
 
+  processActionElapsed(state, 'goToWork', elapsed, storageCap)
   processActionElapsed(state, 'gatherWood', elapsed, storageCap)
   processActionElapsed(state, 'gatherScrap', elapsed, storageCap)
   if (state.companionIdleRemainingMs > 0) {

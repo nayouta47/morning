@@ -3,6 +3,7 @@ import type { ResourceCost } from './resources.ts'
 export const COST_SCALE = 1.15
 
 export const ACTION_DURATION_MS = {
+  goToWork: 8000,
   gatherWood: 5000,
   gatherScrap: 35000,
   recoverGuideRobot: 7000,
@@ -18,6 +19,11 @@ function discountCost(value: number): number {
 }
 
 export const UPGRADE_DEFS = {
+  visitHospital: {
+    name: '병원가기',
+    cost: { cash: 3 },
+    effectText: '다음 단계 해금',
+  },
   betterAxe: {
     name: '도끼 개선',
     baseCost: { wood: 40, iron: 5 },
@@ -60,7 +66,25 @@ export const UPGRADE_DEFS = {
   },
 } as const
 
-export const RESEARCH_PANEL_UPGRADE_KEYS = ['organicFilament', 'moduleCraftingII', 'moduleCraftingIII', 'cannedMetalTech'] as const
+export const RESEARCH_PANEL_GROUPS = [
+  {
+    label: '일과',
+    keys: ['visitHospital'] as const,
+    requiresLab: false,
+  },
+  {
+    label: '모듈 연구',
+    keys: ['moduleCraftingII', 'moduleCraftingIII'] as const,
+    requiresLab: true,
+  },
+  {
+    label: '생산 연구',
+    keys: ['organicFilament', 'cannedMetalTech'] as const,
+    requiresLab: true,
+  },
+] as const
+
+export const RESEARCH_PANEL_UPGRADE_KEYS = RESEARCH_PANEL_GROUPS.flatMap((g) => g.keys)
 
 export const COMPANION_IDLE_MIN_MS = 15_000
 export const COMPANION_IDLE_MAX_MS = 45_000

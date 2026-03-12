@@ -14,6 +14,7 @@ export type ActionGaugeView = {
 }
 
 export type Handlers = {
+  onGoToWork: () => void
   onGatherWood: () => void
   onGatherScrap: () => void
   onBuyLumberMill: () => void
@@ -69,6 +70,7 @@ export type Handlers = {
 }
 
 export type ActionUI = {
+  goToWork: ActionGaugeView
   gatherWood: ActionGaugeView
   gatherScrap: ActionGaugeView
   recoverGuideRobot: ActionGaugeView

@@ -96,11 +96,14 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
 
   patchTabs(app, state)
 
+  patchActionGauge(app, 'go-to-work', actionUI.goToWork)
   patchActionGauge(app, 'gather-wood', actionUI.gatherWood)
   patchActionGauge(app, 'gather-scrap', actionUI.gatherScrap)
   patchActionGauge(app, 'recover-guide-robot', actionUI.recoverGuideRobot)
 
   setText(app, '#resource-storage-cap-label', `자원 (최대 ${getResourceStorageCap(state)})`)
+  setText(app, '#res-cash', formatResourceValue('cash', state.resources.cash))
+  setHidden(app, '[data-resource-id="cash"]', state.resources.cash <= 0)
   setText(app, '#res-wood', formatResourceValue('wood', state.resources.wood))
   setHidden(app, '[data-resource-id="wood"]', state.resources.wood <= 0)
   setText(app, '#res-scrap', formatResourceValue('scrap', state.resources.scrap))
@@ -214,7 +217,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchMinerPanel(app, state, now)
   patchSmeltingPanel(app, state, now)
 
-  setHidden(app, '#upgrades-panel', state.buildings.lab <= 0)
+  setHidden(app, '#upgrades-panel', state.buildings.lab <= 0 && state.upgrades.visitHospital)
   RESEARCH_PANEL_UPGRADE_KEYS.forEach((key) => {
     const def = UPGRADE_DEFS[key]
     const done = state.upgrades[key]

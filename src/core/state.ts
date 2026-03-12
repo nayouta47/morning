@@ -11,6 +11,7 @@ export type Resources = Record<ResourceId, number>
 export type Buildings = Record<BuildingId, number>
 
 export type Upgrades = {
+  visitHospital: boolean
   betterAxe: boolean
   sortingWork: boolean
   sharpSaw: boolean
@@ -52,6 +53,7 @@ export type MinerProgress = Record<MinerProcessKey, number>
 export type MinerProcessRunning = Record<MinerProcessKey, boolean>
 
 export type ActionProgress = {
+  goToWork: number
   gatherWood: number
   gatherScrap: number
   recoverGuideRobot: number
@@ -176,6 +178,7 @@ export type GameState = {
 export const initialState: GameState = {
   codexRevealAll: false,
   resources: {
+    cash: 0,
     wood: 0,
     scrap: 0,
     iron: 0,
@@ -203,6 +206,7 @@ export const initialState: GameState = {
     electricFurnace: 0,
   },
   upgrades: {
+    visitHospital: false,
     betterAxe: false,
     sortingWork: false,
     sharpSaw: false,
@@ -260,6 +264,7 @@ export const initialState: GameState = {
     crushSiliconMass: true,
   },
   actionProgress: {
+    goToWork: 0,
     gatherWood: 0,
     gatherScrap: 0,
     recoverGuideRobot: 0,

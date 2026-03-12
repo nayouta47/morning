@@ -46,6 +46,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     handlers.onCheatGrantResource(resourceId)
   }, { signal })
 
+  app.querySelector<HTMLButtonElement>('#go-to-work')?.addEventListener('click', handlers.onGoToWork)
   app.querySelector<HTMLButtonElement>('#gather-wood')?.addEventListener('click', handlers.onGatherWood)
   app.querySelector<HTMLButtonElement>('#gather-scrap')?.addEventListener('click', handlers.onGatherScrap)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)

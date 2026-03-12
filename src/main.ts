@@ -6,6 +6,7 @@ import {
   equipModuleToSlot,
   gatherScrap,
   gatherWood,
+  goToWork,
   moveEquippedModuleBetweenSlots,
   continueExplorationAfterLoot,
   enterDungeon,
@@ -50,7 +51,7 @@ const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
-type ActionKey = 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot'
+type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -129,7 +130,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -141,6 +142,7 @@ function redraw(nowOverride?: number): void {
   }
 
   const actionUI = {
+    goToWork: toActionView('goToWork', false, now),
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
@@ -150,6 +152,13 @@ function redraw(nowOverride?: number): void {
     renderApp(
       state,
       {
+        onGoToWork: () => {
+          syncState()
+          const view = toActionView('goToWork', false)
+          if (view.disabled) return
+          goToWork(state)
+          redraw()
+        },
         onGatherWood: () => {
           syncState()
           const view = toActionView('gatherWood', false)

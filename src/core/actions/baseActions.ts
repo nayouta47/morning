@@ -17,6 +17,15 @@ function applyUnlocks(state: GameState): void {
 
 export { getBuildingCost }
 
+export function goToWork(state: GameState): void {
+  if (state.actionProgress.goToWork > 0) {
+    narrate(state, '이미 일하러 나간 중입니다.')
+    return
+  }
+  state.actionProgress.goToWork = ACTION_DURATION_MS.goToWork
+  narrate(state, '일하러 나간다.')
+}
+
 export function gatherWood(state: GameState): void {
   if (state.actionProgress.gatherWood > 0) {
     narrate(state, '이미 뗄감을 줍는 중입니다.')
@@ -202,8 +211,10 @@ export function setMinerAllocation(state: GameState, key: MinerProcessKey, reque
   setProcessAllocation(state.minerAllocation, key, requestedValue, state.buildings.miner)
 }
 
+const NO_LAB_UPGRADE_KEYS: ReadonlySet<UpgradeKey> = new Set(['visitHospital'])
+
 export function buyUpgrade(state: GameState, key: UpgradeKey): void {
-  if (state.buildings.lab <= 0) return
+  if (state.buildings.lab <= 0 && !NO_LAB_UPGRADE_KEYS.has(key)) return
   if (state.upgrades[key]) return
 
   const def = UPGRADE_DEFS[key]
