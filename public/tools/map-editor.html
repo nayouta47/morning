@@ -42,7 +42,7 @@
     /* Dungeon panel */
     #dungeon-panel {
       padding: 12px; background: #111; border-bottom: 1px solid #333;
-      display: none; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto;
+      display: none; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto;
     }
     #dungeon-panel.visible { display: flex; }
     .dungeon-list { display: flex; flex-direction: column; gap: 6px; }
@@ -622,6 +622,7 @@ function switchPaletteTab(tab) {
   document.getElementById('biome-palette').style.display = tab === 'biome' ? '' : 'none'
   document.getElementById('dungeon-palette').style.display = tab === 'dungeon' ? '' : 'none'
   document.getElementById('dungeon-panel').classList.toggle('visible', tab === 'dungeon')
+  document.getElementById('main').style.display = tab === 'biome' ? '' : 'none'
 }
 
 // ── 던전 데이터 ───────────────────────────────────────────────────────────────
