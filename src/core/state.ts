@@ -1,6 +1,8 @@
 import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
+import { DEFAULT_ORGANS, type OrganType } from '../data/organs.ts'
+export type { OrganType } from '../data/organs.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT } from './explorationBackpack.ts'
 
@@ -55,7 +57,7 @@ export type ActionProgress = {
   recoverGuideRobot: number
 }
 
-export type TabKey = 'base' | 'assembly' | 'exploration' | 'codex'
+export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex'
 
 export type ExplorationMode = 'loadout' | 'active'
 export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry'
@@ -167,6 +169,8 @@ export type GameState = {
   companionScrapGatherCount: number
   companionIdleRemainingMs: number
   companionIsAutoGathering: boolean
+  equippedOrgans: Record<OrganType, string>
+  selectedOrganSlot: OrganType | null
 }
 
 export const initialState: GameState = {
@@ -316,4 +320,6 @@ export const initialState: GameState = {
   companionScrapGatherCount: 0,
   companionIdleRemainingMs: 0,
   companionIsAutoGathering: false,
+  equippedOrgans: { ...DEFAULT_ORGANS },
+  selectedOrganSlot: null,
 }

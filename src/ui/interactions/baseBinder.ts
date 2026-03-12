@@ -1,12 +1,22 @@
-import type { GameState, MinerProcessKey, SmeltingProcessKey } from '../../core/state.ts'
+import type { GameState, MinerProcessKey, OrganType, SmeltingProcessKey } from '../../core/state.ts'
 import type { ResourceId } from '../../data/resources.ts'
 import type { Handlers } from '../types.ts'
 
 export function bindBaseInteractions(app: HTMLDivElement, state: GameState, handlers: Handlers, signal?: AbortSignal): void {
   app.querySelector<HTMLButtonElement>('#tab-base')?.addEventListener('click', () => handlers.onSelectTab('base'))
   app.querySelector<HTMLButtonElement>('#tab-assembly')?.addEventListener('click', () => handlers.onSelectTab('assembly'))
+  app.querySelector<HTMLButtonElement>('#tab-body')?.addEventListener('click', () => handlers.onSelectTab('body'))
   app.querySelector<HTMLButtonElement>('#tab-exploration')?.addEventListener('click', () => handlers.onSelectTab('exploration'))
   app.querySelector<HTMLButtonElement>('#tab-codex')?.addEventListener('click', () => handlers.onSelectTab('codex'))
+
+  app.querySelectorAll<HTMLButtonElement>('button[data-organ-slot]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slot = btn.dataset.organSlot as OrganType | undefined
+      if (!slot) return
+      const isCurrent = state.selectedOrganSlot === slot
+      handlers.onSelectOrganSlot(isCurrent ? null : slot)
+    })
+  })
   app.querySelector<HTMLButtonElement>('#cheat-accelerate-base-time')?.addEventListener('click', handlers.onCheatAccelerateBaseTime)
   app.querySelector<HTMLButtonElement>('#delete-data')?.addEventListener('click', handlers.onDeleteData)
 

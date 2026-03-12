@@ -18,6 +18,7 @@ import {
   reorderWeapons,
   selectWeapon,
   setActiveTab,
+  selectOrganSlot,
   setSmeltingAllocation,
   setMinerAllocation,
   startCraft,
@@ -235,6 +236,10 @@ function redraw(nowOverride?: number): void {
         },
         onSelectTab: (tab) => {
           setActiveTab(state, tab)
+          redraw()
+        },
+        onSelectOrganSlot: (slot) => {
+          selectOrganSlot(state, slot)
           redraw()
         },
         onCheatAccelerateBaseTime: () => {

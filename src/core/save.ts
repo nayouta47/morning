@@ -330,7 +330,7 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   const activeTab = loaded.activeTab as TabKey
-  base.activeTab = activeTab === 'assembly' || activeTab === 'exploration' || activeTab === 'codex' ? activeTab : 'base'
+  base.activeTab = activeTab === 'assembly' || activeTab === 'body' || activeTab === 'exploration' || activeTab === 'codex' ? activeTab : 'base'
 
   if (Array.isArray(loaded.weapons)) {
     base.weapons = loaded.weapons

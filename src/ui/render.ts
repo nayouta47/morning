@@ -14,6 +14,7 @@ import { patchActionGauge, patchBuildingGauge, patchCraftButtons, patchMinerPane
 import { patchExplorationCombatOverlay } from './panels/combatOverlay.ts'
 import { patchExplorationBody, renderExplorationMap, renderExplorationPanel } from './panels/explorationPanel.ts'
 import { patchCodexPanel, renderCodexPanel } from './panels/codexPanel.ts'
+import { patchBodyPanel, renderBodyPanel } from './panels/bodyPanel.ts'
 
 export type { ActionUI } from './types.ts'
 
@@ -27,16 +28,19 @@ function renderRobotNamingModal(state: GameState): string {
 function patchTabs(app: ParentNode, state: GameState): void {
   const baseTab = app.querySelector<HTMLButtonElement>('#tab-base')
   const assTab = app.querySelector<HTMLButtonElement>('#tab-assembly')
+  const bodyTab = app.querySelector<HTMLButtonElement>('#tab-body')
   const explorationTab = app.querySelector<HTMLButtonElement>('#tab-exploration')
   const codexTab = app.querySelector<HTMLButtonElement>('#tab-codex')
   const panelBase = app.querySelector<HTMLElement>('#panel-base')
   const panelAssembly = app.querySelector<HTMLElement>('#panel-assembly')
+  const panelBody = app.querySelector<HTMLElement>('#panel-body')
   const panelExploration = app.querySelector<HTMLElement>('#panel-exploration')
   const panelCodex = app.querySelector<HTMLElement>('#panel-codex')
-  if (!baseTab || !assTab || !explorationTab || !codexTab || !panelBase || !panelAssembly || !panelExploration || !panelCodex) return
+  if (!baseTab || !assTab || !bodyTab || !explorationTab || !codexTab || !panelBase || !panelAssembly || !panelBody || !panelExploration || !panelCodex) return
 
   const isBase = state.activeTab === 'base'
   const isAssembly = state.activeTab === 'assembly'
+  const isBody = state.activeTab === 'body'
   const isExploration = state.activeTab === 'exploration'
   const isCodex = state.activeTab === 'codex'
   const explorationActive = state.exploration.mode === 'active'
@@ -45,12 +49,15 @@ function patchTabs(app: ParentNode, state: GameState): void {
 
   baseTab.classList.toggle('active', isBase)
   assTab.classList.toggle('active', isAssembly)
+  bodyTab.classList.toggle('active', isBody)
   explorationTab.classList.toggle('active', isExploration)
   codexTab.classList.toggle('active', isCodex)
 
   baseTab.setAttribute('aria-selected', String(isBase))
   assTab.setAttribute('aria-selected', String(isAssembly))
   assTab.textContent = assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'
+  bodyTab.setAttribute('aria-selected', String(isBody))
+  bodyTab.textContent = '신체 조립'
   explorationTab.setAttribute('aria-selected', String(isExploration))
   explorationTab.textContent = '탐험'
   codexTab.setAttribute('aria-selected', String(isCodex))
@@ -58,11 +65,13 @@ function patchTabs(app: ParentNode, state: GameState): void {
 
   baseTab.disabled = explorationActive
   assTab.disabled = explorationActive || !assemblyUnlocked
+  bodyTab.disabled = explorationActive
   explorationTab.disabled = false
   codexTab.disabled = explorationActive || !codexUnlocked
 
   panelBase.classList.toggle('hidden', !isBase)
   panelAssembly.classList.toggle('hidden', !isAssembly)
+  panelBody.classList.toggle('hidden', !isBody)
   panelExploration.classList.toggle('hidden', !isExploration)
   panelCodex.classList.toggle('hidden', !isCodex)
 }
@@ -227,6 +236,7 @@ export function patchAnimatedUI(state: GameState, actionUI: ActionUI, now = Date
   patchExplorationBody(app, state, actionUI.recoverGuideRobot)
   patchExplorationCombatOverlay(app, state, now)
   patchCodexPanel(app, state)
+  patchBodyPanel(app, state)
 
   setText(app, '#exploration-hp', `${state.exploration.hp}/${state.exploration.maxHp}`)
   setText(app, '#exploration-pos', `(${state.exploration.position.x}, ${state.exploration.position.y})`)
@@ -245,7 +255,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const assemblyUnlocked = state.buildings.workbench >= 1
   const codexUnlocked = state.buildings.lab >= 1
 
-  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}`
+  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체 조립</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration">탐험</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '도감' : '도감(잠김)'}</button></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderExplorationPanel(state, actionUI.recoverGuideRobot, now)}${renderCodexPanel(state)}</div></div></main>${renderRobotNamingModal(state)}`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')
