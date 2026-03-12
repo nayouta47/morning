@@ -26,7 +26,7 @@ function renderDogNamingModal(state: GameState): string {
 
 function renderCollapseEventModal(state: GameState): string {
   if (state.walkCount < 3 || state.collapseEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><p>그날 나는 쓰러졌다. 강아지가 짖는 소리가 들렸다.</p><button id="collapse-event-dismiss" type="button">의식을 되찾았다</button></div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><h2>사건</h2><p>그날 나는 쓰러졌다. 강아지가 짖는 소리가 들렸다.</p><button id="collapse-event-dismiss" type="button">의식을 되찾았다</button></div></div>`
 }
 
 function renderRobotNamingModal(state: GameState): string {
