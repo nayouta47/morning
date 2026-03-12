@@ -33,7 +33,7 @@ function renderSilhouette(state: GameState): string {
 function renderOrganDetail(state: GameState): string {
   const slot = state.selectedOrganSlot
   if (!slot) {
-    return `<div class="organ-detail-empty"><p class="hint">장기 슬롯을 선택하세요.</p></div>`
+    return `<div class="organ-detail-empty"><p class="hint">클릭해서 확인</p></div>`
   }
   const organId = state.equippedOrgans[slot]
   const def = ORGAN_DEFS[organId]
