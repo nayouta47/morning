@@ -17,15 +17,14 @@ function renderSilhouette(state: GameState): string {
   }).join('')
 
   return `<div class="body-silhouette">
-    <svg class="body-svg" viewBox="0 0 180 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="90" cy="35" r="28" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
-      <rect x="82" y="62" width="16" height="14" fill="#1a1a1a" stroke="none"/>
-      <rect x="82" y="62" width="16" height="14" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1"/>
-      <rect x="42" y="76" width="96" height="110" rx="8" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
-      <rect x="10" y="76" width="30" height="105" rx="8" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
-      <rect x="140" y="76" width="30" height="105" rx="8" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
-      <rect x="42" y="186" width="40" height="105" rx="8" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
-      <rect x="98" y="186" width="40" height="105" rx="8" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+    <svg class="body-svg" viewBox="0 0 160 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="80" cy="28" r="20" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+      <rect x="74" y="46" width="12" height="12" fill="#1a1a1a"/>
+      <rect x="48" y="58" width="64" height="90" rx="6" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+      <rect x="16" y="58" width="22" height="82" rx="6" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+      <rect x="122" y="58" width="22" height="82" rx="6" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+      <rect x="48" y="148" width="28" height="124" rx="6" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
+      <rect x="84" y="148" width="28" height="124" rx="6" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1.5"/>
     </svg>
     ${slots}
   </div>`

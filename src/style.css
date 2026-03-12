@@ -634,9 +634,10 @@ li {
 
 .body-silhouette {
   position: relative;
-  width: 180px;
-  height: 300px;
+  width: 160px;
+  height: 280px;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .body-svg {
@@ -1835,8 +1836,8 @@ li {
   }
 
   .body-silhouette {
-    width: 140px;
-    height: 233px;
+    width: 130px;
+    height: 228px;
   }
 
   .module-list {

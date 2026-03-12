@@ -1,4 +1,4 @@
-export type OrganType = 'brain' | 'eyes' | 'heart' | 'arms'
+export type OrganType = 'brain' | 'eyes' | 'heart' | 'arms' | 'intestines'
 
 export type OrganDef = {
   id: string
@@ -32,10 +32,17 @@ export const ORGAN_DEFS: Record<string, OrganDef> = {
   },
   humanArms: {
     id: 'humanArms',
-    name: '인간의 팔',
+    name: '인간의 오른팔',
     emoji: '💪',
     organType: 'arms',
-    flavorText: '두 개의 평범한 팔. 무언가를 잡으려 할 때만 가치가 있다.',
+    flavorText: '평범한 오른팔 하나. 들고, 치고, 잡는다. 그게 전부다.',
+  },
+  humanIntestines: {
+    id: 'humanIntestines',
+    name: '인간의 내장',
+    emoji: '🫀',
+    organType: 'intestines',
+    flavorText: '복잡하게 얽힌 소화기관. 먹은 것들이 어디선가 정리되고 있다.',
   },
 }
 
@@ -44,21 +51,29 @@ export const DEFAULT_ORGANS: Record<OrganType, string> = {
   eyes: 'humanEyes',
   heart: 'humanHeart',
   arms: 'humanArms',
+  intestines: 'humanIntestines',
 }
 
 export const ORGAN_SLOT_LABELS: Record<OrganType, string> = {
   brain: '뇌',
   eyes: '눈',
   heart: '심장',
-  arms: '팔',
+  arms: '오른팔',
+  intestines: '내장',
 }
 
-/** [left%, top%] center position of each organ slot relative to silhouette container */
+/**
+ * [left%, top%] center position of each organ slot relative to silhouette container (160×280)
+ * SVG body layout: head cy=28 r=20, torso x=48 y=58 w=64 h=90,
+ * left arm x=16 y=58 w=22 h=82, right arm x=122 y=58 w=22 h=82,
+ * legs x=48/84 y=148 w=28 h=124
+ */
 export const ORGAN_SLOT_POSITIONS: Record<OrganType, [number, number]> = {
-  brain: [50, 11.7],
-  eyes: [50, 16.7],
-  heart: [36, 35],
-  arms: [50, 43.3],
+  brain: [50, 6],       // 상단 머리 내부 (cy≈17)
+  eyes: [50, 15],       // 얼굴 중앙 (cy≈42)
+  heart: [38, 29],      // 좌상 흉부 (cx≈61, cy≈81)
+  intestines: [50, 44], // 하복부 (cy≈123)
+  arms: [83, 36],       // 오른팔 중앙 (cx≈133, cy≈101)
 }
 
-export const ORGAN_ORDER: OrganType[] = ['brain', 'eyes', 'heart', 'arms']
+export const ORGAN_ORDER: OrganType[] = ['brain', 'eyes', 'heart', 'intestines', 'arms']
