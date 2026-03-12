@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler' | 'hunterHunter' | 'divineElk' | 'steelEagle' | 'willowFish' | 'emberCrane' | 'phoenixBird'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -119,6 +119,82 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
       { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.8 },
       { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.5 },
       { resource: 'scrap', minAmount: 2, maxAmount: 4, chance: 0.9 },
+    ],
+  },
+  hunterHunter: {
+    id: 'hunterHunter',
+    name: '🏹 사냥꾼사냥꾼',
+    tier: 3,
+    hp: 15,
+    damage: 4,
+    attackCooldownMs: 1800,
+    drops: [
+      { resource: 'scrap', minAmount: 1, maxAmount: 3, chance: 0.7 },
+      { resource: 'cash', minAmount: 2, maxAmount: 5, chance: 0.5 },
+      { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.4 },
+    ],
+  },
+  divineElk: {
+    id: 'divineElk',
+    name: '🦌 신수고라니',
+    tier: 3,
+    hp: 28,
+    damage: 3,
+    attackCooldownMs: 4000,
+    drops: [
+      { resource: 'wood', minAmount: 2, maxAmount: 4, chance: 0.8 },
+      { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.6 },
+      { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.2 },
+    ],
+  },
+  steelEagle: {
+    id: 'steelEagle',
+    name: '🦅 강철참수리',
+    tier: 2,
+    hp: 12,
+    damage: 4,
+    attackCooldownMs: 2000,
+    drops: [
+      { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.7 },
+      { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.5 },
+      { resource: 'chromium', minAmount: 1, maxAmount: 1, chance: 0.3 },
+    ],
+  },
+  willowFish: {
+    id: 'willowFish',
+    name: '🐟 버들가지',
+    tier: 1,
+    hp: 4,
+    damage: 1,
+    attackCooldownMs: 3000,
+    drops: [
+      { resource: 'syntheticFood', minAmount: 1, maxAmount: 2, chance: 0.8 },
+      { resource: 'carbon', minAmount: 1, maxAmount: 1, chance: 0.2 },
+    ],
+  },
+  emberCrane: {
+    id: 'emberCrane',
+    name: '🦢 잔불두루미',
+    tier: 2,
+    hp: 16,
+    damage: 3,
+    attackCooldownMs: 2800,
+    drops: [
+      { resource: 'carbon', minAmount: 1, maxAmount: 3, chance: 0.75 },
+      { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.4 },
+    ],
+  },
+  phoenixBird: {
+    id: 'phoenixBird',
+    name: '🐦‍🔥 불사조',
+    tier: 3,
+    hp: 30,
+    damage: 5,
+    attackCooldownMs: 3000,
+    drops: [
+      { resource: 'carbon', minAmount: 2, maxAmount: 4, chance: 0.9 },
+      { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.4 },
+      { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.3 },
     ],
   },
 }
