@@ -4,8 +4,43 @@ import { getBiomesForEnemy } from '../../data/maps/index.ts'
 import { MODULE_CODEX_ENTRIES, MODULE_METADATA } from '../../data/modules.ts'
 import { getResourceDisplay } from '../../data/resources.ts'
 import { renderInfluenceMiniGrid } from './assembly/influenceView.ts'
+import { EVENT_NAMES } from '../../data/events.ts'
 
-type CodexSubTab = 'enemy' | 'chip'
+type CodexSubTab = 'enemy' | 'chip' | 'event'
+
+type EventCodexEntry = {
+  key: string
+  name: string
+  description: string
+  isUnlocked: (state: GameState) => boolean
+}
+
+const EVENT_CODEX_ENTRIES: EventCodexEntry[] = [
+  {
+    key: 'collapse',
+    name: EVENT_NAMES.collapse,
+    description: '산책 도중 시야에 어둠이 내려앉았다. 바닥이 기울어졌다. 가까이서 짖는 소리가 들렸다.',
+    isUnlocked: (state) => state.collapseEventDismissed,
+  },
+  {
+    key: 'terminalIllness',
+    name: EVENT_NAMES.terminalIllness,
+    description: '담당의는 종이를 내려놓았다. 이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다고 했다. 냉동 수면 프로그램에 들어갔다.',
+    isUnlocked: (state) => state.terminalIllnessEventDismissed,
+  },
+  {
+    key: 'timePassed',
+    name: EVENT_NAMES.timePassed,
+    description: '눈을 떴다. 천장이 낯설었다. 화면에는 숫자가 하나 떠 있었다. 72.',
+    isUnlocked: (state) => state.timePassedEventDismissed,
+  },
+  {
+    key: 'relapse',
+    name: EVENT_NAMES.relapse,
+    description: '시야가 흐려졌다. 바닥이 기울어졌다. 다시.',
+    isUnlocked: (state) => state.relapseEventDismissed,
+  },
+]
 
 const CHIP_CODEX_ENTRIES = MODULE_CODEX_ENTRIES
 
@@ -60,6 +95,16 @@ function renderEnemyRows(state: GameState): string {
 }
 
 
+function renderEventRows(state: GameState): string {
+  const unlocked = EVENT_CODEX_ENTRIES.filter((entry) => entry.isUnlocked(state))
+  if (unlocked.length === 0) {
+    return '<p class="codex-empty">아직 기록된 사건이 없습니다.</p>'
+  }
+  return unlocked.map((entry) =>
+    `<article class="codex-card" aria-label="${entry.name} 사건 항목"><div class="codex-event-head"><span class="codex-card-title">${entry.name}</span></div><p class="codex-event-desc">${entry.description}</p></article>`
+  ).join('')
+}
+
 function renderChipRows(state: GameState): string {
   return CHIP_CODEX_ENTRIES
     .map((chip) => {
@@ -82,21 +127,24 @@ function codexSignature(state: GameState): string {
   }).join('|')
 
   const chipSig = CHIP_CODEX_ENTRIES.map((chip) => `${chip.type}:${state.modules[chip.type]}`).join('|')
-  return `${selectedCodexSubTab}|${state.codexRevealAll ? 1 : 0}|${enemySig}|${chipSig}`
+  const eventSig = EVENT_CODEX_ENTRIES.map((e) => `${e.key}:${e.isUnlocked(state) ? 1 : 0}`).join('|')
+  return `${selectedCodexSubTab}|${state.codexRevealAll ? 1 : 0}|${enemySig}|${chipSig}|${eventSig}`
 }
 
 function renderCodexBody(state: GameState): string {
   if (selectedCodexSubTab === 'chip') return `<div class="codex-list" id="codex-chip-list">${renderChipRows(state)}</div>`
+  if (selectedCodexSubTab === 'event') return `<div class="codex-list" id="codex-event-list">${renderEventRows(state)}</div>`
   return `<div class="codex-list" id="codex-list">${renderEnemyRows(state)}</div>`
 }
 
 function renderCodexHint(): string {
   if (selectedCodexSubTab === 'chip') return '모든 칩을 표시합니다. 미보유 칩도 잠김 상태로 확인할 수 있습니다.'
+  if (selectedCodexSubTab === 'event') return '경험한 사건이 순서대로 기록됩니다.'
   return '조우한 적만 카드로 표시됩니다. 카드를 눌러 상세 정보를 확인하세요.'
 }
 
 function renderSubTabs(): string {
-  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button></div>`
+  return `<div class="codex-subtabs" role="tablist" aria-label="도감 분류"><button class="codex-subtab ${selectedCodexSubTab === 'enemy' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'enemy'}" data-codex-subtab="enemy">적</button><button class="codex-subtab ${selectedCodexSubTab === 'chip' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'chip'}" data-codex-subtab="chip">칩</button><button class="codex-subtab ${selectedCodexSubTab === 'event' ? 'active' : ''}" type="button" role="tab" aria-selected="${selectedCodexSubTab === 'event'}" data-codex-subtab="event">사건</button></div>`
 }
 
 export function renderCodexPanel(state: GameState): string {
@@ -118,6 +166,7 @@ export function patchCodexPanel(app: ParentNode, state: GameState): void {
 
   const enemyTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="enemy"]')
   const chipTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="chip"]')
+  const eventTab = app.querySelector<HTMLButtonElement>('[data-codex-subtab="event"]')
   if (enemyTab) {
     enemyTab.classList.toggle('active', selectedCodexSubTab === 'enemy')
     enemyTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'enemy'))
@@ -125,5 +174,9 @@ export function patchCodexPanel(app: ParentNode, state: GameState): void {
   if (chipTab) {
     chipTab.classList.toggle('active', selectedCodexSubTab === 'chip')
     chipTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'chip'))
+  }
+  if (eventTab) {
+    eventTab.classList.toggle('active', selectedCodexSubTab === 'event')
+    eventTab.setAttribute('aria-selected', String(selectedCodexSubTab === 'event'))
   }
 }

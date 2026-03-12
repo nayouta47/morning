@@ -12,7 +12,7 @@ export function bindCodexInteractions(app: HTMLDivElement, state: GameState, han
     const codexSubTabButton = target.closest<HTMLButtonElement>('[data-codex-subtab]')
     if (codexSubTabButton) {
       const subTab = codexSubTabButton.getAttribute('data-codex-subtab')
-      if (subTab === 'enemy' || subTab === 'chip') {
+      if (subTab === 'enemy' || subTab === 'chip' || subTab === 'event') {
         setCodexSubTab(subTab)
         patchCodexPanel(app, state)
       }
