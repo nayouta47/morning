@@ -23,7 +23,7 @@ export function goToWork(state: GameState): void {
     return
   }
   state.actionProgress.goToWork = ACTION_DURATION_MS.goToWork
-  narrate(state, '일하러 나간다.')
+  narrate(state, '생명을 돈으로 치환하는 절차를 수행한다.')
 }
 
 export function gatherWood(state: GameState): void {
