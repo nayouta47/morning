@@ -268,7 +268,7 @@ export function contactFamily(state: GameState): void {
 }
 
 export function goForWalk(state: GameState): void {
-  if (!state.upgrades.adoptDog) return
+  if (!state.upgrades.adoptDog || state.timePassedEventDismissed) return
   if (state.actionProgress.goForWalk > 0) {
     narrate(state, '이미 산책 중입니다.')
     return

@@ -300,7 +300,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
   const storageCap = getResourceStorageCap(state)
   const companionName = getCompanionName(state)
 
-  const dailySection = `<section class="action-group" aria-label="일과 행동"><h3 class="subheading">일과</h3>${renderGaugeButton('go-to-work', `💵 일 나가기 (+${state.timePassedEventDismissed ? 200 : 2})`, '일 나가기 행동', actionUI.goToWork)}${renderGaugeButton('contact-family', '📞 가족에게 연락하기', '가족에게 연락하기 행동', actionUI.contactFamily)}${state.upgrades.adoptDog ? renderGaugeButton('go-for-walk', `🐕🚶 ${state.dogName ?? '강아지'}와(과) 산책하기`, '산책하기 행동', actionUI.goForWalk) : ''}</section>`
+  const dailySection = `<section class="action-group" aria-label="일과 행동"><h3 class="subheading">일과</h3>${renderGaugeButton('go-to-work', `💵 일 나가기 (+${state.timePassedEventDismissed ? 200 : 2})`, '일 나가기 행동', actionUI.goToWork)}${renderGaugeButton('contact-family', '📞 가족에게 연락하기', '가족에게 연락하기 행동', actionUI.contactFamily)}${state.upgrades.adoptDog && !state.timePassedEventDismissed ? renderGaugeButton('go-for-walk', `🐕🚶 ${state.dogName ?? '강아지'}와(과) 산책하기`, '산책하기 행동', actionUI.goForWalk) : ''}</section>`
 
   const gatherRows: string[] = [renderGaugeButton('gather-wood', `🪵 뗄감 줍기 (+${getGatherWoodReward(state)})`, '🪵 뗄감 줍기 행동', actionUI.gatherWood)]
   if (state.unlocks.scrapAction) {
