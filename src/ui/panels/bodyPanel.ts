@@ -42,7 +42,7 @@ function renderOrganDetail(state: GameState): string {
       <span class="organ-detail-emoji" aria-hidden="true">${def.emoji}</span>
       <div>
         <h3>${def.name}</h3>
-        <p class="hint organ-detail-slot-label">${ORGAN_SLOT_LABELS[slot]} 슬롯</p>
+        <p class="hint organ-detail-slot-label">${ORGAN_SLOT_LABELS[slot]} 파츠</p>
       </div>
     </div>
     <p class="hint organ-detail-flavor">${def.flavorText}</p>
@@ -54,7 +54,7 @@ export function renderBodyPanel(state: GameState): string {
     <div class="body-panel-inner">
       ${renderSilhouette(state)}
       <div class="body-detail-col">
-        <h2>신체</h2>
+        <h2>신체 프레임</h2>
         <div id="organ-detail-panel">${renderOrganDetail(state)}</div>
       </div>
     </div>
