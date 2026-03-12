@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -69,6 +69,56 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     drops: [
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.8 },
       { resource: 'iron', minAmount: 1, maxAmount: 1, chance: 0.35 },
+    ],
+  },
+  rustGolem: {
+    id: 'rustGolem',
+    name: '🧱 녹슨 골렘',
+    tier: 2,
+    hp: 18,
+    damage: 5,
+    attackCooldownMs: 5000,
+    drops: [
+      { resource: 'iron', minAmount: 2, maxAmount: 4, chance: 1 },
+      { resource: 'scrap', minAmount: 3, maxAmount: 6, chance: 0.7 },
+    ],
+  },
+  staticHound: {
+    id: 'staticHound',
+    name: '🐕 정전기 개',
+    tier: 1,
+    hp: 5,
+    damage: 2,
+    attackCooldownMs: 1500,
+    drops: [
+      { resource: 'scrap', minAmount: 1, maxAmount: 3, chance: 0.6 },
+      { resource: 'carbon', minAmount: 1, maxAmount: 1, chance: 0.3 },
+    ],
+  },
+  moldedWorker: {
+    id: 'moldedWorker',
+    name: '👷 곰팡이 노동자',
+    tier: 2,
+    hp: 14,
+    damage: 2,
+    attackCooldownMs: 2500,
+    drops: [
+      { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.75 },
+      { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.4 },
+      { resource: 'scrap', minAmount: 1, maxAmount: 3, chance: 0.5 },
+    ],
+  },
+  chromiumCrawler: {
+    id: 'chromiumCrawler',
+    name: '🦀 크롬 집게발',
+    tier: 3,
+    hp: 30,
+    damage: 5,
+    attackCooldownMs: 4000,
+    drops: [
+      { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.8 },
+      { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.5 },
+      { resource: 'scrap', minAmount: 2, maxAmount: 4, chance: 0.9 },
     ],
   },
 }
