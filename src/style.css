@@ -1568,6 +1568,10 @@ li {
   gap: 10px;
 }
 
+#codex-chip-list {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
 .codex-empty {
   margin: 0;
   border: 1px dashed #3a3a3a;
@@ -1631,6 +1635,8 @@ li {
 
 .codex-chip-card {
   padding: 10px 12px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .codex-chip-head {
@@ -1669,13 +1675,6 @@ li {
   margin: 4px 0 0;
   font-size: 11px;
   color: #9fc2d6;
-}
-
-.codex-chip-body-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  align-items: start;
 }
 
 .codex-power-list { display: grid; gap: 10px; }
