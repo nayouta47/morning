@@ -65,7 +65,7 @@
       background: #222; border: 1px solid #444; color: #ccc; padding: 4px 6px;
       border-radius: 3px; font-family: monospace; font-size: 12px; width: 100%;
     }
-    .form-row textarea { resize: vertical; min-height: 40px; }
+    .form-row textarea { resize: none; overflow-y: hidden; min-height: 40px; }
     .floor-block { border: 1px solid #333; border-radius: 3px; padding: 8px; margin-bottom: 6px; background: #131313; }
     .floor-block h4 { font-size: 11px; color: #777; margin-bottom: 6px; }
     .form-actions { display: flex; gap: 8px; margin-top: 8px; }
@@ -684,11 +684,16 @@ function renderDungeonPalette() {
 }
 
 const ENEMY_OPTIONS = [
-  { id: 'siliconLifeform', name: '실리콘 생명체' },
-  { id: 'siliconBug', name: '실리콘 벌레' },
-  { id: 'wheelBug', name: '바퀴벌레' },
-  { id: 'bareBonesMan', name: '해골인간' },
+  { id: 'siliconLifeform', name: '벌벌떠는 기인' },
+  { id: 'siliconBug', name: '규소충' },
+  { id: 'wheelBug', name: '바퀴 벌레' },
+  { id: 'bareBonesMan', name: '앙상한 사내' },
 ]
+
+function autoResize(el) {
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
+}
 
 function openDungeonForm(editId) {
   const container = document.getElementById('dungeon-form-container')
@@ -708,7 +713,7 @@ function openDungeonForm(editId) {
         <label>보상 배율<input type="number" name="floor_mult_${i}" value="${f?.rewardMultiplier ?? 1}" min="0.5" max="3" step="0.5" style="width:70px"></label>
       </div>
       <div class="form-row">
-        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2">${f?.dialogText ?? ''}</textarea></label>
+        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2" oninput="autoResize(this)">${f?.dialogText ?? ''}</textarea></label>
       </div>
     </div>`
   }
@@ -721,7 +726,7 @@ function openDungeonForm(editId) {
       <label>이모지<input type="text" id="df-emoji" value="${existing?.emoji ?? '🏚️'}" style="width:60px"></label>
     </div>
     <div class="form-row">
-      <label style="flex:1">진입 텍스트<textarea id="df-entry" rows="2">${existing?.entryText ?? ''}</textarea></label>
+      <label style="flex:1">진입 텍스트<textarea id="df-entry" rows="2" oninput="autoResize(this)">${existing?.entryText ?? ''}</textarea></label>
     </div>
     <div class="form-row">
       <label>층 수<select id="df-floors" onchange="updateFloorCount(this.value, ${editId ? `'${editId}'` : 'null'})">
@@ -734,6 +739,7 @@ function openDungeonForm(editId) {
       <button class="action-btn danger" onclick="closeDungeonForm()">취소</button>
     </div>
   </div>`
+  document.querySelectorAll('.form-row textarea').forEach(autoResize)
 }
 
 function updateFloorCount(count, editId) {
@@ -753,11 +759,12 @@ function updateFloorCount(count, editId) {
         <label>보상 배율<input type="number" name="floor_mult_${i}" value="${f?.rewardMultiplier ?? 1}" min="0.5" max="3" step="0.5" style="width:70px"></label>
       </div>
       <div class="form-row">
-        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2">${f?.dialogText ?? ''}</textarea></label>
+        <label style="flex:1">진입 텍스트<textarea name="floor_dialog_${i}" rows="2" oninput="autoResize(this)">${f?.dialogText ?? ''}</textarea></label>
       </div>
     </div>`
   }
   container.innerHTML = floorsHtml
+  document.querySelectorAll('.form-row textarea').forEach(autoResize)
 }
 
 function saveDungeonForm(editId) {
