@@ -23,18 +23,24 @@ export function goToWork(state: GameState): void {
     return
   }
   state.actionProgress.goToWork = ACTION_DURATION_MS.goToWork
-  const goToWorkLogs = state.upgrades.adoptDog
+  const goToWorkLogs = state.timePassedEventDismissed
     ? [
-        '알람이 울렸다. 오늘도 쓸모 있는 하루가 시작된다. 나쁘지 않다.',
-        '신발끈을 묶었다. 발이 길을 알고 있다. 믿어본다.',
-        '삶의 의미를 검색했다. 검색 결과 여러 건. 하나씩 열어볼 예정이다.',
-        '걱정을 멈추는 법을 배우는 중이다. 진도가 조금 나갔다.',
-      ]
-    : [
         '생명을 돈으로 치환하는 절차를 수행한다.',
         '걱정을 멈추고 노동을 사랑하는 법을 배웠다. 아직 배우는 중이다.',
         '면도를 마치고 벽을 쳐다보자 형상이 보였다. 그에게 잘 다녀오겠다 인사하였다. 그는 답하지 않았다.',
       ]
+    : state.upgrades.adoptDog
+      ? [
+          '알람이 울렸다. 오늘도 쓸모 있는 하루가 시작된다. 나쁘지 않다.',
+          '신발끈을 묶었다. 발이 길을 알고 있다. 믿어본다.',
+          '삶의 의미를 검색했다. 검색 결과 여러 건. 하나씩 열어볼 예정이다.',
+          '걱정을 멈추는 법을 배우는 중이다. 진도가 조금 나갔다.',
+        ]
+      : [
+          '생명을 돈으로 치환하는 절차를 수행한다.',
+          '걱정을 멈추고 노동을 사랑하는 법을 배웠다. 아직 배우는 중이다.',
+          '면도를 마치고 벽을 쳐다보자 형상이 보였다. 그에게 잘 다녀오겠다 인사하였다. 그는 답하지 않았다.',
+        ]
   narrate(state, goToWorkLogs[Math.floor(Math.random() * goToWorkLogs.length)])
 }
 

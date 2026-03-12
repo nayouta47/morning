@@ -56,6 +56,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     handlers.onConfirmDogName(input?.value ?? '')
   })
   app.querySelector<HTMLButtonElement>('#collapse-event-dismiss')?.addEventListener('click', handlers.onDismissCollapseEvent)
+  app.querySelector<HTMLButtonElement>('#time-passed-dismiss')?.addEventListener('click', handlers.onDismissTimePassedEvent)
   app.querySelector<HTMLButtonElement>('#cryo-sleep-confirm')?.addEventListener('click', handlers.onStartCryoSleep)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)

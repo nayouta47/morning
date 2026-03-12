@@ -174,6 +174,7 @@ export type GameState = {
   walkCount: number
   collapseEventDismissed: boolean
   terminalIllnessEventDismissed: boolean
+  timePassedEventDismissed: boolean
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
@@ -337,6 +338,7 @@ export const initialState: GameState = {
   walkCount: 0,
   collapseEventDismissed: false,
   terminalIllnessEventDismissed: false,
+  timePassedEventDismissed: false,
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,

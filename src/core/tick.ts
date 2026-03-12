@@ -247,8 +247,13 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
 
 function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep', storageCap: number): void {
   if (key === 'goToWork') {
-    state.resources.cash += 2
-    narrate(state, '일을 마치고 돌아왔다. 💵현금 2를 벌었다.')
+    if (state.timePassedEventDismissed) {
+      state.resources.cash += 200
+      narrate(state, '일을 마치고 돌아왔다. 💵현금 200을 벌었다.')
+    } else {
+      state.resources.cash += 2
+      narrate(state, '일을 마치고 돌아왔다. 💵현금 2를 벌었다.')
+    }
     return
   }
   if (key === 'gatherWood') {
@@ -280,7 +285,9 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
 
   if (key === 'contactFamily') {
     // 사건 발생 순서 역순으로 체크 — 새 사건이 생기면 맨 위에 else if 추가
-    if (state.collapseEventDismissed) {
+    if (state.timePassedEventDismissed) {
+      narrate(state, '신호가 갔다. 아무도 받지 않았다.')
+    } else if (state.collapseEventDismissed) {
       state.resources.cash += 5
       narrate(state, '어머니가 병원비를 보태주셨다. 💵현금 5를 받았다.')
     } else if (state.upgrades.adoptDog) {

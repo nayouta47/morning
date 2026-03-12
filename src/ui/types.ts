@@ -72,6 +72,7 @@ export type Handlers = {
   onConfirmDogName: (name: string) => void
   onDismissCollapseEvent: () => void
   onStartCryoSleep: () => void
+  onDismissTimePassedEvent: () => void
 }
 
 export type ActionUI = {
