@@ -54,7 +54,7 @@ function renderLoadoutItemRows(state: GameState): string {
     const carried = getBackpackResourceAmount(state.exploration.backpack, resourceId)
     const owned = state.resources[resourceId]
     const canFill = owned > 0
-    return `<li class="exploration-loadout-item"><span>${def.emoji} ${def.label}</span><span class="hint">${carried} / ${owned}</span><div class="exploration-loadout-item-controls"><button type="button" data-loadout-remove="${resourceId}" ${carried <= 0 ? 'disabled' : ''}>-</button><button type="button" data-loadout-add="${resourceId}" ${owned <= 0 ? 'disabled' : ''}>+</button><button type="button" data-loadout-fill="${resourceId}" ${!canFill ? 'disabled' : ''}>전부</button></div></li>`
+    return `<li class="exploration-loadout-item"><span>${def.emoji} ${def.label}</span><div class="exploration-loadout-item-controls"><button type="button" data-loadout-clear="${resourceId}" aria-label="${def.label} 전부 내리기" ${carried <= 0 ? 'disabled' : ''}>«</button><button type="button" data-loadout-remove="${resourceId}" aria-label="${def.label} 1개 내리기" ${carried <= 0 ? 'disabled' : ''}>−</button><span class="loadout-item-amount">${carried}<span class="hint"> / ${owned}</span></span><button type="button" data-loadout-add="${resourceId}" aria-label="${def.label} 1개 올리기" ${owned <= 0 ? 'disabled' : ''}>+</button><button type="button" data-loadout-fill="${resourceId}" aria-label="${def.label} 전부 올리기" ${!canFill ? 'disabled' : ''}>»</button></div></li>`
   }).join('')
 }
 

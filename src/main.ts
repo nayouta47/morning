@@ -13,6 +13,7 @@ import {
   addLoadoutResource,
   removeLoadoutResource,
   fillLoadoutResource,
+  clearLoadoutResource,
   moveExplorationStep,
   reorderWeapons,
   selectWeapon,
@@ -352,6 +353,11 @@ function redraw(nowOverride?: number): void {
         onLoadoutFillItem: (resourceId) => {
           syncState()
           fillLoadoutResource(state, resourceId)
+          redraw()
+        },
+        onLoadoutClearItem: (resourceId) => {
+          syncState()
+          clearLoadoutResource(state, resourceId)
           redraw()
         },
         onCraftPistol: () => {

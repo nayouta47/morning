@@ -432,3 +432,9 @@ export function removeLoadoutResource(state: GameState, resourceId: ResourceId, 
   state.resources[resourceId] += removeAmount
   return true
 }
+
+export function clearLoadoutResource(state: GameState, resourceId: ResourceId): boolean {
+  const carried = getBackpackResourceAmount(state.exploration.backpack, resourceId)
+  if (carried <= 0) return false
+  return removeLoadoutResource(state, resourceId, carried)
+}

@@ -44,6 +44,7 @@ export type Handlers = {
   onLoadoutAddItem: (resourceId: ResourceId) => void
   onLoadoutRemoveItem: (resourceId: ResourceId) => void
   onLoadoutFillItem: (resourceId: ResourceId) => void
+  onLoadoutClearItem: (resourceId: ResourceId) => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void

@@ -73,6 +73,13 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
     if (loadoutFillButton) {
       const resourceId = loadoutFillButton.getAttribute('data-loadout-fill') as ResourceId | null
       if (resourceId) handlers.onLoadoutFillItem(resourceId)
+      return
+    }
+
+    const loadoutClearButton = target.closest<HTMLElement>('[data-loadout-clear]')
+    if (loadoutClearButton) {
+      const resourceId = loadoutClearButton.getAttribute('data-loadout-clear') as ResourceId | null
+      if (resourceId) handlers.onLoadoutClearItem(resourceId)
     }
   }, { signal })
 }
