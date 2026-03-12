@@ -29,7 +29,7 @@ export const UPGRADE_DEFS = {
   },
   visitHospital: {
     name: '병원가기',
-    cost: { cash: 3 },
+    cost: { cash: 10 },
     effectText: '다음 단계 해금',
   },
   betterAxe: {

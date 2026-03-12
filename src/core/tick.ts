@@ -10,7 +10,7 @@ import { MODULE_METADATA } from '../data/modules.ts'
 import { addResourceWithCap, getResourceStorageCap } from './resourceCaps.ts'
 import { SHOVEL_MAX_STACK, getGatherWoodReward, getGatherScrapDurationMs, getShovelCount, resolveGatherScrapReward } from './rewards.ts'
 import { COMPANION_DEPART_MESSAGES, getCompanionName } from './companion.ts'
-import { CONTACT_FAMILY_LOGS } from './actions/baseActions.ts'
+import { CONTACT_FAMILY_LOGS, getRandomDogContactFamilyLog } from './actions/baseActions.ts'
 
 const MAX_ELAPSED_MS = 24 * 60 * 60 * 1000
 const CHROMIUM_CHANCE_PER_SCRAP = 0.008
@@ -283,6 +283,9 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
     if (state.collapseEventDismissed) {
       state.resources.cash += 5
       narrate(state, '어머니가 병원비를 보태주셨다. 💵현금 5를 받았다.')
+    } else if (state.upgrades.adoptDog) {
+      const name = state.dogName ?? '강아지'
+      narrate(state, getRandomDogContactFamilyLog(name))
     } else {
       narrate(state, CONTACT_FAMILY_LOGS[Math.floor(Math.random() * CONTACT_FAMILY_LOGS.length)])
     }

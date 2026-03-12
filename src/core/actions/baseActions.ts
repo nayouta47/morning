@@ -272,6 +272,16 @@ export function goForWalk(state: GameState): void {
   narrate(state, `${name}와(과) 산책을 나간다.`)
 }
 
+export function getRandomDogContactFamilyLog(name: string): string {
+  const logs = [
+    '강아지 얘기를 했다. 목소리가 밝아졌다. 그쪽도 나도.',
+    `${name} 짖는 소리가 수화기 너머로 들렸다. 한참 웃었다.`,
+    '이름을 말하자 귀엽다고 했다. 잘 키우라고도 했다. 할 수 있을 것 같았다.',
+    '강아지 생겼다는 말에 가족이 놀랐다. 나도 아직 실감이 잘 안 난다.',
+  ]
+  return logs[Math.floor(Math.random() * logs.length)]
+}
+
 export { CONTACT_FAMILY_LOGS }
 
 export function unlockAllEnemyCodex(state: GameState): void {
