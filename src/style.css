@@ -28,16 +28,16 @@
   /* Shared penalty visuals (board slots + module mini-map) */
   --heat-penalty-fill:
     linear-gradient(180deg, rgba(255, 150, 120, 0.42), rgba(202, 92, 52, 0.62)),
-    repeating-linear-gradient(135deg, rgba(255, 210, 180, 0.84) 0, rgba(255, 210, 180, 0.84) 2px, rgba(136, 58, 30, 0.24) 2px, rgba(136, 58, 30, 0.24) 5px);
+    repeating-linear-gradient(135deg, rgba(255, 210, 180, 0.75) 0, rgba(255, 210, 180, 0.75) 2px, transparent 2px, transparent 5px);
   --heat-penalty-fill-strong:
     linear-gradient(180deg, rgba(255, 140, 105, 0.54), rgba(194, 76, 42, 0.76)),
-    repeating-linear-gradient(135deg, rgba(255, 208, 176, 0.9) 0, rgba(255, 208, 176, 0.9) 2px, rgba(126, 46, 20, 0.3) 2px, rgba(126, 46, 20, 0.3) 5px);
+    repeating-linear-gradient(135deg, rgba(255, 208, 176, 0.85) 0, rgba(255, 208, 176, 0.85) 2px, transparent 2px, transparent 5px);
   --block-penalty-fill:
     linear-gradient(180deg, rgba(142, 184, 255, 0.42), rgba(74, 118, 196, 0.62)),
-    repeating-linear-gradient(-135deg, rgba(196, 220, 255, 0.8) 0, rgba(196, 220, 255, 0.8) 2px, rgba(38, 66, 124, 0.24) 2px, rgba(38, 66, 124, 0.24) 5px);
+    repeating-linear-gradient(-135deg, rgba(196, 220, 255, 0.72) 0, rgba(196, 220, 255, 0.72) 2px, transparent 2px, transparent 5px);
   --block-penalty-fill-strong:
     linear-gradient(180deg, rgba(128, 172, 255, 0.54), rgba(58, 102, 184, 0.76)),
-    repeating-linear-gradient(-135deg, rgba(188, 214, 255, 0.9) 0, rgba(188, 214, 255, 0.9) 2px, rgba(28, 56, 114, 0.3) 2px, rgba(28, 56, 114, 0.3) 5px);
+    repeating-linear-gradient(-135deg, rgba(188, 214, 255, 0.85) 0, rgba(188, 214, 255, 0.85) 2px, transparent 2px, transparent 5px);
 }
 
 * {
@@ -1512,6 +1512,7 @@ li {
   border-color: #965b45;
   background: var(--heat-penalty-fill);
   color: #ffe3d1;
+  text-shadow: -1px -1px 0 rgba(0,0,0,0.9), 1px -1px 0 rgba(0,0,0,0.9), -1px 1px 0 rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,0.9);
 }
 
 .influence-cell.heatMajor {
@@ -1523,6 +1524,7 @@ li {
   border-color: #4f6a9c;
   background: var(--block-penalty-fill-strong);
   color: #deebff;
+  text-shadow: -1px -1px 0 rgba(0,0,0,0.9), 1px -1px 0 rgba(0,0,0,0.9), -1px 1px 0 rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,0.9);
 }
 
 .influence-legend {
@@ -1876,7 +1878,21 @@ li {
   border: 1px solid #4a4337;
   background: #141414;
   border-radius: 8px;
-  padding: 14px;
+  padding: 28px;
+}
+
+.modal-card h2 {
+  margin-bottom: 16px;
+}
+
+.modal-card p {
+  margin-bottom: 20px;
+}
+
+.modal-subtitle {
+  font-size: 0.75em;
+  font-weight: normal;
+  opacity: 0.6;
 }
 
 #robot-name-input {
