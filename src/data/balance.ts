@@ -75,7 +75,7 @@ export const UPGRADE_DEFS = {
 
 export const RESEARCH_PANEL_GROUPS = [
   {
-    label: '일과',
+    label: '일상',
     keys: ['adoptDog', 'visitHospital'] as const,
     requiresLab: false,
   },

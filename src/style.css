@@ -165,7 +165,8 @@ h1 {
   grid-auto-rows: max-content;
 }
 
-.action-group {
+.action-group,
+.upgrade-group {
   border: 1px solid #2b2b2b;
   border-radius: 6px;
   padding: 10px;
@@ -294,6 +295,9 @@ h1 {
 }
 
 .upgrades {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .resources-split {
