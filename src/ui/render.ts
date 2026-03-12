@@ -21,7 +21,7 @@ export type { ActionUI } from './types.ts'
 
 function renderDogNamingModal(state: GameState): string {
   if (!state.needsDogNaming) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="강아지 이름 설정"><div class="modal-card"><h2>🐕 강아지 이름 정하기</h2><p class="hint">이름은 1~12자, 공백만은 불가합니다.</p><input id="dog-name-input" type="text" maxlength="12" value="" autocomplete="off" /><button id="dog-name-confirm" type="button">확인</button></div></div>`
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="강아지 이름 설정"><div class="modal-card"><h2>🐕 강아지 이름 정하기</h2><p class="hint">이름은 1~12자, 공백만은 불가합니다.</p><input id="dog-name-input" type="text" maxlength="12" value="강아지" autocomplete="off" /><button id="dog-name-confirm" type="button">확인</button></div></div>`
 }
 
 function renderCollapseEventModal(state: GameState): string {
