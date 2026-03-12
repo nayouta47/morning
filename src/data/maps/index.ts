@@ -29,6 +29,7 @@ export type DungeonDef = {
   name: string
   emoji: string
   entryText: string
+  triggerEventId?: string
   floors: DungeonFloor[]
 }
 
@@ -50,6 +51,7 @@ type RawDungeonDef = {
   name?: unknown
   emoji?: unknown
   entryText?: unknown
+  triggerEventId?: unknown
   floors?: RawDungeonFloor[]
 }
 
@@ -125,6 +127,7 @@ function normalizeDungeons(raw: RawDungeonDef[]): DungeonDef[] {
         name: d.name,
         emoji: typeof d.emoji === 'string' ? d.emoji : '🏚️',
         entryText: typeof d.entryText === 'string' ? d.entryText : '',
+        triggerEventId: typeof d.triggerEventId === 'string' ? d.triggerEventId : undefined,
         floors,
       }
     })

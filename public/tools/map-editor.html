@@ -690,6 +690,14 @@ function renderDungeonPalette() {
   }
 }
 
+const EVENT_OPTIONS = [
+  { id: 'collapse', name: '발작' },
+  { id: 'terminalIllness', name: '불치병' },
+  { id: 'timePassed', name: '얼마나 흐른거지?' },
+  { id: 'relapse', name: '재발작' },
+  { id: 'lookAround', name: '주위를 바라보다' },
+]
+
 const ENEMY_OPTIONS = [
   { id: 'siliconLifeform', name: '벌벌떠는 기인' },
   { id: 'siliconBug', name: '규소충' },
@@ -739,6 +747,10 @@ function buildDungeonFormHTML(editId) {
       <label style="flex:1">진입 텍스트<textarea id="df-entry" rows="2" oninput="autoResize(this)">${existing?.entryText ?? ''}</textarea></label>
     </div>
     <div class="form-row">
+      <label>클리어 시 사건 트리거<select id="df-trigger-event">
+        <option value="">없음</option>
+        ${EVENT_OPTIONS.map(e => `<option value="${e.id}"${existing?.triggerEventId === e.id ? ' selected' : ''}>${e.name}</option>`).join('')}
+      </select></label>
       <label>층 수<select id="df-floors" onchange="updateFloorCount(this.value, ${editId ? `'${editId}'` : 'null'})">
         ${[3,4,5].map(n => `<option value="${n}"${n === floorCount ? ' selected' : ''}>${n}층</option>`).join('')}
       </select></label>
@@ -813,6 +825,7 @@ function saveDungeonForm(editId) {
   const name = document.getElementById('df-name').value.trim()
   const emoji = document.getElementById('df-emoji').value.trim() || '🏚️'
   const entryText = document.getElementById('df-entry').value.trim()
+  const triggerEventId = document.getElementById('df-trigger-event')?.value || undefined
   const floorCount = parseInt(document.getElementById('df-floors').value)
 
   if (!id) { alert('ID를 입력하세요'); return }
@@ -834,7 +847,7 @@ function saveDungeonForm(editId) {
     floors.push({ dialogText: dialog, enemyId: enemy, rewardMultiplier: mult })
   }
 
-  const dungeon = { id, name, emoji, entryText, floors }
+  const dungeon = { id, name, emoji, entryText, ...(triggerEventId ? { triggerEventId } : {}), floors }
 
   if (editId) {
     const idx = mapData.dungeons.findIndex(d => d.id === editId)
@@ -871,6 +884,7 @@ function doAutoSaveDungeon(editId) {
   if (!name) return
   const emoji = document.getElementById('df-emoji')?.value.trim() || '🏚️'
   const entryText = document.getElementById('df-entry')?.value.trim() ?? ''
+  const triggerEventId = document.getElementById('df-trigger-event')?.value || undefined
   const floorCount = parseInt(document.getElementById('df-floors')?.value ?? '3')
   if (!mapData.dungeons) mapData.dungeons = []
   const floors = []
@@ -880,7 +894,7 @@ function doAutoSaveDungeon(editId) {
     const dialog = document.querySelector(`[name="floor_dialog_${i}"]`)?.value ?? ''
     floors.push({ dialogText: dialog, enemyId: enemy, rewardMultiplier: mult })
   }
-  const dungeon = { id: editId, name, emoji, entryText, floors }
+  const dungeon = { id: editId, name, emoji, entryText, ...(triggerEventId ? { triggerEventId } : {}), floors }
   const idx = mapData.dungeons.findIndex(d => d.id === editId)
   if (idx >= 0) mapData.dungeons[idx] = dungeon
   // Update header text in-place (don't re-render panel — would destroy the open form)

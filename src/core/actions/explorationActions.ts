@@ -341,6 +341,7 @@ export function continueExplorationAfterLoot(state: GameState): boolean {
       state.exploration.clearedDungeonIds.push(activeDungeon.id)
       state.exploration.activeDungeon = null
       narrate(state, `${dungeonName} 던전을 클리어했다.`)
+      if (def?.triggerEventId) applyDungeonEventTrigger(state, def.triggerEventId)
       state.exploration.phase = 'moving'
     }
     return true
@@ -437,4 +438,19 @@ export function clearLoadoutResource(state: GameState, resourceId: ResourceId): 
   const carried = getBackpackResourceAmount(state.exploration.backpack, resourceId)
   if (carried <= 0) return false
   return removeLoadoutResource(state, resourceId, carried)
+}
+
+function applyDungeonEventTrigger(state: GameState, eventId: string): void {
+  if (eventId === 'collapse') {
+    state.walkCount = Math.max(state.walkCount, 3)
+  } else if (eventId === 'terminalIllness') {
+    state.upgrades.visitHospital = true
+  } else if (eventId === 'timePassed') {
+    state.terminalIllnessEventDismissed = true
+  } else if (eventId === 'relapse') {
+    state.timePassedEventDismissed = true
+    state.goToWorkPostEventCount = Math.max(state.goToWorkPostEventCount, 5)
+  } else if (eventId === 'lookAround') {
+    state.relapseEventDismissed = true
+  }
 }
