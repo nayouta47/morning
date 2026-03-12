@@ -315,6 +315,10 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     narrate(state, '금속 프린터를 설치해야 조립 탭을 사용할 수 있다.')
     return
   }
+  if (tab === 'exploration' && !state.relapseEventDismissed) {
+    narrate(state, '아직 밖에 나갈 때가 아니다.')
+    return
+  }
   if (tab === 'codex' && !state.collapseEventDismissed) {
     narrate(state, '아직 일기를 쓸 일이 없었다.')
     return

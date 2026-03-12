@@ -314,6 +314,7 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
     if (state.terminalIllnessEventDismissed) {
       // 두 번째 수면 (재발작 후)
       state.relapseEventDismissed = true
+      state.resources.cash = 0
       narrate(state, '냉동 캡슐이 닫혔다.')
       narrate(state, `사건 — ${EVENT_NAMES.relapse}`)
     } else {

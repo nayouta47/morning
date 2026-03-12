@@ -424,6 +424,10 @@ function normalizeState(raw: unknown): GameState | null {
     base.activeTab = 'base'
   }
 
+  if (!base.relapseEventDismissed && base.activeTab === 'exploration' && base.exploration.mode !== 'active') {
+    base.activeTab = 'base'
+  }
+
   if (!base.collapseEventDismissed && base.activeTab === 'codex') {
     base.activeTab = 'base'
   }
