@@ -100,7 +100,7 @@ function patchTabs(app: ParentNode, state: GameState): void {
 function patchMessages(app: ParentNode, state: GameState): void {
   const logLists = app.querySelectorAll<HTMLUListElement>('#log-list')
   if (logLists.length <= 0) return
-  const signature = `${state.messages.length}:${state.messages[state.messages.length - 1] ?? ''}`
+  const signature = `${state.messages.length}:${state.messages[0] ?? ''}:${state.messages[state.messages.length - 1] ?? ''}`
   const html = [...state.messages].reverse().map((line) => `<li>${line}</li>`).join('')
 
   logLists.forEach((logList) => {
