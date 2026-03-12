@@ -50,7 +50,7 @@
       display: flex; flex-direction: column; align-items: stretch; padding: 6px 8px;
       background: #1a1a1a; border: 1px solid #333; border-radius: 4px; font-size: 12px;
     }
-    .dungeon-item-header { display: flex; align-items: center; gap: 6px; }
+    .dungeon-item-header { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .dungeon-item-header span { flex: 1; color: #ccc; }
     .dungeon-item-form { display: none; margin-top: 8px; }
     .dungeon-item-form.open { display: block; }
@@ -655,11 +655,10 @@ function renderDungeonPanel() {
   }
   dungeons.forEach(d => {
     html += `<div class="dungeon-list-item" data-id="${d.id}">
-      <div class="dungeon-item-header">
+      <div class="dungeon-item-header" onclick="openDungeonForm('${d.id}')">
         <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
-        <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}')">🖌 그리기</button>
-        <button class="btn-edit" onclick="openDungeonForm('${d.id}')">편집</button>
-        <button class="btn-delete" onclick="deleteDungeon('${d.id}')">삭제</button>
+        <button class="btn-paint${activePaintDungeonId === d.id ? ' active' : ''}" data-dungeon-id="${d.id}" onclick="setActivePaintDungeon(activePaintDungeonId === '${d.id}' ? null : '${d.id}'); event.stopPropagation()">🖌 그리기</button>
+        <button class="btn-delete" onclick="deleteDungeon('${d.id}'); event.stopPropagation()">삭제</button>
       </div>
       <div class="dungeon-item-form"></div>
     </div>`
