@@ -316,6 +316,26 @@ function normalizeState(raw: unknown): GameState | null {
   base.companionIdleRemainingMs = Math.min(COMPANION_IDLE_MAX_MS, Math.max(0, Number((loaded as Partial<GameState>).companionIdleRemainingMs) || 0))
   base.companionIsAutoGathering = Boolean((loaded as Partial<GameState>).companionIsAutoGathering)
 
+  base.collapseEventDismissed = Boolean(loaded.collapseEventDismissed)
+  base.terminalIllnessEventDismissed = Boolean(loaded.terminalIllnessEventDismissed)
+  base.timePassedEventDismissed = Boolean(loaded.timePassedEventDismissed)
+  base.relapseEventDismissed = Boolean(loaded.relapseEventDismissed)
+  base.goToWorkPostEventCount = Math.max(0, Math.floor(Number(loaded.goToWorkPostEventCount) || 0))
+  base.dogName = typeof loaded.dogName === 'string' ? loaded.dogName.trim().slice(0, 12) : null
+  base.needsDogNaming = Boolean(loaded.needsDogNaming)
+  base.walkCount = Math.max(0, Math.floor(Number(loaded.walkCount) || 0))
+  base.codexRevealAll = Boolean(loaded.codexRevealAll)
+  base.selectedOrganSlot = null
+
+  const ORGAN_TYPES = ['brain', 'eyes', 'heart', 'arms', 'intestines'] as const
+  if (loaded.equippedOrgans && typeof loaded.equippedOrgans === 'object') {
+    const raw = loaded.equippedOrgans as Partial<Record<string, unknown>>
+    ORGAN_TYPES.forEach((slot) => {
+      const val = raw[slot]
+      if (typeof val === 'string') base.equippedOrgans[slot] = val
+    })
+  }
+
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
