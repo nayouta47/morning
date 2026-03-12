@@ -84,7 +84,7 @@ function toActionView(key: ActionKey, locked: boolean, now = Date.now()) {
       progress,
       disabled: true,
       label: key === 'gatherScrap' && state.companionIsAutoGathering
-        ? `${getCompanionName(state)} 채집 중`
+        ? `🐕 ${getCompanionName(state)} 채집 중`
         : '진행 중',
       timeText: `${remainingSec.toFixed(1)}s / ${(cycleDuration / 1000).toFixed(1)}s`,
     }
