@@ -43,7 +43,7 @@
           "rewardMultiplier": 1
         },
         {
-          "dialogText": "",
+          "dialogText": "인간형 로봇이 말을 멈춘다.\n\"재봉틀이 혼자서 계속 짜고 있었구나. 주인이 없어진 후에도.\"\n\"막을 씌우면 살아날 수 있다고 — 아직도 그렇게 믿고 있는 거야.\"",
           "enemyId": "siliconLifeform",
           "rewardMultiplier": 1
         },
