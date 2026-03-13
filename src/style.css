@@ -131,6 +131,7 @@ h1 {
 .tab-btn {
   padding: 10px;
   min-width: 80px;
+  margin: 0;
 }
 
 .tab-btn.active {
