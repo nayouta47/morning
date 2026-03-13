@@ -83,6 +83,8 @@ export type Handlers = {
   onDismissCollapseEvent: () => void
   onStartCryoSleep: () => void
   onDismissTimePassedEvent: () => void
+  onDismissTailorEnd: () => void
+  onEquipRuby: () => void
 }
 
 export type ActionUI = {

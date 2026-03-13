@@ -483,5 +483,7 @@ function applyDungeonEventTrigger(state: GameState, eventId: string): void {
     state.relapseEventDismissed = true
   } else if (eventId === 'ownerlessThing') {
     state.ownerlessThingTriggered = true
+  } else if (eventId === 'tailorEnd') {
+    state.tailorEndTriggered = true
   }
 }

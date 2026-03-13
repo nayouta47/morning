@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler' | 'hunterHunter' | 'divineElk' | 'steelEagle' | 'willowFish' | 'emberCrane' | 'phoenixBird' | 'tailor'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler' | 'hunterHunter' | 'divineElk' | 'steelEagle' | 'willowFish' | 'emberCrane' | 'phoenixBird' | 'tailor' | 'webSpider'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -208,6 +208,18 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
       { resource: 'scrap', minAmount: 8, maxAmount: 14, chance: 1 },
       { resource: 'iron', minAmount: 1, maxAmount: 3, chance: 0.6 },
       { resource: 'cash', minAmount: 3, maxAmount: 6, chance: 0.5 },
+    ],
+  },
+  webSpider: {
+    id: 'webSpider',
+    name: '🕷️ 거미',
+    tier: 1,
+    hp: 5,
+    damage: 2,
+    attackCooldownMs: 2000,
+    drops: [
+      { resource: 'scrap', minAmount: 3, maxAmount: 6, chance: 0.9 },
+      { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.4 },
     ],
   },
 }

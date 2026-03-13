@@ -5,7 +5,9 @@
     { "id": "timePassed", "name": "얼마나 흐른거지?" },
     { "id": "relapse", "name": "재발작" },
     { "id": "lookAround", "name": "주위를 바라보다" },
-    { "id": "ownerlessThing", "name": "주인 없는 것" }
+    { "id": "ownerlessThing", "name": "주인 없는 것" },
+    { "id": "tailorEnd", "name": "재봉사의 끝" },
+    { "id": "ruby", "name": "R.U.B.Y" }
   ],
   "enemies": [
     { "id": "siliconLifeform", "name": "🧏‍♀️ 석화인" },
@@ -22,6 +24,7 @@
     { "id": "willowFish", "name": "🐟 유사" },
     { "id": "emberCrane", "name": "🦢 잔화학" },
     { "id": "phoenixBird", "name": "🐦‍🔥 회염조" },
-    { "id": "tailor", "name": "🪡 재봉사" }
+    { "id": "tailor", "name": "🪡 재봉사" },
+    { "id": "webSpider", "name": "🕷️ 거미" }
   ]
 }

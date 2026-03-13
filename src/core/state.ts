@@ -194,6 +194,9 @@ export type GameState = {
   isGuideRobotRecovered: boolean
   ownerlessThingTriggered: boolean
   isAndroidRecovered: boolean
+  tailorEndTriggered: boolean
+  tailorEndDismissed: boolean
+  rubyEquipped: boolean
   companionScrapGatherCount: number
   companionIdleRemainingMs: number
   companionIsAutoGathering: boolean
@@ -375,6 +378,9 @@ export const initialState: GameState = {
   isGuideRobotRecovered: false,
   ownerlessThingTriggered: false,
   isAndroidRecovered: false,
+  tailorEndTriggered: false,
+  tailorEndDismissed: false,
+  rubyEquipped: false,
   companionScrapGatherCount: 0,
   companionIdleRemainingMs: 0,
   companionIsAutoGathering: false,

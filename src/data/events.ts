@@ -5,4 +5,6 @@ export const EVENT_NAMES = {
   relapse: '재발작',
   lookAround: '주위를 바라보다',
   ownerlessThing: '주인 없는 것',
+  tailorEnd: '재봉사의 끝',
+  ruby: 'R.U.B.Y',
 } as const

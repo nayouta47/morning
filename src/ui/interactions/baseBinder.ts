@@ -78,6 +78,8 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   })
   app.querySelector<HTMLButtonElement>('#collapse-event-dismiss')?.addEventListener('click', handlers.onDismissCollapseEvent)
   app.querySelector<HTMLButtonElement>('#time-passed-dismiss')?.addEventListener('click', handlers.onDismissTimePassedEvent)
+  app.querySelector<HTMLButtonElement>('#tailor-end-dismiss')?.addEventListener('click', handlers.onDismissTailorEnd)
+  app.querySelector<HTMLButtonElement>('#ruby-equip')?.addEventListener('click', handlers.onEquipRuby)
   app.querySelector<HTMLButtonElement>('#cryo-sleep-confirm')?.addEventListener('click', handlers.onStartCryoSleep)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)
