@@ -50,6 +50,11 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
       return
     }
 
+    if (target.closest<HTMLElement>('#floor-entry-confirm')) {
+      handlers.onConfirmFloorEntry()
+      return
+    }
+
     if (target.closest<HTMLElement>('#dungeon-cancel')) {
       handlers.onCancelDungeonEntry()
       return

@@ -43,6 +43,7 @@ export type Handlers = {
   onContinueAfterLoot: () => void
   onEnterDungeon: () => void
   onCancelDungeonEntry: () => void
+  onConfirmFloorEntry: () => void
   onLoadoutAddItem: (resourceId: ResourceId) => void
   onLoadoutRemoveItem: (resourceId: ResourceId) => void
   onLoadoutFillItem: (resourceId: ResourceId) => void

@@ -11,7 +11,7 @@ import type { ArmorType, GameState } from '../state.ts'
 import { ARMOR_HP } from '../../data/crafting.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { narrate } from './logging.ts'
-import { EXPLORATION_MAP, getBiomeAt, getDungeonDef, getTileAt } from '../../data/maps/index.ts'
+import { type DungeonFloor, EXPLORATION_MAP, getBiomeAt, getDungeonDef, getTileAt } from '../../data/maps/index.ts'
 import { ACTION_DURATION_MS, SMALL_HEAL_POTION_COOLDOWN_MS, SMALL_HEAL_POTION_HEAL } from '../../data/balance.ts'
 import { addResourceWithCap, getResourceStorageCap } from '../resourceCaps.ts'
 import { getCompanionName } from '../companion.ts'
@@ -308,8 +308,20 @@ export function enterDungeon(state: GameState): boolean {
   const floor = def.floors[activeDungeon.currentFloor]
   if (!floor) return false
 
-  if (floor.dialogText) narrate(state, floor.dialogText)
+  if (floor.dialogText) {
+    state.exploration.phase = 'floor-entry'
+    return true
+  }
 
+  return startFloorCombat(state, activeDungeon, def.floors.length, floor)
+}
+
+function startFloorCombat(
+  state: GameState,
+  activeDungeon: { id: string; currentFloor: number },
+  totalFloors: number,
+  floor: DungeonFloor,
+): boolean {
   const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
   const combatState = createEnemyCombatState(floor.enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
   state.exploration.combat = combatState
@@ -321,8 +333,23 @@ export function enterDungeon(state: GameState): boolean {
     if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
   }
 
-  narrate(state, `[${activeDungeon.currentFloor + 1}/${def.floors.length}층] ${combatState.enemyName}이(가) 막아선다.`)
+  narrate(state, `[${activeDungeon.currentFloor + 1}/${totalFloors}층] ${combatState.enemyName}이(가) 막아선다.`)
   return true
+}
+
+export function confirmFloorEntry(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'floor-entry') return false
+  const { activeDungeon } = state.exploration
+  if (!activeDungeon) return false
+
+  const def = getDungeonDef(activeDungeon.id)
+  if (!def) return false
+
+  const floor = def.floors[activeDungeon.currentFloor]
+  if (!floor) return false
+
+  if (floor.dialogText) narrate(state, floor.dialogText)
+  return startFloorCombat(state, activeDungeon, def.floors.length, floor)
 }
 
 export function cancelDungeonEntry(state: GameState): boolean {
@@ -344,17 +371,11 @@ export function continueExplorationAfterLoot(state: GameState): boolean {
       activeDungeon.currentFloor += 1
       const nextFloor = def.floors[activeDungeon.currentFloor]
       if (nextFloor) {
-        if (nextFloor.dialogText) narrate(state, nextFloor.dialogText)
-        const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
-        const combatState = createEnemyCombatState(nextFloor.enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
-        state.exploration.combat = combatState
-        state.exploration.phase = 'combat'
-        const codex = state.enemyCodex[nextFloor.enemyId]
-        if (codex) {
-          codex.encountered = true
-          if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
+        if (nextFloor.dialogText) {
+          state.exploration.phase = 'floor-entry'
+        } else {
+          startFloorCombat(state, activeDungeon, def.floors.length, nextFloor)
         }
-        narrate(state, `[${activeDungeon.currentFloor + 1}/${def.floors.length}층] ${combatState.enemyName}이(가) 막아선다.`)
       }
     } else {
       const dungeonName = def?.name ?? activeDungeon.id

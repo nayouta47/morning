@@ -53,6 +53,17 @@ export function renderActiveBody(state: GameState, now = Date.now()): string {
     }
   }
 
+  if (state.exploration.phase === 'floor-entry' && state.exploration.activeDungeon) {
+    const { activeDungeon } = state.exploration
+    const def = getDungeonDef(activeDungeon.id)
+    if (def) {
+      const floor = def.floors[activeDungeon.currentFloor]
+      if (floor) {
+        return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre></div><div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="층 진입"><div class="modal-card"><h2>${def.emoji} ${def.name} <span class="modal-subtitle">— ${activeDungeon.currentFloor + 1}/${def.floors.length}층</span></h2><p>${floor.dialogText.replace(/\n/g, '<br>')}</p><button id="floor-entry-confirm" type="button">확인</button></div></div>`
+      }
+    }
+  }
+
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
     return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
   }

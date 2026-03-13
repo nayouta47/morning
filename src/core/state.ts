@@ -71,7 +71,7 @@ export type ActionProgress = {
 export type TabKey = 'base' | 'assembly' | 'body' | 'android' | 'exploration' | 'codex' | 'dog'
 
 export type ExplorationMode = 'loadout' | 'active'
-export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry'
+export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry' | 'floor-entry'
 
 export type Position = {
   x: number

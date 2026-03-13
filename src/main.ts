@@ -13,6 +13,7 @@ import {
   continueExplorationAfterLoot,
   enterDungeon,
   cancelDungeonEntry,
+  confirmFloorEntry,
   addLoadoutResource,
   removeLoadoutResource,
   fillLoadoutResource,
@@ -467,6 +468,11 @@ function redraw(nowOverride?: number): void {
         onCancelDungeonEntry: () => {
           syncState()
           cancelDungeonEntry(state)
+          redraw()
+        },
+        onConfirmFloorEntry: () => {
+          syncState()
+          confirmFloorEntry(state)
           redraw()
         },
         onLoadoutAddItem: (resourceId) => {
