@@ -2,7 +2,7 @@ import { ACTION_DURATION_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/bal
 import { COMPANION_DEPART_MESSAGES, getCompanionName } from '../companion.ts'
 import { ENEMY_IDS } from '../../data/enemies.ts'
 import { getBuildingCost, getBuildingLabel, type BuildingId } from '../../data/buildings.ts'
-import type { GameState, MinerProcessKey, OrganType, SmeltingProcessKey, TabKey } from '../state.ts'
+import type { AndroidPartSlot, GameState, MinerProcessKey, OrganType, SmeltingProcessKey, TabKey } from '../state.ts'
 import { evaluateUnlocks } from '../unlocks.ts'
 import { canAfford, payCost } from './costs.ts'
 import { narrate } from './logging.ts'
@@ -345,6 +345,10 @@ export function selectOrganSlot(state: GameState, slot: OrganType | null): void 
 
 export function selectDogOrganSlot(state: GameState, slot: OrganType | null): void {
   state.selectedDogOrganSlot = slot
+}
+
+export function selectAndroidPartSlot(state: GameState, slot: AndroidPartSlot | null): void {
+  state.selectedAndroidPartSlot = slot
 }
 
 export function selectWeapon(state: GameState, weaponId: string | null): void {

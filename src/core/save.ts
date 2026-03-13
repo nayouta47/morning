@@ -9,6 +9,7 @@ import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { inferModuleTypeFromAlias } from '../data/modules.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT, normalizeBackpackEntries } from './explorationBackpack.ts'
 import { DOG_DEFAULT_ORGANS } from '../data/dogOrgans.ts'
+import { ANDROID_DEFAULT_PARTS, ANDROID_PART_DEFS } from '../data/androidParts.ts'
 
 const SAVE_KEY = 'morning-save-v4'
 const LEGACY_SAVE_KEYS = Array.from({ length: 10 }, (_, index) => `morning-save-v${index + 1}`)
@@ -333,6 +334,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.codexRevealAll = Boolean(loaded.codexRevealAll)
   base.selectedOrganSlot = null
   base.selectedDogOrganSlot = null
+  base.selectedAndroidPartSlot = null
 
   const ORGAN_TYPES = ['brain', 'eyes', 'heart', 'arms', 'intestines'] as const
   if (loaded.equippedOrgans && typeof loaded.equippedOrgans === 'object') {
@@ -352,6 +354,18 @@ function normalizeState(raw: unknown): GameState | null {
     })
   }
 
+  const loadedAndroidParts = (loaded as Partial<GameState>).equippedAndroidParts
+  if (loadedAndroidParts && typeof loadedAndroidParts === 'object') {
+    const raw = loadedAndroidParts as Partial<Record<string, unknown>>
+    const ANDROID_SLOTS = ['cpu', 'core', 'leftArm', 'rightArm', 'leftLeg', 'rightLeg'] as const
+    ANDROID_SLOTS.forEach((slot) => {
+      const val = raw[slot]
+      if (val === null) base.equippedAndroidParts[slot] = null
+      else if (typeof val === 'string' && ANDROID_PART_DEFS[val]) base.equippedAndroidParts[slot] = val
+      else base.equippedAndroidParts[slot] = ANDROID_DEFAULT_PARTS[slot]
+    })
+  }
+
   const loadedLastUpdate = Number(loaded.lastUpdate)
   base.lastUpdate = Number.isFinite(loadedLastUpdate) && loadedLastUpdate > 0 ? loadedLastUpdate : Date.now()
 
@@ -366,7 +380,7 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   const activeTab = loaded.activeTab as TabKey
-  base.activeTab = activeTab === 'assembly' || activeTab === 'body' || activeTab === 'exploration' || activeTab === 'codex' || activeTab === 'dog' ? activeTab : 'base'
+  base.activeTab = activeTab === 'assembly' || activeTab === 'body' || activeTab === 'android' || activeTab === 'exploration' || activeTab === 'codex' || activeTab === 'dog' ? activeTab : 'base'
 
   if (Array.isArray(loaded.weapons)) {
     base.weapons = loaded.weapons

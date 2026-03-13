@@ -48,6 +48,7 @@ export type Handlers = {
   onLoadoutClearItem: (resourceId: ResourceId) => void
   onSelectOrganSlot: (slot: import('../core/state.ts').OrganType | null) => void
   onSelectDogOrganSlot: (slot: import('../core/state.ts').OrganType | null) => void
+  onSelectAndroidPartSlot: (slot: import('../core/state.ts').AndroidPartSlot | null) => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void

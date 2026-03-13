@@ -2,7 +2,9 @@ import type { ResourceId } from '../data/resources.ts'
 import type { BuildingId } from '../data/buildings.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { DEFAULT_ORGANS, type OrganType } from '../data/organs.ts'
+import { ANDROID_DEFAULT_PARTS, type AndroidPartSlot } from '../data/androidParts.ts'
 export type { OrganType } from '../data/organs.ts'
+export type { AndroidPartSlot } from '../data/androidParts.ts'
 import { DOG_DEFAULT_ORGANS } from '../data/dogOrgans.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT } from './explorationBackpack.ts'
@@ -65,7 +67,7 @@ export type ActionProgress = {
   cryoSleep: number
 }
 
-export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex' | 'dog'
+export type TabKey = 'base' | 'assembly' | 'body' | 'android' | 'exploration' | 'codex' | 'dog'
 
 export type ExplorationMode = 'loadout' | 'active'
 export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry'
@@ -190,6 +192,8 @@ export type GameState = {
   selectedOrganSlot: OrganType | null
   equippedDogOrgans: Record<OrganType, string>
   selectedDogOrganSlot: OrganType | null
+  equippedAndroidParts: Record<AndroidPartSlot, string | null>
+  selectedAndroidPartSlot: AndroidPartSlot | null
 }
 
 export const initialState: GameState = {
@@ -360,4 +364,6 @@ export const initialState: GameState = {
   selectedOrganSlot: null,
   equippedDogOrgans: { ...DOG_DEFAULT_ORGANS },
   selectedDogOrganSlot: null,
+  equippedAndroidParts: { ...ANDROID_DEFAULT_PARTS },
+  selectedAndroidPartSlot: null,
 }

@@ -1,4 +1,4 @@
-import type { GameState, MinerProcessKey, OrganType, SmeltingProcessKey } from '../../core/state.ts'
+import type { AndroidPartSlot, GameState, MinerProcessKey, OrganType, SmeltingProcessKey } from '../../core/state.ts'
 import type { ResourceId } from '../../data/resources.ts'
 import type { Handlers } from '../types.ts'
 
@@ -9,6 +9,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   app.querySelector<HTMLButtonElement>('#tab-exploration')?.addEventListener('click', () => handlers.onSelectTab('exploration'))
   app.querySelector<HTMLButtonElement>('#tab-codex')?.addEventListener('click', () => handlers.onSelectTab('codex'))
   app.querySelector<HTMLButtonElement>('#tab-dog')?.addEventListener('click', () => handlers.onSelectTab('dog'))
+  app.querySelector<HTMLButtonElement>('#tab-android')?.addEventListener('click', () => handlers.onSelectTab('android'))
 
   app.querySelectorAll<HTMLButtonElement>('button[data-organ-slot]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -25,6 +26,15 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
       if (!slot) return
       const isCurrent = state.selectedDogOrganSlot === slot
       handlers.onSelectDogOrganSlot(isCurrent ? null : slot)
+    })
+  })
+
+  app.querySelectorAll<HTMLButtonElement>('button[data-android-part-slot]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slot = btn.dataset.androidPartSlot as AndroidPartSlot | undefined
+      if (!slot) return
+      const isCurrent = state.selectedAndroidPartSlot === slot
+      handlers.onSelectAndroidPartSlot(isCurrent ? null : slot)
     })
   })
   app.querySelector<HTMLButtonElement>('#cheat-accelerate-base-time')?.addEventListener('click', handlers.onCheatAccelerateBaseTime)
