@@ -41,7 +41,7 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     id: 'module',
     label: '모듈 제작 I',
     durationMs: WEAPON_CRAFT_DURATION_MS,
-    costs: { iron: 200, molybdenum: 1 },
+    costs: { iron: 200, chromium: 1 },
     requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
     outputs: [{ kind: 'moduleRandom', pool: ['damage', 'cooldown', 'blockAmplifierUp', 'blockAmplifierDown'], count: 1 }],
   },
@@ -130,10 +130,10 @@ export function getCraftRecipeCost(state: GameState, recipe: CraftRecipeKey): Re
   if (recipe === 'module') {
     const tier = getActiveModuleCraftTier(state)
     if (tier === 3) {
-      return { siliconIngot: 1, highAlloySteel: 1 }
+      return { siliconIngot: 1, cobalt: 1 }
     }
     if (tier === 2) {
-      return { iron: 200, chromium: 4, molybdenum: 2, cobalt: 1 }
+      return { iron: 200, molybdenum: 2 }
     }
     return CRAFT_RECIPE_DEFS.module.costs
   }
