@@ -1,0 +1,27 @@
+{
+  "events": [
+    { "id": "collapse", "name": "발작" },
+    { "id": "terminalIllness", "name": "불치병" },
+    { "id": "timePassed", "name": "얼마나 흐른거지?" },
+    { "id": "relapse", "name": "재발작" },
+    { "id": "lookAround", "name": "주위를 바라보다" },
+    { "id": "ownerlessThing", "name": "주인 없는 것" }
+  ],
+  "enemies": [
+    { "id": "siliconLifeform", "name": "🧏‍♀️ 석화인" },
+    { "id": "siliconBug", "name": "🐛 석충" },
+    { "id": "wheelBug", "name": "🛞 윤각" },
+    { "id": "bareBonesMan", "name": "🩻 해골무사" },
+    { "id": "rustGolem", "name": "🐃 적철장" },
+    { "id": "staticHound", "name": "🐩 뇌견" },
+    { "id": "moldedWorker", "name": "👷 균역부" },
+    { "id": "chromiumCrawler", "name": "🦀 백갑장군" },
+    { "id": "hunterHunter", "name": "🏹 역포수" },
+    { "id": "divineElk", "name": "🦌 녹신" },
+    { "id": "steelEagle", "name": "🦅 철응" },
+    { "id": "willowFish", "name": "🐟 유사" },
+    { "id": "emberCrane", "name": "🦢 잔화학" },
+    { "id": "phoenixBird", "name": "🐦‍🔥 회염조" },
+    { "id": "tailor", "name": "🪡 재봉사" }
+  ]
+}

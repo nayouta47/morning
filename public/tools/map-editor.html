@@ -740,31 +740,19 @@ function renderDungeonPalette() {
   }
 }
 
-const EVENT_OPTIONS = [
-  { id: 'collapse', name: '발작' },
-  { id: 'terminalIllness', name: '불치병' },
-  { id: 'timePassed', name: '얼마나 흐른거지?' },
-  { id: 'relapse', name: '재발작' },
-  { id: 'lookAround', name: '주위를 바라보다' },
-]
+let EVENT_OPTIONS = []
+let ENEMY_OPTIONS = []
 
-const ENEMY_OPTIONS = [
-  { id: 'siliconLifeform', name: '🧏‍♀️ 석화인' },
-  { id: 'siliconBug', name: '🐛 석충' },
-  { id: 'wheelBug', name: '🛞 윤각' },
-  { id: 'bareBonesMan', name: '🩻 해골무사' },
-  { id: 'rustGolem', name: '🐃 적철장' },
-  { id: 'staticHound', name: '🐩 뇌견' },
-  { id: 'moldedWorker', name: '👷 균역부' },
-  { id: 'chromiumCrawler', name: '🦀 백갑장군' },
-  { id: 'hunterHunter', name: '🏹 역포수' },
-  { id: 'divineElk', name: '🦌 녹신' },
-  { id: 'steelEagle', name: '🦅 철응' },
-  { id: 'willowFish', name: '🐟 유사' },
-  { id: 'emberCrane', name: '🦢 잔화학' },
-  { id: 'phoenixBird', name: '🐦‍🔥 회염조' },
-  { id: 'tailor', name: '🪡 재봉사' },
-]
+async function loadGameData() {
+  try {
+    const res = await fetch('./game-data.json')
+    const data = await res.json()
+    EVENT_OPTIONS = data.events ?? []
+    ENEMY_OPTIONS = data.enemies ?? []
+  } catch {
+    // 로드 실패 시 빈 배열 유지
+  }
+}
 
 function autoResize(el) {
   el.style.height = 'auto'
@@ -1006,6 +994,7 @@ renderDungeonPalette()
 
 // GitHub API에서 맵 자동 로드, 실패 시 로컬 → 기본 맵 순으로 폴백
 async function autoLoad() {
+  await loadGameData()
   const token = getToken()
   const headers = { 'Accept': 'application/vnd.github+json' }
   if (token) headers['Authorization'] = `Bearer ${token}`
