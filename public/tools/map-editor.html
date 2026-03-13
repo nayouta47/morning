@@ -329,6 +329,7 @@ canvas.addEventListener('mousedown', e => {
       const current = mapData.tiles[tile.y]?.[tile.x]
       mapData.tiles[tile.y][tile.x] = { biome: current?.biome ?? FALLBACK }
       render()
+      scheduleAutoSave()
     } else {
       // 우클릭 = 바이옴 선택
       const biomeId = mapData.tiles[tile.y]?.[tile.x]?.biome ?? FALLBACK
@@ -603,7 +604,10 @@ let autoSaveTimer = null
 let isSaving = false
 
 function scheduleAutoSave() {
-  if (!getToken()) return
+  if (!getToken()) {
+    setStatus('⚠️ 변경됨 — GitHub 토큰(🔑)이 없어 저장되지 않습니다')
+    return
+  }
   clearTimeout(autoSaveTimer)
   autoSaveTimer = setTimeout(githubSave, 2000)
   setStatus('✏️ 변경됨 — 2초 후 자동 저장...')
@@ -616,7 +620,11 @@ async function githubSave() {
     showTokenDialog()
     if (!getToken()) return
   }
-  if (isSaving) return
+  if (isSaving) {
+    // 저장 중 변경 발생 — 완료 후 재시도
+    autoSaveTimer = setTimeout(githubSave, 2000)
+    return
+  }
 
   isSaving = true
   setStatus('⏳ GitHub에 저장 중...')
