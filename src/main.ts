@@ -398,6 +398,7 @@ function redraw(nowOverride?: number): void {
         },
         onEquipRuby: () => {
           state.rubyEquipped = true
+          state.equippedOrgans.arms = 'rubyArm'
           narrate(state, `사건 — ${EVENT_NAMES.ruby}`)
           appMounted = false
           redraw()

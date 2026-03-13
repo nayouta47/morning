@@ -25,9 +25,9 @@ export const DOG_ORGAN_DEFS: Record<string, OrganDef> = {
   dogPaws: {
     id: 'dogPaws',
     name: '보행 관절 모듈',
-    emoji: '🔩',
+    emoji: '💪',
     organType: 'arms',
-    flavorText: '노면을 짚고, 방향을 정렬하고, 가끔 무릎 위에 올려진다.',
+    flavorText: '베어링 자리 일부에 생체 부품을 박아 넣었다. 발소리가 달라졌고, 관절이 전보다 따뜻하다.',
   },
   dogGut: {
     id: 'dogGut',

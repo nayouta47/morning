@@ -44,6 +44,13 @@ export const ORGAN_DEFS: Record<string, OrganDef> = {
     organType: 'intestines',
     flavorText: '순환계통. 피가 어디선가 돌고 있다.',
   },
+  rubyArm: {
+    id: 'rubyArm',
+    name: 'R.U.B.Y 보조 팔',
+    emoji: '🦾',
+    organType: 'arms',
+    flavorText: 'R.U.B.Y가 물어다 준 것이다. 무겁고 차갑지만, 움직인다. 어디서 구했는지는 묻지 않기로 했다.',
+  },
 }
 
 export const DEFAULT_ORGANS: Record<OrganType, string> = {
