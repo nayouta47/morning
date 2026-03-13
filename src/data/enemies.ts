@@ -186,7 +186,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   phoenixBird: {
     id: 'phoenixBird',
-    name: '🐦‍🔥 불사조',
+    name: '🐦‍🔥 순환염황',
     tier: 3,
     hp: 30,
     damage: 5,
