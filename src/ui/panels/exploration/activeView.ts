@@ -1,6 +1,6 @@
 import type { GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight } from '../../../core/explorationBackpack.ts'
-import { getBiomeAt, getDungeonDef } from '../../../data/maps/index.ts'
+import { getBiomeAt, getDungeonDef, getTileAt } from '../../../data/maps/index.ts'
 import { getResourceDisplay, type ResourceId } from '../../../data/resources.ts'
 import { renderExplorationCombatOverlay } from '../combatOverlay.ts'
 import { getSyntheticFoodButtonState, renderBackpackHeatmap } from './loadoutView.ts'
@@ -17,7 +17,11 @@ export function renderExplorationMap(state: GameState): string {
       if (xx < 0 || yy < 0 || xx >= mapWidth || yy >= mapHeight) tokens.push('⬛')
       else if (xx === x && yy === y) tokens.push('🧍')
       else if (xx === state.exploration.start.x && yy === state.exploration.start.y) tokens.push('🏠')
-      else if (state.exploration.visited.includes(`${xx},${yy}`)) tokens.push(getBiomeAt(xx, yy).emoji)
+      else if (state.exploration.visited.includes(`${xx},${yy}`)) {
+        const tile = getTileAt(xx, yy)
+        const dungeonDef = tile?.dungeonId ? getDungeonDef(tile.dungeonId) : undefined
+        tokens.push(dungeonDef ? dungeonDef.emoji : getBiomeAt(xx, yy).emoji)
+      }
       else tokens.push('⬛')
     }
     rows.push(tokens.join(' '))
