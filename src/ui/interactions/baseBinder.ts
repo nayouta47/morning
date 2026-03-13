@@ -8,6 +8,7 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   app.querySelector<HTMLButtonElement>('#tab-body')?.addEventListener('click', () => handlers.onSelectTab('body'))
   app.querySelector<HTMLButtonElement>('#tab-exploration')?.addEventListener('click', () => handlers.onSelectTab('exploration'))
   app.querySelector<HTMLButtonElement>('#tab-codex')?.addEventListener('click', () => handlers.onSelectTab('codex'))
+  app.querySelector<HTMLButtonElement>('#tab-dog')?.addEventListener('click', () => handlers.onSelectTab('dog'))
 
   app.querySelectorAll<HTMLButtonElement>('button[data-organ-slot]').forEach((btn) => {
     btn.addEventListener('click', () => {

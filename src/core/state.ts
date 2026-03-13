@@ -64,7 +64,7 @@ export type ActionProgress = {
   cryoSleep: number
 }
 
-export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex'
+export type TabKey = 'base' | 'assembly' | 'body' | 'exploration' | 'codex' | 'dog'
 
 export type ExplorationMode = 'loadout' | 'active'
 export type ExplorationPhase = 'moving' | 'combat' | 'loot' | 'dungeon-entry'

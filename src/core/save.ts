@@ -350,7 +350,7 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   const activeTab = loaded.activeTab as TabKey
-  base.activeTab = activeTab === 'assembly' || activeTab === 'body' || activeTab === 'exploration' || activeTab === 'codex' ? activeTab : 'base'
+  base.activeTab = activeTab === 'assembly' || activeTab === 'body' || activeTab === 'exploration' || activeTab === 'codex' || activeTab === 'dog' ? activeTab : 'base'
 
   if (Array.isArray(loaded.weapons)) {
     base.weapons = loaded.weapons
@@ -449,6 +449,10 @@ function normalizeState(raw: unknown): GameState | null {
   }
 
   if (!base.collapseEventDismissed && base.activeTab === 'codex') {
+    base.activeTab = 'base'
+  }
+
+  if (!base.isGuideRobotRecovered && base.activeTab === 'dog') {
     base.activeTab = 'base'
   }
 

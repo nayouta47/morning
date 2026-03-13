@@ -1,16 +1,24 @@
 import type { LootEntry } from './state.ts'
 import type { ResourceId } from '../data/resources.ts'
 
-export const EXPLORATION_BACKPACK_UNIT_WEIGHT = 1
 export const EXPLORATION_BACKPACK_MAX_WEIGHT = 50
+
+const RESOURCE_UNIT_WEIGHT: Partial<Record<ResourceId, number>> = {
+  scrap: 0.1,
+  iron: 0.3,
+}
+const DEFAULT_UNIT_WEIGHT = 1
+
+export function getResourceUnitWeight(resourceId: ResourceId): number {
+  return RESOURCE_UNIT_WEIGHT[resourceId] ?? DEFAULT_UNIT_WEIGHT
+}
 
 export function getBackpackResourceAmount(backpack: LootEntry[], resourceId: ResourceId): number {
   return backpack.reduce((sum, entry) => (entry.resource === resourceId ? sum + entry.amount : sum), 0)
 }
 
 export function getBackpackUsedWeight(backpack: LootEntry[]): number {
-  const totalAmount = backpack.reduce((sum, entry) => sum + Math.max(0, Math.floor(entry.amount)), 0)
-  return totalAmount * EXPLORATION_BACKPACK_UNIT_WEIGHT
+  return backpack.reduce((sum, entry) => sum + Math.max(0, Math.floor(entry.amount)) * getResourceUnitWeight(entry.resource), 0)
 }
 
 export function getBackpackRemainingWeight(backpack: LootEntry[], maxWeight: number): number {
@@ -26,8 +34,9 @@ export function addResourceToBackpack(
   const requested = Math.max(0, Math.floor(amount))
   if (requested <= 0) return { added: 0, remaining: 0 }
 
+  const unitWeight = getResourceUnitWeight(resourceId)
   const remainingWeight = getBackpackRemainingWeight(backpack, maxWeight)
-  const maxAddable = Math.floor(remainingWeight / EXPLORATION_BACKPACK_UNIT_WEIGHT)
+  const maxAddable = unitWeight > 0 ? Math.floor(remainingWeight / unitWeight) : requested
   const added = Math.min(requested, maxAddable)
 
   if (added > 0) {
