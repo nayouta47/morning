@@ -119,7 +119,7 @@ export function bindAssemblyInteractions(
 
     const button = target.closest<HTMLElement>('[data-weapon-id]')
     const id = button?.getAttribute('data-weapon-id')
-    if (id) dispatchIntent({ type: 'weapon/select', weaponId: id })
+    if (id) dispatchIntent({ type: 'weapon/select', weaponId: id === state.selectedWeaponId ? null : id })
   }, { signal })
 
   app.addEventListener('dragstart', (event) => {

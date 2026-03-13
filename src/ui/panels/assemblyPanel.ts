@@ -65,12 +65,12 @@ function renderWeaponStatCards(stats: ReturnType<typeof getWeaponStats>, weapon:
         <div class="weapon-stat-item"><span class="weapon-stat-label">기본 공격력</span><strong class="weapon-stat-value">${stats.baseDamage}</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">최종 공격력</span><strong class="weapon-stat-value ${finalClass}">${stats.finalDamage}</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">기본 쿨다운</span><strong class="weapon-stat-value">${stats.baseCooldownSec.toFixed(1)}s</strong></div>
-        <div class="weapon-stat-item"><span class="weapon-stat-label">최종 쿨다운</span><strong class="weapon-stat-value ${finalClass}">${stats.finalCooldownSec.toFixed(1)}s</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">최종 쿨다운</span><strong class="weapon-stat-value ${finalClass}">${stats.finalCooldownSec.toFixed(1)}s${stats.totalHaste !== 0 ? `<span class="weapon-stat-haste-inline"> (가속 ${stats.totalHaste > 0 ? '+' : ''}${stats.totalHaste})</span>` : ''}</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">명중률</span><strong class="weapon-stat-value">${displayStats.accuracy}%</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">사거리</span><strong class="weapon-stat-value">${displayStats.range}m</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">중량</span><strong class="weapon-stat-value">${displayStats.weight.toFixed(1)}kg</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">DPS</span><strong class="weapon-stat-value ${finalClass}">${(stats.finalDamage / stats.finalCooldownSec).toFixed(2)}</strong></div>
       </div>
-      <p class="weapon-stat-haste">가속 ${stats.totalHaste >= 0 ? '+' : ''}${stats.totalHaste}</p>
     </article>`
 }
 
@@ -169,7 +169,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const selected = getSelectedWeapon(state)
   if (!selected) {
     if (copyButton) copyButton.disabled = true
-    board.innerHTML = '<p class="hint">무기를 선택하면 슬롯 보드가 표시됩니다.</p>'
+    board.innerHTML = '<p class="hint" style="grid-column:1/-1">무기를 선택하면 슬롯 보드가 표시됩니다.</p>'
     return
   }
 

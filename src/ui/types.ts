@@ -56,7 +56,7 @@ export type Handlers = {
   onCraftScavengerDrone: () => void
   onCraftSyntheticFood: () => void
   onCraftSmallHealPotion: () => void
-  onSelectWeapon: (weaponId: string) => void
+  onSelectWeapon: (weaponId: string | null) => void
   onReorderWeapons: (sourceWeaponId: string, targetWeaponId: string | null) => void
   onEquipModule: (moduleType: ModuleType, slotIndex: number) => void
   onMoveEquippedModule: (fromSlotIndex: number, toSlotIndex: number) => void
@@ -87,7 +87,7 @@ export type ActionUI = {
 }
 
 export type InteractionIntent =
-  | { type: 'weapon/select'; weaponId: string }
+  | { type: 'weapon/select'; weaponId: string | null }
   | { type: 'weapon/reorder'; sourceWeaponId: string; targetWeaponId: string | null }
   | { type: 'module/equip'; moduleType: ModuleType; slotIndex: number }
   | { type: 'module/move'; fromSlotIndex: number; toSlotIndex: number }

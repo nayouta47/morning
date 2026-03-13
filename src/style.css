@@ -1177,10 +1177,10 @@ li {
   color: #d7cfbf;
 }
 
-.weapon-stat-haste {
-  margin: 8px 0 0;
-  font-size: 12px;
+.weapon-stat-haste-inline {
+  font-size: 11px;
   color: #adc8db;
+  font-weight: 400;
 }
 
 #power-summary-bar {
