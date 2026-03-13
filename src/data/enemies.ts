@@ -24,7 +24,7 @@ export type EnemyDef = {
 export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   siliconLifeform: {
     id: 'siliconLifeform',
-    name: '🧏‍♀️ 벌벌떠는 기인',
+    name: '🧏‍♀️ 석화인',
     tier: 2,
     hp: 20,
     damage: 2,
@@ -37,7 +37,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   siliconBug: {
     id: 'siliconBug',
-    name: '🐛 규소충',
+    name: '🐛 석충',
     tier: 1,
     hp: 3,
     damage: 1,
@@ -49,7 +49,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   wheelBug: {
     id: 'wheelBug',
-    name: '🛞 바퀴 벌레',
+    name: '🛞 윤각',
     tier: 1,
     hp: 4,
     damage: 3,
@@ -61,7 +61,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   bareBonesMan: {
     id: 'bareBonesMan',
-    name: '🩻 앙상한 사내',
+    name: '🩻 해골무사',
     tier: 3,
     hp: 10,
     damage: 3,
@@ -73,7 +73,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   rustGolem: {
     id: 'rustGolem',
-    name: '🧱 녹슨 골렘',
+    name: '🧱 적철장',
     tier: 2,
     hp: 18,
     damage: 5,
@@ -85,7 +85,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   staticHound: {
     id: 'staticHound',
-    name: '🐕 정전기 개',
+    name: '🐕 뇌견',
     tier: 1,
     hp: 5,
     damage: 2,
@@ -97,7 +97,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   moldedWorker: {
     id: 'moldedWorker',
-    name: '👷 곰팡이 노동자',
+    name: '👷 균역부',
     tier: 2,
     hp: 14,
     damage: 2,
@@ -110,7 +110,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   chromiumCrawler: {
     id: 'chromiumCrawler',
-    name: '🦀 크롬 집게발',
+    name: '🦀 백갑장군',
     tier: 3,
     hp: 30,
     damage: 5,
@@ -123,7 +123,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   hunterHunter: {
     id: 'hunterHunter',
-    name: '🏹 사냥꾼사냥꾼',
+    name: '🏹 역포수',
     tier: 3,
     hp: 15,
     damage: 4,
@@ -136,7 +136,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   divineElk: {
     id: 'divineElk',
-    name: '🦌 신수고라니',
+    name: '🦌 녹신',
     tier: 3,
     hp: 28,
     damage: 3,
@@ -149,7 +149,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   steelEagle: {
     id: 'steelEagle',
-    name: '🦅 강철참수리',
+    name: '🦅 철응',
     tier: 2,
     hp: 12,
     damage: 4,
@@ -162,7 +162,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   willowFish: {
     id: 'willowFish',
-    name: '🐟 버들가지',
+    name: '🐟 유사',
     tier: 1,
     hp: 4,
     damage: 1,
@@ -174,7 +174,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   emberCrane: {
     id: 'emberCrane',
-    name: '🦢 잔불두루미',
+    name: '🦢 잔화학',
     tier: 2,
     hp: 16,
     damage: 3,
@@ -186,7 +186,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   phoenixBird: {
     id: 'phoenixBird',
-    name: '🐦‍🔥 순환염황',
+    name: '🐦‍🔥 회염조',
     tier: 3,
     hp: 30,
     damage: 5,
