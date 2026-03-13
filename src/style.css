@@ -129,7 +129,8 @@ h1 {
 }
 
 .tab-btn {
-  max-width: 220px;
+  padding: 10px;
+  min-width: 80px;
 }
 
 .tab-btn.active {
