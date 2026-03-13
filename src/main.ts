@@ -22,6 +22,7 @@ import {
   selectWeapon,
   setActiveTab,
   selectOrganSlot,
+  selectDogOrganSlot,
   setSmeltingAllocation,
   setMinerAllocation,
   startCraft,
@@ -267,6 +268,10 @@ function redraw(nowOverride?: number): void {
         },
         onSelectOrganSlot: (slot) => {
           selectOrganSlot(state, slot)
+          redraw()
+        },
+        onSelectDogOrganSlot: (slot) => {
+          selectDogOrganSlot(state, slot)
           redraw()
         },
         onCheatToggleCodexReveal: () => {

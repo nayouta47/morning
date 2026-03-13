@@ -343,6 +343,10 @@ export function selectOrganSlot(state: GameState, slot: OrganType | null): void 
   state.selectedOrganSlot = slot
 }
 
+export function selectDogOrganSlot(state: GameState, slot: OrganType | null): void {
+  state.selectedDogOrganSlot = slot
+}
+
 export function selectWeapon(state: GameState, weaponId: string | null): void {
   if (state.exploration.mode === 'active') {
     narrate(state, '탐험 중에는 무기를 변경할 수 없다.')

@@ -3,6 +3,7 @@ import type { BuildingId } from '../data/buildings.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { DEFAULT_ORGANS, type OrganType } from '../data/organs.ts'
 export type { OrganType } from '../data/organs.ts'
+import { DOG_DEFAULT_ORGANS } from '../data/dogOrgans.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT } from './explorationBackpack.ts'
 
@@ -186,6 +187,8 @@ export type GameState = {
   companionIsAutoGathering: boolean
   equippedOrgans: Record<OrganType, string>
   selectedOrganSlot: OrganType | null
+  equippedDogOrgans: Record<OrganType, string>
+  selectedDogOrganSlot: OrganType | null
 }
 
 export const initialState: GameState = {
@@ -353,4 +356,6 @@ export const initialState: GameState = {
   companionIsAutoGathering: false,
   equippedOrgans: { ...DEFAULT_ORGANS },
   selectedOrganSlot: null,
+  equippedDogOrgans: { ...DOG_DEFAULT_ORGANS },
+  selectedDogOrganSlot: null,
 }

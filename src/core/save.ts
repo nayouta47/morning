@@ -8,6 +8,7 @@ import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
 import { EXPLORATION_MAP } from '../data/maps/index.ts'
 import { inferModuleTypeFromAlias } from '../data/modules.ts'
 import { EXPLORATION_BACKPACK_MAX_WEIGHT, normalizeBackpackEntries } from './explorationBackpack.ts'
+import { DOG_DEFAULT_ORGANS } from '../data/dogOrgans.ts'
 
 const SAVE_KEY = 'morning-save-v4'
 const LEGACY_SAVE_KEYS = Array.from({ length: 10 }, (_, index) => `morning-save-v${index + 1}`)
@@ -326,6 +327,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.walkCount = Math.max(0, Math.floor(Number(loaded.walkCount) || 0))
   base.codexRevealAll = Boolean(loaded.codexRevealAll)
   base.selectedOrganSlot = null
+  base.selectedDogOrganSlot = null
 
   const ORGAN_TYPES = ['brain', 'eyes', 'heart', 'arms', 'intestines'] as const
   if (loaded.equippedOrgans && typeof loaded.equippedOrgans === 'object') {
@@ -333,6 +335,15 @@ function normalizeState(raw: unknown): GameState | null {
     ORGAN_TYPES.forEach((slot) => {
       const val = raw[slot]
       if (typeof val === 'string') base.equippedOrgans[slot] = val
+    })
+  }
+
+  if ((loaded as Partial<GameState>).equippedDogOrgans && typeof (loaded as Partial<GameState>).equippedDogOrgans === 'object') {
+    const raw = (loaded as Partial<GameState>).equippedDogOrgans as Partial<Record<string, unknown>>
+    ORGAN_TYPES.forEach((slot) => {
+      const val = raw[slot]
+      if (typeof val === 'string') base.equippedDogOrgans[slot] = val
+      else base.equippedDogOrgans[slot] = DOG_DEFAULT_ORGANS[slot]
     })
   }
 

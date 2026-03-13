@@ -47,6 +47,7 @@ export type Handlers = {
   onLoadoutFillItem: (resourceId: ResourceId) => void
   onLoadoutClearItem: (resourceId: ResourceId) => void
   onSelectOrganSlot: (slot: import('../core/state.ts').OrganType | null) => void
+  onSelectDogOrganSlot: (slot: import('../core/state.ts').OrganType | null) => void
   onCraftPistol: () => void
   onCraftRifle: () => void
   onCraftModule: () => void

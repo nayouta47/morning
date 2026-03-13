@@ -18,6 +18,15 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
       handlers.onSelectOrganSlot(isCurrent ? null : slot)
     })
   })
+
+  app.querySelectorAll<HTMLButtonElement>('button[data-dog-organ-slot]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const slot = btn.dataset.dogOrganSlot as OrganType | undefined
+      if (!slot) return
+      const isCurrent = state.selectedDogOrganSlot === slot
+      handlers.onSelectDogOrganSlot(isCurrent ? null : slot)
+    })
+  })
   app.querySelector<HTMLButtonElement>('#cheat-accelerate-base-time')?.addEventListener('click', handlers.onCheatAccelerateBaseTime)
   app.querySelector<HTMLButtonElement>('#cheat-codex-reveal')?.addEventListener('click', handlers.onCheatToggleCodexReveal)
   app.querySelector<HTMLButtonElement>('#delete-data')?.addEventListener('click', handlers.onDeleteData)
