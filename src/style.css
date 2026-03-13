@@ -230,6 +230,13 @@ h1 {
   gap: 6px;
 }
 
+.armor-craft-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
 .module-craft-row {
   --module-rarity-color: transparent;
   --module-rarity-rgb: 0, 0, 0;
