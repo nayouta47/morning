@@ -335,7 +335,7 @@ export function renderBasePanel(state: GameState, actionUI: ActionUI, now = Date
     : ''
 
   const smeltingSection = state.buildings.electricFurnace > 0
-    ? `<section class="action-group" aria-label="녹이기 행동"><h3 class="subheading">녹이기</h3><p class="hint" id="smelting-remaining">전기로 배정: ${smeltingUsed}/${state.buildings.electricFurnace} (남음 ${smeltingRemaining})</p>${renderSmeltingRow(state, 'burnWood', '땔감 태우기 (🪵1K → ⚫탄소1)')}${renderSmeltingRow(state, 'meltScrap', '고물 녹이기 (🗑️1K+🟢3+🔵1 → 🔗1)')}${renderSmeltingRow(state, 'meltIron', '철 녹이기 (⛓️1K+🟡8 → 🖇️1)')}${renderSmeltingRow(state, 'meltSiliconMass', '규소 덩어리 녹이기 (🧱1 → 🗞️75% / 🟡25%)')}</section>`
+    ? `<section class="action-group" aria-label="녹이기 행동"><h3 class="subheading">녹이기</h3><p class="hint" id="smelting-remaining">전기로 배정: ${smeltingUsed}/${state.buildings.electricFurnace} (남음 ${smeltingRemaining})</p>${renderSmeltingRow(state, 'burnWood', '땔감 태우기 (🪵1K → ⚫탄소1)')}${renderSmeltingRow(state, 'meltScrap', '고물 녹이기 (🗑️100+🟢3+🔵1 → 🔗1)')}${renderSmeltingRow(state, 'meltIron', '철 녹이기 (⛓️100+🟡8 → 🖇️1)')}${renderSmeltingRow(state, 'meltSiliconMass', '규소 덩어리 녹이기 (🧱1 → 🗞️75% / 🟡25%)')}</section>`
     : ''
 
   const buildingRows: string[] = []

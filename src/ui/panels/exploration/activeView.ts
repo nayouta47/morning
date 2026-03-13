@@ -53,7 +53,7 @@ export function renderActiveBody(state: GameState, now = Date.now()): string {
     const def = getDungeonDef(activeDungeon.id)
     if (def) {
       const floorLabel = activeDungeon.currentFloor > 0 ? `<p class="hint">${activeDungeon.currentFloor + 1}/${def.floors.length}층부터 재진입</p>` : ''
-      return `<div class="exploration-active">${baseInfo}<div class="exploration-combat-box dungeon-entry-panel"><p><strong>${def.emoji} ${def.name}</strong></p><p>${def.entryText}</p>${floorLabel}<button id="dungeon-enter">진입</button> <button id="dungeon-cancel">돌아가기</button></div><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre></div>`
+      return `<div class="exploration-active">${baseInfo}<pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre></div><div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="던전 진입"><div class="modal-card"><h2>${def.emoji} ${def.name}</h2><p>${def.entryText.replace(/\n/g, '<br>')}</p>${floorLabel}<button id="dungeon-enter" type="button">진입</button> <button id="dungeon-cancel" type="button">돌아가기</button></div></div>`
     }
   }
 
