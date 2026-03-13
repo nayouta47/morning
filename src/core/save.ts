@@ -231,6 +231,7 @@ function normalizeState(raw: unknown): GameState | null {
   base.actionProgress.gatherWood = clampProgress(loaded.actionProgress?.gatherWood)
   base.actionProgress.gatherScrap = clampProgress(loaded.actionProgress?.gatherScrap)
   base.actionProgress.recoverGuideRobot = clampProgress(loaded.actionProgress?.recoverGuideRobot)
+  base.actionProgress.takeAndroid = clampProgress((loaded.actionProgress as Partial<typeof base.actionProgress>)?.takeAndroid)
 
   base.smeltingAllocation.burnWood = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.burnWood) || 0))
   base.smeltingAllocation.meltScrap = Math.max(0, Math.floor(Number(loaded.smeltingAllocation?.meltScrap) || 0))
@@ -319,6 +320,8 @@ function normalizeState(raw: unknown): GameState | null {
   base.robotName = typeof loaded.robotName === 'string' ? loaded.robotName.trim().slice(0, 12) : null
   base.needsRobotNaming = Boolean(loaded.needsRobotNaming)
   base.isGuideRobotRecovered = Boolean(loaded.isGuideRobotRecovered)
+  base.ownerlessThingTriggered = Boolean((loaded as Partial<GameState>).ownerlessThingTriggered)
+  base.isAndroidRecovered = Boolean((loaded as Partial<GameState>).isAndroidRecovered)
   base.companionScrapGatherCount = Math.max(0, Math.floor(Number(loaded.companionScrapGatherCount) || 0))
   base.companionIdleRemainingMs = Math.min(COMPANION_IDLE_MAX_MS, Math.max(0, Number((loaded as Partial<GameState>).companionIdleRemainingMs) || 0))
   base.companionIsAutoGathering = Boolean((loaded as Partial<GameState>).companionIsAutoGathering)

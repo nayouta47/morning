@@ -62,6 +62,7 @@ export type ActionProgress = {
   gatherWood: number
   gatherScrap: number
   recoverGuideRobot: number
+  takeAndroid: number
   goForWalk: number
   contactFamily: number
   cryoSleep: number
@@ -191,6 +192,8 @@ export type GameState = {
   robotName: string | null
   needsRobotNaming: boolean
   isGuideRobotRecovered: boolean
+  ownerlessThingTriggered: boolean
+  isAndroidRecovered: boolean
   companionScrapGatherCount: number
   companionIdleRemainingMs: number
   companionIsAutoGathering: boolean
@@ -299,6 +302,7 @@ export const initialState: GameState = {
     gatherWood: 0,
     gatherScrap: 0,
     recoverGuideRobot: 0,
+    takeAndroid: 0,
     goForWalk: 0,
     contactFamily: 0,
     cryoSleep: 0,
@@ -369,6 +373,8 @@ export const initialState: GameState = {
   robotName: null,
   needsRobotNaming: false,
   isGuideRobotRecovered: false,
+  ownerlessThingTriggered: false,
+  isAndroidRecovered: false,
   companionScrapGatherCount: 0,
   companionIdleRemainingMs: 0,
   companionIsAutoGathering: false,

@@ -332,6 +332,10 @@ export function setActiveTab(state: GameState, tab: TabKey): void {
     narrate(state, '아직 안내견을 회수하지 않았다.')
     return
   }
+  if (tab === 'android' && !state.isAndroidRecovered) {
+    narrate(state, '아직 데려오지 않았다.')
+    return
+  }
   if (state.exploration.mode === 'active' && tab !== 'exploration') {
     narrate(state, '탐험 중에는 다른 탭으로 이동할 수 없다.')
     return

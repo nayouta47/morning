@@ -33,6 +33,7 @@ export type Handlers = {
   onBuyUpgrade: (key: UpgradeKey) => void
   onSelectTab: (tab: import('../core/state.ts').TabKey) => void
   onStartRecoverGuideRobot: () => void
+  onStartTakeAndroid: () => void
   onStartExploration: () => void
   onMoveExploration: (dx: number, dy: number) => void
   onFleeExplorationCombat: () => void
@@ -89,6 +90,7 @@ export type ActionUI = {
   gatherWood: ActionGaugeView
   gatherScrap: ActionGaugeView
   recoverGuideRobot: ActionGaugeView
+  takeAndroid: ActionGaugeView
   goForWalk: ActionGaugeView
   contactFamily: ActionGaugeView
   cryoSleep: ActionGaugeView

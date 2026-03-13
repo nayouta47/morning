@@ -33,6 +33,7 @@ import {
   unequipArmor,
   startExploration,
   startRecoverGuideRobot,
+  startTakeAndroid,
   startExplorationFlee,
   takeExplorationLoot,
   toggleBuildingRun,
@@ -60,7 +61,7 @@ const SIMULATION_INTERVAL_MS = 250
 const HIDDEN_SIMULATION_INTERVAL_MS = 1000
 const BASE_CHEAT_ACCELERATION_MS = 10 * 60 * 1000
 
-type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep'
+type ActionKey = 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'takeAndroid' | 'goForWalk' | 'contactFamily' | 'cryoSleep'
 
 let animationFrameId: number | null = null
 let hiddenSimulationTimer: ReturnType<typeof setInterval> | null = null
@@ -139,7 +140,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}|${state.ownerlessThingTriggered ? 1 : 0}|${state.isAndroidRecovered ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -155,6 +156,7 @@ function redraw(nowOverride?: number): void {
     gatherWood: toActionView('gatherWood', false, now),
     gatherScrap: toActionView('gatherScrap', !state.unlocks.scrapAction, now),
     recoverGuideRobot: toActionView('recoverGuideRobot', state.isGuideRobotRecovered, now),
+    takeAndroid: toActionView('takeAndroid', state.isAndroidRecovered, now),
     contactFamily: toActionView('contactFamily', false, now),
     goForWalk: (() => {
       if (!state.upgrades.adoptDog) return toActionView('goForWalk', true, now)
@@ -400,6 +402,13 @@ function redraw(nowOverride?: number): void {
           const view = toActionView('recoverGuideRobot', state.isGuideRobotRecovered)
           if (view.disabled) return
           startRecoverGuideRobot(state)
+          redraw()
+        },
+        onStartTakeAndroid: () => {
+          syncState()
+          const view = toActionView('takeAndroid', state.isAndroidRecovered)
+          if (view.disabled) return
+          startTakeAndroid(state)
           redraw()
         },
         onStartExploration: () => {

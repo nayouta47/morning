@@ -246,7 +246,7 @@ function processCraftElapsed(state: GameState, key: CraftRecipeKey, elapsedMs: n
   resolveCraftCompletion(state, key, storageCap)
 }
 
-function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep', storageCap: number): void {
+function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'takeAndroid' | 'goForWalk' | 'contactFamily' | 'cryoSleep', storageCap: number): void {
   if (key === 'goToWork') {
     if (state.timePassedEventDismissed && !state.relapseEventDismissed) {
       state.goToWorkPostEventCount += 1
@@ -326,6 +326,14 @@ function resolveGatherCompletion(state: GameState, key: 'goToWork' | 'gatherWood
     return
   }
 
+  if (key === 'takeAndroid') {
+    state.isAndroidRecovered = true
+    state.actionProgress.takeAndroid = 0
+    narrate(state, '육중한 금속 몸통을 어깨에 걸었다. 생각보다 가볍다.')
+    narrate(state, `사건 — ${EVENT_NAMES.ownerlessThing}`)
+    return
+  }
+
   state.isGuideRobotRecovered = true
   state.actionProgress.recoverGuideRobot = 0
   narrate(state, '막대기로 눌러보니 허파의 바람이 빠지며 움츠리는 것처럼 경련을 일으킨다.')
@@ -345,7 +353,7 @@ function tryAutoGatherScrap(state: GameState): void {
   narrate(state, name + COMPANION_DEPART_MESSAGES[Math.floor(Math.random() * COMPANION_DEPART_MESSAGES.length)])
 }
 
-function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'goForWalk' | 'contactFamily' | 'cryoSleep', elapsedMs: number, storageCap: number): void {
+function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' | 'gatherScrap' | 'recoverGuideRobot' | 'takeAndroid' | 'goForWalk' | 'contactFamily' | 'cryoSleep', elapsedMs: number, storageCap: number): void {
   const current = state.actionProgress[key]
   if (current <= 0) return
 
@@ -442,6 +450,7 @@ function advanceBaseByElapsed(state: GameState, elapsed: number): void {
   }
   tryAutoGatherScrap(state)
   processActionElapsed(state, 'recoverGuideRobot', elapsed, storageCap)
+  processActionElapsed(state, 'takeAndroid', elapsed, storageCap)
   processActionElapsed(state, 'cryoSleep', elapsed, storageCap)
 }
 

@@ -90,6 +90,22 @@ export function startRecoverGuideRobot(state: GameState): boolean {
   return true
 }
 
+export function startTakeAndroid(state: GameState): boolean {
+  if (state.isAndroidRecovered) {
+    narrate(state, '이미 데려왔다.')
+    return false
+  }
+
+  if (state.actionProgress.takeAndroid > 0) {
+    narrate(state, '이미 옮기는 중이다.')
+    return false
+  }
+
+  state.actionProgress.takeAndroid = ACTION_DURATION_MS.takeAndroid
+  narrate(state, '인간형 로봇을 끌어당겼다.')
+  return true
+}
+
 export function startExploration(state: GameState, proceedWithoutWeapon = false): boolean {
   if (!state.isGuideRobotRecovered) {
     narrate(state, '먼저 파괴된 안내견을 주워 와야 한다.')
@@ -465,5 +481,7 @@ function applyDungeonEventTrigger(state: GameState, eventId: string): void {
     state.goToWorkPostEventCount = Math.max(state.goToWorkPostEventCount, 5)
   } else if (eventId === 'lookAround') {
     state.relapseEventDismissed = true
+  } else if (eventId === 'ownerlessThing') {
+    state.ownerlessThingTriggered = true
   }
 }

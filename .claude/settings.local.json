@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d=require\\(''./src/data/maps/default-map.json''\\); console.log\\(''size:'', d.size, ''start:'', JSON.stringify\\(d.start\\), ''rows:'', d.tiles.length, ''cols:'', d.tiles[0].length\\)\")",
+      "Bash(npm run:*)"
+    ]
+  }
+}

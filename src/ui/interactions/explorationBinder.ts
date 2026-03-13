@@ -13,6 +13,11 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
       return
     }
 
+    if (target.closest<HTMLElement>('#take-android')) {
+      handlers.onStartTakeAndroid()
+      return
+    }
+
     if (target.closest<HTMLElement>('#exploration-start')) {
       handlers.onStartExploration()
       return

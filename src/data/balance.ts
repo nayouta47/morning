@@ -7,6 +7,7 @@ export const ACTION_DURATION_MS = {
   gatherWood: 5000,
   gatherScrap: 35000,
   recoverGuideRobot: 7000,
+  takeAndroid: 5000,
   goForWalk: 10000,
   contactFamily: 6000,
   cryoSleep: 4000,
