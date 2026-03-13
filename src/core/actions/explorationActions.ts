@@ -43,12 +43,12 @@ function revealExplorationTilesInRadius(state: GameState): void {
   const { mapWidth, mapHeight } = state.exploration
   const revealed = new Set(state.exploration.visited)
 
-  for (let yy = y - 2; yy <= y + 2; yy += 1) {
-    for (let xx = x - 2; xx <= x + 2; xx += 1) {
+  for (let yy = y - 4; yy <= y + 4; yy += 1) {
+    for (let xx = x - 4; xx <= x + 4; xx += 1) {
       if (xx < 0 || yy < 0 || xx >= mapWidth || yy >= mapHeight) continue
       const dx = xx - x
       const dy = yy - y
-      if (dx * dx + dy * dy <= 2) {
+      if (dx * dx + dy * dy <= 16) {
         revealed.add(positionKey(xx, yy))
       }
     }
