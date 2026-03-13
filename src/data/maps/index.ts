@@ -58,6 +58,8 @@ type RawDungeonDef = {
 type RawMapData = {
   id?: unknown
   name?: unknown
+  width?: unknown
+  height?: unknown
   size?: unknown
   start?: { x?: unknown; y?: unknown }
   dungeons?: RawDungeonDef[]
@@ -67,7 +69,8 @@ type RawMapData = {
 export type ExplorationMap = {
   id: string
   name: string
-  size: number
+  width: number
+  height: number
   start: { x: number; y: number }
   dungeons: DungeonDef[]
   tiles: MapTile[][]
@@ -135,12 +138,13 @@ function normalizeDungeons(raw: RawDungeonDef[]): DungeonDef[] {
 }
 
 function normalizeMapData(raw: RawMapData): ExplorationMap {
-  const requestedSize = Math.max(8, toFiniteInt(raw.size, 33))
+  const width = Math.max(1, toFiniteInt(raw.width ?? raw.size, 33))
+  const height = Math.max(1, toFiniteInt(raw.height ?? raw.size, 33))
   const dungeons = normalizeDungeons(raw.dungeons ?? [])
   const dungeonIds = new Set(dungeons.map((d) => d.id))
 
-  const tiles: MapTile[][] = Array.from({ length: requestedSize }, (_, y) =>
-    Array.from({ length: requestedSize }, (_, x) => {
+  const tiles: MapTile[][] = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
       const rawTile = raw.tiles?.[y]?.[x]
       const biomeLike = rawTile?.biome
       const biome = typeof biomeLike === 'string' && BIOME_DEFS[biomeLike] ? biomeLike : FALLBACK_BIOME_ID
@@ -152,10 +156,11 @@ function normalizeMapData(raw: RawMapData): ExplorationMap {
   return {
     id: typeof raw.id === 'string' ? raw.id : 'default-map',
     name: typeof raw.name === 'string' ? raw.name : '탐험 지역',
-    size: requestedSize,
+    width,
+    height,
     start: {
-      x: Math.max(0, Math.min(requestedSize - 1, toFiniteInt(raw.start?.x, Math.floor(requestedSize / 2)))),
-      y: Math.max(0, Math.min(requestedSize - 1, toFiniteInt(raw.start?.y, Math.floor(requestedSize / 2)))),
+      x: Math.max(0, Math.min(width - 1, toFiniteInt(raw.start?.x, Math.floor(width / 2)))),
+      y: Math.max(0, Math.min(height - 1, toFiniteInt(raw.start?.y, Math.floor(height / 2)))),
     },
     dungeons,
     tiles,

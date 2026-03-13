@@ -104,7 +104,8 @@ export type EnemyCodexEntry = {
 export type ExplorationState = {
   mode: ExplorationMode
   phase: ExplorationPhase
-  mapSize: number
+  mapWidth: number
+  mapHeight: number
   hp: number
   maxHp: number
   start: Position
@@ -319,7 +320,8 @@ export const initialState: GameState = {
   exploration: {
     mode: 'loadout',
     phase: 'moving',
-    mapSize: EXPLORATION_MAP.size,
+    mapWidth: EXPLORATION_MAP.width,
+    mapHeight: EXPLORATION_MAP.height,
     hp: 10,
     maxHp: 10,
     start: { x: EXPLORATION_MAP.start.x, y: EXPLORATION_MAP.start.y },

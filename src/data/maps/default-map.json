@@ -1,7 +1,8 @@
 {
   "id": "default-wastes",
   "name": "폐허 외곽",
-  "size": 33,
+  "width": 33,
+  "height": 33,
   "start": {
     "x": 32,
     "y": 16

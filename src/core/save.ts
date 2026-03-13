@@ -60,9 +60,12 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
     exploration.phase === 'combat' || exploration.phase === 'loot' || exploration.phase === 'dungeon-entry'
       ? exploration.phase
       : 'moving'
-  base.exploration.mapSize = Number.isFinite(Number(exploration.mapSize))
-    ? Math.max(8, Number(exploration.mapSize))
-    : EXPLORATION_MAP.size
+  base.exploration.mapWidth = Number.isFinite(Number((exploration as Record<string, unknown>).mapWidth))
+    ? Math.max(1, Number((exploration as Record<string, unknown>).mapWidth))
+    : EXPLORATION_MAP.width
+  base.exploration.mapHeight = Number.isFinite(Number((exploration as Record<string, unknown>).mapHeight))
+    ? Math.max(1, Number((exploration as Record<string, unknown>).mapHeight))
+    : EXPLORATION_MAP.height
   base.exploration.maxHp = Math.max(1, Number(exploration.maxHp) || 10)
   base.exploration.hp = Math.min(base.exploration.maxHp, Math.max(0, Number(exploration.hp) || base.exploration.maxHp))
   base.exploration.movesSinceEncounter = Math.max(0, Math.floor(Number(exploration.movesSinceEncounter) || 0))
@@ -77,15 +80,17 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
   }
   base.exploration.carriedWeaponId = typeof exploration.carriedWeaponId === 'string' ? exploration.carriedWeaponId : null
 
-  const clampPos = (value: unknown, fallback: number) =>
-    Math.max(0, Math.min(base.exploration.mapSize - 1, Number(value) || fallback))
+  const clampX = (value: unknown, fallback: number) =>
+    Math.max(0, Math.min(base.exploration.mapWidth - 1, Number(value) || fallback))
+  const clampY = (value: unknown, fallback: number) =>
+    Math.max(0, Math.min(base.exploration.mapHeight - 1, Number(value) || fallback))
   base.exploration.start = {
-    x: clampPos(exploration.start?.x, EXPLORATION_MAP.start.x),
-    y: clampPos(exploration.start?.y, EXPLORATION_MAP.start.y),
+    x: clampX(exploration.start?.x, EXPLORATION_MAP.start.x),
+    y: clampY(exploration.start?.y, EXPLORATION_MAP.start.y),
   }
   base.exploration.position = {
-    x: clampPos(exploration.position?.x, base.exploration.start.x),
-    y: clampPos(exploration.position?.y, base.exploration.start.y),
+    x: clampX(exploration.position?.x, base.exploration.start.x),
+    y: clampY(exploration.position?.y, base.exploration.start.y),
   }
   base.exploration.steps = Math.max(0, Math.floor(Number(exploration.steps) || 0))
 

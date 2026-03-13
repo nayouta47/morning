@@ -39,12 +39,12 @@ function positionKey(x: number, y: number): string {
 
 function revealExplorationTilesInRadius(state: GameState): void {
   const { x, y } = state.exploration.position
-  const size = state.exploration.mapSize
+  const { mapWidth, mapHeight } = state.exploration
   const revealed = new Set(state.exploration.visited)
 
   for (let yy = y - 2; yy <= y + 2; yy += 1) {
     for (let xx = x - 2; xx <= x + 2; xx += 1) {
-      if (xx < 0 || yy < 0 || xx >= size || yy >= size) continue
+      if (xx < 0 || yy < 0 || xx >= mapWidth || yy >= mapHeight) continue
       const dx = xx - x
       const dy = yy - y
       if (dx * dx + dy * dy <= 2) {
@@ -111,7 +111,8 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   }
 
   const start = EXPLORATION_MAP.start
-  state.exploration.mapSize = EXPLORATION_MAP.size
+  state.exploration.mapWidth = EXPLORATION_MAP.width
+  state.exploration.mapHeight = EXPLORATION_MAP.height
   state.exploration.mode = 'active'
   state.exploration.phase = 'moving'
   state.exploration.hp = state.exploration.maxHp
@@ -135,8 +136,8 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
   if (state.exploration.mode !== 'active') return false
   if (state.exploration.phase !== 'moving') return false
 
-  const nextX = Math.max(0, Math.min(state.exploration.mapSize - 1, state.exploration.position.x + dx))
-  const nextY = Math.max(0, Math.min(state.exploration.mapSize - 1, state.exploration.position.y + dy))
+  const nextX = Math.max(0, Math.min(state.exploration.mapWidth - 1, state.exploration.position.x + dx))
+  const nextY = Math.max(0, Math.min(state.exploration.mapHeight - 1, state.exploration.position.y + dy))
 
   if (nextX === state.exploration.position.x && nextY === state.exploration.position.y) {
     narrate(state, '더 이상 갈 수 없는 경계다.')

@@ -6,7 +6,7 @@ import { renderExplorationCombatOverlay } from '../combatOverlay.ts'
 import { getSyntheticFoodButtonState, renderBackpackHeatmap } from './loadoutView.ts'
 
 export function renderExplorationMap(state: GameState): string {
-  const size = state.exploration.mapSize
+  const { mapWidth, mapHeight } = state.exploration
   const radius = 4
   const { x, y } = state.exploration.position
   const rows: string[] = []
@@ -14,7 +14,7 @@ export function renderExplorationMap(state: GameState): string {
   for (let yy = y - radius; yy <= y + radius; yy += 1) {
     const tokens: string[] = []
     for (let xx = x - radius; xx <= x + radius; xx += 1) {
-      if (xx < 0 || yy < 0 || xx >= size || yy >= size) tokens.push('⬛')
+      if (xx < 0 || yy < 0 || xx >= mapWidth || yy >= mapHeight) tokens.push('⬛')
       else if (xx === x && yy === y) tokens.push('🧍')
       else if (xx === state.exploration.start.x && yy === state.exploration.start.y) tokens.push('🏠')
       else if (state.exploration.visited.includes(`${xx},${yy}`)) tokens.push(getBiomeAt(xx, yy).emoji)

@@ -155,6 +155,13 @@
       <div id="info-box">커서를 맵에 올려보세요.</div>
     </div>
     <div>
+      <h2>맵 크기</h2>
+      <div id="size-controls">
+        <label>가로: <input type="number" id="map-width" min="1" max="200" oninput="onSizeChange()"></label>
+        <label>세로: <input type="number" id="map-height" min="1" max="200" oninput="onSizeChange()"></label>
+      </div>
+    </div>
+    <div>
       <h2>출발 지점</h2>
       <div id="start-controls">
         <label>X: <input type="number" id="start-x" min="0" oninput="onStartChange()"></label>
@@ -192,7 +199,7 @@ const BIOME_MAP = Object.fromEntries(BIOMES.map(b => [b.id, b]))
 const FALLBACK = BIOMES[0].id
 
 // ── 상태 ─────────────────────────────────────────────────────────────────────
-let mapData = null          // { id, name, size, start, tiles }
+let mapData = null          // { id, name, width, height, start, tiles }
 let selectedBiome = BIOMES[0].id
 let zoom = 16               // px per tile
 let isPainting = false
@@ -203,15 +210,17 @@ let fileHandle = null       // FileSystemFileHandle (File System Access API)
 
 // ── 기본 맵 ──────────────────────────────────────────────────────────────────
 function makeDefaultMap() {
-  const size = 33
+  const width = 33
+  const height = 33
   return {
     id: 'default-wastes',
     name: '폐허 외곽',
-    size,
+    width,
+    height,
     start: { x: 16, y: 16 },
     dungeons: [],
-    tiles: Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => ({ biome: FALLBACK }))
+    tiles: Array.from({ length: height }, () =>
+      Array.from({ length: width }, () => ({ biome: FALLBACK }))
     )
   }
 }
@@ -222,17 +231,17 @@ const ctx = canvas.getContext('2d')
 
 function resizeCanvas() {
   if (!mapData) return
-  canvas.width  = mapData.size * zoom
-  canvas.height = mapData.size * zoom
+  canvas.width  = mapData.width * zoom
+  canvas.height = mapData.height * zoom
 }
 
 function render() {
   if (!mapData) return
-  const { size, tiles, start } = mapData
+  const { width, height, tiles, start } = mapData
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
       const tile = tiles[y]?.[x]
       const biomeId = tile?.biome ?? FALLBACK
       const biome = BIOME_MAP[biomeId] ?? BIOME_MAP[FALLBACK]
@@ -254,9 +263,11 @@ function render() {
   if (zoom >= 6) {
     ctx.strokeStyle = 'rgba(0,0,0,0.25)'
     ctx.lineWidth = 0.5
-    for (let i = 0; i <= size; i++) {
-      ctx.beginPath(); ctx.moveTo(i * zoom, 0); ctx.lineTo(i * zoom, size * zoom); ctx.stroke()
-      ctx.beginPath(); ctx.moveTo(0, i * zoom); ctx.lineTo(size * zoom, i * zoom); ctx.stroke()
+    for (let i = 0; i <= width; i++) {
+      ctx.beginPath(); ctx.moveTo(i * zoom, 0); ctx.lineTo(i * zoom, height * zoom); ctx.stroke()
+    }
+    for (let i = 0; i <= height; i++) {
+      ctx.beginPath(); ctx.moveTo(0, i * zoom); ctx.lineTo(width * zoom, i * zoom); ctx.stroke()
     }
   }
 
@@ -286,7 +297,7 @@ function tileFromEvent(e) {
   const rect = canvas.getBoundingClientRect()
   const x = Math.floor((e.clientX - rect.left) / zoom)
   const y = Math.floor((e.clientY - rect.top) / zoom)
-  if (!mapData || x < 0 || y < 0 || x >= mapData.size || y >= mapData.size) return null
+  if (!mapData || x < 0 || y < 0 || x >= mapData.width || y >= mapData.height) return null
   return { x, y }
 }
 
@@ -353,6 +364,8 @@ canvas.addEventListener('wheel', e => {
 // ── 실행 취소 ─────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    const tag = document.activeElement?.tagName.toLowerCase()
+    if (tag === 'input' || tag === 'textarea') return
     e.preventDefault()
     if (undoStack.length === 0) { setStatus('되돌릴 내용 없음'); return }
     mapData.tiles = undoStack.pop()
@@ -383,8 +396,8 @@ function onStartChange() {
   const x = parseInt(document.getElementById('start-x').value)
   const y = parseInt(document.getElementById('start-y').value)
   if (!Number.isFinite(x) || !Number.isFinite(y)) return
-  mapData.start.x = Math.max(0, Math.min(mapData.size - 1, x))
-  mapData.start.y = Math.max(0, Math.min(mapData.size - 1, y))
+  mapData.start.x = Math.max(0, Math.min(mapData.width - 1, x))
+  mapData.start.y = Math.max(0, Math.min(mapData.height - 1, y))
   render()
   scheduleAutoSave()
 }
@@ -403,6 +416,30 @@ function setStartFromCursor() {
 function syncStartInputs() {
   document.getElementById('start-x').value = mapData.start.x
   document.getElementById('start-y').value = mapData.start.y
+}
+
+function syncSizeInputs() {
+  document.getElementById('map-width').value = mapData.width
+  document.getElementById('map-height').value = mapData.height
+}
+
+function onSizeChange() {
+  if (!mapData) return
+  const w = Math.max(1, parseInt(document.getElementById('map-width').value) || 1)
+  const h = Math.max(1, parseInt(document.getElementById('map-height').value) || 1)
+  if (w === mapData.width && h === mapData.height) return
+  pushUndo()
+  mapData.tiles = Array.from({ length: h }, (_, y) =>
+    Array.from({ length: w }, (_, x) => mapData.tiles[y]?.[x] ?? { biome: FALLBACK })
+  )
+  mapData.width = w
+  mapData.height = h
+  mapData.start.x = Math.min(mapData.start.x, w - 1)
+  mapData.start.y = Math.min(mapData.start.y, h - 1)
+  syncStartInputs()
+  resizeCanvas()
+  render()
+  scheduleAutoSave()
 }
 
 // ── 정보 박스 ─────────────────────────────────────────────────────────────────
@@ -463,11 +500,12 @@ function onFileSelected(e) {
 }
 
 function loadMapData(raw) {
-  const size = Math.max(8, Number(raw.size) || 33)
+  const width = Math.max(1, Number(raw.width ?? raw.size) || 33)
+  const height = Math.max(1, Number(raw.height ?? raw.size) || 33)
   const dungeons = Array.isArray(raw.dungeons) ? raw.dungeons.filter(d => d && typeof d.id === 'string') : []
   const dungeonIds = new Set(dungeons.map(d => d.id))
-  const tiles = Array.from({ length: size }, (_, y) =>
-    Array.from({ length: size }, (_, x) => {
+  const tiles = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => {
       const rawTile = raw.tiles?.[y]?.[x]
       const b = rawTile?.biome
       const biome = (typeof b === 'string' && BIOME_MAP[b]) ? b : FALLBACK
@@ -478,10 +516,11 @@ function loadMapData(raw) {
   mapData = {
     id: raw.id ?? 'default-wastes',
     name: raw.name ?? '탐험 지역',
-    size,
+    width,
+    height,
     start: {
-      x: Math.max(0, Math.min(size - 1, Number(raw.start?.x) || Math.floor(size / 2))),
-      y: Math.max(0, Math.min(size - 1, Number(raw.start?.y) || Math.floor(size / 2))),
+      x: Math.max(0, Math.min(width - 1, Number(raw.start?.x) || Math.floor(width / 2))),
+      y: Math.max(0, Math.min(height - 1, Number(raw.start?.y) || Math.floor(height / 2))),
     },
     dungeons,
     tiles,
@@ -489,6 +528,7 @@ function loadMapData(raw) {
   undoStack = []
   resizeCanvas()
   syncStartInputs()
+  syncSizeInputs()
   renderDungeonPanel()
   renderDungeonPalette()
   render()
@@ -507,7 +547,8 @@ function toJson() {
   return JSON.stringify({
     id: mapData.id,
     name: mapData.name,
-    size: mapData.size,
+    width: mapData.width,
+    height: mapData.height,
     start: mapData.start,
     dungeons: mapData.dungeons ?? [],
     tiles: '__TILES__'
@@ -609,7 +650,7 @@ async function githubSave() {
     })
     if (!putRes.ok) throw new Error(`커밋 실패: ${putRes.status} ${await putRes.text()}`)
 
-    setStatus('✅ 자동 저장 완료')
+    setStatus('✅ GitHub 저장 완료 — 게임에 반영하려면 git pull 후 새로고침 (또는 로컬 파일 열기 후 Ctrl+S)')
   } catch(e) {
     setStatus(`❌ 저장 실패: ${e.message}`)
     console.error(e)
@@ -648,6 +689,14 @@ function setActivePaintDungeon(id) {
   setStatus(id ? `던전 페인트 모드: ${id}` : '던전 페인트 해제')
 }
 
+function copyDungeon(id) {
+  const d = getDungeons().find(x => x.id === id)
+  if (!d) return
+  navigator.clipboard.writeText(JSON.stringify(d, null, 2))
+    .then(() => setStatus(`📋 ${d.name} 복사됨`))
+    .catch(() => setStatus('복사 실패'))
+}
+
 function renderDungeonPanel() {
   const panel = document.getElementById('dungeon-panel')
   const dungeons = getDungeons()
@@ -659,6 +708,7 @@ function renderDungeonPanel() {
     html += `<div class="dungeon-list-item" data-id="${d.id}">
       <div class="dungeon-item-header" onclick="openDungeonForm('${d.id}')">
         <span>${d.emoji} <strong>${d.name}</strong> (${d.floors.length}층, id: ${d.id})</span>
+        <button class="btn-copy" onclick="copyDungeon('${d.id}'); event.stopPropagation()" title="클립보드에 복사">📋</button>
         <button class="btn-delete" onclick="deleteDungeon('${d.id}'); event.stopPropagation()">삭제</button>
       </div>
       <div class="dungeon-item-form"></div>
