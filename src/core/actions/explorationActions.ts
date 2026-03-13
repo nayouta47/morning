@@ -144,7 +144,6 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.carriedWeaponId = state.selectedWeaponId
   state.exploration.combat = null
   state.exploration.activeDungeon = null
-  state.exploration.clearedDungeonIds = []
   revealExplorationTilesInRadius(state)
   state.activeTab = 'exploration'
   narrate(state, `${getCompanionName(state)}와 함께 탐험 시작. 칠흑 속에서 숨소리만 들린다.`)

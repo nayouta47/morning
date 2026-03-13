@@ -201,13 +201,12 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     id: 'tailor',
     name: '🪡 재봉사',
     tier: 1,
-    hp: 12,
+    hp: 40,
     damage: 4,
     attackCooldownMs: 3500,
     drops: [
       { resource: 'scrap', minAmount: 8, maxAmount: 14, chance: 1 },
       { resource: 'iron', minAmount: 1, maxAmount: 3, chance: 0.6 },
-      { resource: 'cash', minAmount: 3, maxAmount: 6, chance: 0.5 },
     ],
   },
   webSpider: {
