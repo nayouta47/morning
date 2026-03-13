@@ -1,6 +1,6 @@
 import type { ResourceId } from './resources.ts'
 
-export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler' | 'hunterHunter' | 'divineElk' | 'steelEagle' | 'willowFish' | 'emberCrane' | 'phoenixBird'
+export type EnemyId = 'siliconLifeform' | 'siliconBug' | 'wheelBug' | 'bareBonesMan' | 'rustGolem' | 'staticHound' | 'moldedWorker' | 'chromiumCrawler' | 'hunterHunter' | 'divineElk' | 'steelEagle' | 'willowFish' | 'emberCrane' | 'phoenixBird' | 'tailor'
 
 export type EnemyDropCandidate = {
   resource: ResourceId
@@ -195,6 +195,19 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
       { resource: 'carbon', minAmount: 2, maxAmount: 4, chance: 0.9 },
       { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.4 },
       { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.3 },
+    ],
+  },
+  tailor: {
+    id: 'tailor',
+    name: '🪡 재봉사',
+    tier: 1,
+    hp: 12,
+    damage: 4,
+    attackCooldownMs: 3500,
+    drops: [
+      { resource: 'scrap', minAmount: 8, maxAmount: 14, chance: 1 },
+      { resource: 'iron', minAmount: 1, maxAmount: 3, chance: 0.6 },
+      { resource: 'cash', minAmount: 3, maxAmount: 6, chance: 0.5 },
     ],
   },
 }
