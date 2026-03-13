@@ -7,10 +7,18 @@ import {
   isCraftRecipeUnlocked,
   type CraftRecipeKey,
 } from '../../data/crafting.ts'
-import type { GameState } from '../state.ts'
+import type { ArmorType, GameState } from '../state.ts'
 import { SHOVEL_MAX_STACK, getShovelCount } from '../rewards.ts'
 import { canAfford, payCost } from './costs.ts'
 import { narrate } from './logging.ts'
+
+export function cycleArmorCraftType(state: GameState, step: -1 | 1): void {
+  const types: ArmorType[] = ['junkArmor', 'ironArmor']
+  const idx = types.indexOf(state.selectedArmorCraftType)
+  const next = idx + step
+  if (next < 0 || next >= types.length) return
+  state.selectedArmorCraftType = types[next]
+}
 
 export function cycleModuleCraftTier(state: GameState, step: -1 | 1): void {
   const nextTier = state.selectedModuleCraftTier + step

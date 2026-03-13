@@ -16,6 +16,8 @@ export const RESOURCE_DEFS = {
   nickel: { id: 'nickel', label: '니켈', emoji: '🟡', order: 14, precision: 0 },
   lowAlloySteel: { id: 'lowAlloySteel', label: '저합금강', emoji: '🔗', order: 15, precision: 0 },
   highAlloySteel: { id: 'highAlloySteel', label: '고합금강', emoji: '🖇️', order: 16, precision: 0 },
+  junkArmor: { id: 'junkArmor', label: '고물 방어구', emoji: '🛡️', order: 17, precision: 0 },
+  ironArmor: { id: 'ironArmor', label: '철 방어구', emoji: '🔰', order: 18, precision: 0 },
 } as const
 
 export type ResourceId = keyof typeof RESOURCE_DEFS

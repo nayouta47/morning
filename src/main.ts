@@ -28,6 +28,9 @@ import {
   setMinerAllocation,
   startCraft,
   cycleModuleCraftTier,
+  cycleArmorCraftType,
+  equipArmor,
+  unequipArmor,
   startExploration,
   startRecoverGuideRobot,
   startExplorationFlee,
@@ -507,6 +510,36 @@ function redraw(nowOverride?: number): void {
         onCraftSmallHealPotion: () => {
           syncState()
           startCraft(state, 'smallHealPotion')
+          redraw()
+        },
+        onCraftJunkArmor: () => {
+          syncState()
+          startCraft(state, 'junkArmor')
+          redraw()
+        },
+        onCraftIronArmor: () => {
+          syncState()
+          startCraft(state, 'ironArmor')
+          redraw()
+        },
+        onArmorCraftTypePrev: () => {
+          syncState()
+          cycleArmorCraftType(state, -1)
+          redraw()
+        },
+        onArmorCraftTypeNext: () => {
+          syncState()
+          cycleArmorCraftType(state, 1)
+          redraw()
+        },
+        onEquipArmor: (armorType) => {
+          syncState()
+          equipArmor(state, armorType)
+          redraw()
+        },
+        onUnequipArmor: () => {
+          syncState()
+          unequipArmor(state)
           redraw()
         },
         onSelectWeapon: (weaponId) => {

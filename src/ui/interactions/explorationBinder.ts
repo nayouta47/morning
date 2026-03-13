@@ -1,4 +1,4 @@
-import type { GameState } from '../../core/state.ts'
+import type { ArmorType, GameState } from '../../core/state.ts'
 import type { ResourceId } from '../../data/resources.ts'
 import type { Handlers } from '../types.ts'
 import { getEventTargetElement } from '../view.ts'
@@ -80,6 +80,19 @@ export function bindExplorationInteractions(app: HTMLDivElement, _state: GameSta
     if (loadoutClearButton) {
       const resourceId = loadoutClearButton.getAttribute('data-loadout-clear') as ResourceId | null
       if (resourceId) handlers.onLoadoutClearItem(resourceId)
+      return
+    }
+
+    const equipBtn = target.closest<HTMLElement>('[data-equip-armor]')
+    if (equipBtn) {
+      handlers.onEquipArmor(equipBtn.getAttribute('data-equip-armor') as ArmorType)
+      return
+    }
+
+    const unequipBtn = target.closest<HTMLElement>('[data-unequip-armor]')
+    if (unequipBtn) {
+      handlers.onUnequipArmor()
+      return
     }
   }, { signal })
 }

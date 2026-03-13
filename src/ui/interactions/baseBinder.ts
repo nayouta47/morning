@@ -132,4 +132,8 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
   app.querySelector<HTMLButtonElement>('#craft-scavenger-drone')?.addEventListener('click', handlers.onCraftScavengerDrone)
   app.querySelector<HTMLButtonElement>('#craft-synthetic-food')?.addEventListener('click', handlers.onCraftSyntheticFood)
   app.querySelector<HTMLButtonElement>('#craft-small-heal-potion')?.addEventListener('click', handlers.onCraftSmallHealPotion)
+  app.querySelector<HTMLButtonElement>('#armor-craft-type-prev')?.addEventListener('click', handlers.onArmorCraftTypePrev)
+  app.querySelector<HTMLButtonElement>('#armor-craft-type-next')?.addEventListener('click', handlers.onArmorCraftTypeNext)
+  app.querySelector<HTMLButtonElement>('#craft-junk-armor')?.addEventListener('click', handlers.onCraftJunkArmor)
+  app.querySelector<HTMLButtonElement>('#craft-iron-armor')?.addEventListener('click', handlers.onCraftIronArmor)
 }

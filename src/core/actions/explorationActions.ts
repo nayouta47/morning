@@ -7,7 +7,8 @@ import {
   selectEncounterEnemyId,
 } from '../combat.ts'
 
-import type { GameState } from '../state.ts'
+import type { ArmorType, GameState } from '../state.ts'
+import { ARMOR_HP } from '../../data/crafting.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { narrate } from './logging.ts'
 import { EXPLORATION_MAP, getBiomeAt, getDungeonDef, getTileAt } from '../../data/maps/index.ts'
@@ -115,6 +116,8 @@ export function startExploration(state: GameState, proceedWithoutWeapon = false)
   state.exploration.mapHeight = EXPLORATION_MAP.height
   state.exploration.mode = 'active'
   state.exploration.phase = 'moving'
+  const armorBonus = state.exploration.equippedArmor ? ARMOR_HP[state.exploration.equippedArmor] : 0
+  state.exploration.maxHp = 10 + armorBonus
   state.exploration.hp = state.exploration.maxHp
   state.exploration.start = { x: start.x, y: start.y }
   state.exploration.position = { x: start.x, y: start.y }
@@ -439,6 +442,15 @@ export function clearLoadoutResource(state: GameState, resourceId: ResourceId): 
   const carried = getBackpackResourceAmount(state.exploration.backpack, resourceId)
   if (carried <= 0) return false
   return removeLoadoutResource(state, resourceId, carried)
+}
+
+export function equipArmor(state: GameState, armorType: ArmorType): void {
+  if (state.resources[armorType] < 1) return
+  state.exploration.equippedArmor = armorType
+}
+
+export function unequipArmor(state: GameState): void {
+  state.exploration.equippedArmor = null
 }
 
 function applyDungeonEventTrigger(state: GameState, eventId: string): void {

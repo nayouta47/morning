@@ -1,4 +1,4 @@
-import type { CraftProgress, GameState, ModuleType, ModuleCraftTier, WeaponType } from '../core/state.ts'
+import type { CraftProgress, GameState, ModuleType, ModuleCraftTier, WeaponType, ArmorType } from '../core/state.ts'
 import { SHOVEL_MAX_STACK, getShovelCount } from '../core/rewards.ts'
 import type { ResourceCost } from './resources.ts'
 import { getMissingRequirementFromList, areRequirementsMet, type Requirement } from '../core/requirements.ts'
@@ -79,6 +79,22 @@ export const CRAFT_RECIPE_DEFS: Record<CraftRecipeKey, CraftRecipeDef> = {
     requirements: [{ kind: 'building', building: 'droneController', count: 1 }],
     outputs: [{ kind: 'resource', resource: 'scavengerDrone', amount: 1 }],
   },
+  junkArmor: {
+    id: 'junkArmor',
+    label: '고물 방어구',
+    durationMs: WEAPON_CRAFT_DURATION_MS,
+    costs: { wood: 20, iron: 10 },
+    requirements: [],
+    outputs: [{ kind: 'resource', resource: 'junkArmor', amount: 1 }],
+  },
+  ironArmor: {
+    id: 'ironArmor',
+    label: '철 방어구',
+    durationMs: WEAPON_CRAFT_DURATION_MS,
+    costs: { iron: 100 },
+    requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
+    outputs: [{ kind: 'resource', resource: 'ironArmor', amount: 1 }],
+  },
 }
 
 const SHOVEL_CRAFT_BASE_WOOD_COST = 10
@@ -88,6 +104,12 @@ const SHOVEL_CRAFT_DURATION_INCREMENT_MS = 3_000
 const SCAVENGER_DRONE_BASE_IRON_COST = 500
 const SCAVENGER_DRONE_COBALT_COST = 1
 const SCAVENGER_DRONE_IRON_COST_GROWTH = 1.15
+
+export const ARMOR_HP: Record<ArmorType, number> = { junkArmor: 10, ironArmor: 30 }
+
+export function getSelectedArmorCraftType(state: GameState): ArmorType {
+  return state.selectedArmorCraftType
+}
 
 export function getSelectedModuleCraftTier(state: GameState): ModuleCraftTier {
   if (state.selectedModuleCraftTier === 3) return 3

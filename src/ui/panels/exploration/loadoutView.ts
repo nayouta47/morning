@@ -1,7 +1,8 @@
-import type { GameState } from '../../../core/state.ts'
+import type { ArmorType, GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight, getBackpackResourceAmount } from '../../../core/explorationBackpack.ts'
 import { RESOURCE_DEFS, type ResourceId } from '../../../data/resources.ts'
 import { WEAPON_DISPLAY_STATS } from '../../../data/balance.ts'
+import { ARMOR_HP } from '../../../data/crafting.ts'
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
 
 export function renderBackpackHeatmap(state: GameState): string {
@@ -56,6 +57,23 @@ function renderLoadoutItemRows(state: GameState): string {
   }).join('')
 }
 
+function renderArmorSection(state: GameState): string {
+  const equipped = state.exploration.equippedArmor
+  if (equipped) {
+    const def = RESOURCE_DEFS[equipped]
+    const hp = ARMOR_HP[equipped]
+    return `<section class="exploration-loadout-items"><p class="hint">🛡️ 방어구</p><div>${def.emoji} ${def.label} (+${hp} HP) <button type="button" data-unequip-armor>해제</button></div></section>`
+  }
+  const armorTypes: ArmorType[] = ['junkArmor', 'ironArmor']
+  const buttons = armorTypes.map((t) => {
+    const def = RESOURCE_DEFS[t]
+    const hp = ARMOR_HP[t]
+    const owned = state.resources[t] >= 1
+    return `<button type="button" data-equip-armor="${t}" ${owned ? '' : 'disabled'}>${def.label} +${hp} HP</button>`
+  }).join('')
+  return `<section class="exploration-loadout-items"><p class="hint">🛡️ 방어구</p><div>${buttons}</div></section>`
+}
+
 function getBlockReason(canStart: boolean): string {
   if (!canStart) return '출발 조건: 무기 1개를 선택하세요.'
   return ''
@@ -65,7 +83,7 @@ export function renderLoadoutBody(state: GameState): string {
   const canStart = Boolean(state.selectedWeaponId) && state.isGuideRobotRecovered && state.buildings.laikaRepair > 0
   const blockReason = getBlockReason(Boolean(state.selectedWeaponId))
 
-  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p><div class="loadout-config-grid">${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">🎒 배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section></div>${renderBackpackHeatmap(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason ? `<p class="hint">${blockReason}</p>` : ''}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
+  return `<div class="exploration-loadout"><p class="hint">탐험 준비: 무기/배낭을 수동으로 정리하고 출발합니다.</p><div class="loadout-config-grid">${renderLoadoutWeaponSelection(state)}<section class="exploration-loadout-items"><p class="hint">🎒 배낭 적재</p><ul>${renderLoadoutItemRows(state)}</ul></section>${renderArmorSection(state)}</div>${renderBackpackHeatmap(state)}<p class="hint">HP <strong id="exploration-hp">${state.exploration.hp}/${state.exploration.maxHp}</strong></p>${blockReason ? `<p class="hint">${blockReason}</p>` : ''}<button id="exploration-start" ${canStart ? '' : 'disabled'}>출발</button></div>`
 }
 
 export function getSyntheticFoodButtonState(state: GameState): { amount: number; disabled: boolean } {

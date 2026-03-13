@@ -122,7 +122,10 @@ export type ExplorationState = {
   combat: CombatState | null
   activeDungeon: { id: string; currentFloor: number } | null
   clearedDungeonIds: string[]
+  equippedArmor: ArmorType | null
 }
+
+export type ArmorType = 'junkArmor' | 'ironArmor'
 
 export type WeaponType = 'pistol' | 'rifle'
 export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight' | 'slotUnlocker'
@@ -144,6 +147,8 @@ export type CraftProgress = {
   scavengerDrone: number
   syntheticFood: number
   smallHealPotion: number
+  junkArmor: number
+  ironArmor: number
 }
 
 export type GameState = {
@@ -174,6 +179,7 @@ export type GameState = {
   enemyCodex: Record<EnemyId, EnemyCodexEntry>
   selectedModuleCraftTier: ModuleCraftTier
   moduleCraftTierInProgress: ModuleCraftTier | null
+  selectedArmorCraftType: ArmorType
   dogName: string | null
   needsDogNaming: boolean
   walkCount: number
@@ -216,6 +222,8 @@ export const initialState: GameState = {
     nickel: 0,
     lowAlloySteel: 0,
     highAlloySteel: 0,
+    junkArmor: 0,
+    ironArmor: 0,
   },
   buildings: {
     lumberMill: 0,
@@ -318,6 +326,8 @@ export const initialState: GameState = {
     scavengerDrone: 0,
     syntheticFood: 0,
     smallHealPotion: 0,
+    junkArmor: 0,
+    ironArmor: 0,
   },
   nextWeaponId: 1,
   gatherScrapRewardRemainderSevenths: 0,
@@ -340,12 +350,14 @@ export const initialState: GameState = {
     combat: null,
     activeDungeon: null,
     clearedDungeonIds: [],
+    equippedArmor: null,
   },
   enemyCodex: Object.fromEntries(
     ENEMY_IDS.map((enemyId) => [enemyId, { encountered: false, firstEncounteredAt: null, defeatCount: 0 }]),
   ) as Record<EnemyId, EnemyCodexEntry>,
   selectedModuleCraftTier: 1,
   moduleCraftTierInProgress: null,
+  selectedArmorCraftType: 'junkArmor',
   dogName: null,
   needsDogNaming: false,
   walkCount: 0,

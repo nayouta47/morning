@@ -3,12 +3,14 @@ import { getBuildingCost } from '../../core/actions.ts'
 import { SHOVEL_MAX_STACK, getGatherScrapRewardPreview, getGatherWoodReward, getShovelCount } from '../../core/rewards.ts'
 import { BUILDING_CYCLE_MS, RESEARCH_PANEL_GROUPS, SMELTING_CYCLE_MS, UPGRADE_DEFS, getUpgradeCost } from '../../data/balance.ts'
 import {
+  ARMOR_HP,
   CRAFT_RECIPE_DEFS,
   getCraftRecipeCost,
   getCraftRecipeDuration,
   getActiveModuleCraftTier,
   getCraftRecipeMissingRequirement,
   getModuleCraftTierLabel,
+  getSelectedArmorCraftType,
   getSelectedModuleCraftTier,
   isCraftRecipeUnlocked,
   type CraftRecipeKey,
@@ -227,6 +229,14 @@ function renderResourceRow(resource: keyof GameState['resources'], id: string, v
   return `<p class="resource-row" data-resource-row="true" data-resource-id="${resource}"${amount <= 0 ? ' hidden' : ''}>${getResourceDisplay(resource)} <strong id="${id}">${value}</strong></p>`
 }
 
+function renderArmorCraftControl(state: GameState): string {
+  const armorType = getSelectedArmorCraftType(state)
+  const armorView = craftViewByRecipe(state, armorType)
+  const label = CRAFT_RECIPE_DEFS[armorType].label
+  const hp = ARMOR_HP[armorType]
+  return `<div class="armor-craft-row"><div class="module-craft-tier-switch" aria-label="방어구 타입 선택"><button id="armor-craft-type-prev" class="craft-tier-btn" aria-label="이전 방어구 타입" ${armorType === 'junkArmor' ? 'disabled' : ''}>◀</button><button id="armor-craft-type-next" class="craft-tier-btn" aria-label="다음 방어구 타입" ${armorType === 'ironArmor' ? 'disabled' : ''}>▶</button></div>${renderGaugeButton(`craft-${armorType === 'junkArmor' ? 'junk-armor' : 'iron-armor'}`, `${label} +${hp}HP (${formatCost(getCraftRecipeCost(state, armorType))})`, `${label} 제작`, armorView)}</div>`
+}
+
 function renderModuleCraftControl(state: GameState, moduleView: ActionGaugeView): string {
   const tier = getSelectedModuleCraftTier(state)
   const activeTier = getActiveModuleCraftTier(state)
@@ -248,6 +258,7 @@ export function renderCraftActions(state: GameState): string {
 
   const rows: string[] = [
     renderGaugeButton('craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`, '🪏 삽 제작', shovelView),
+    renderArmorCraftControl(state),
   ]
 
   if (isCraftVisible('pistol')) {
@@ -493,6 +504,8 @@ export function patchCraftButtons(app: ParentNode, state: GameState): void {
   patchActionGauge(app, 'craft-scavenger-drone', craftViewByRecipe(state, 'scavengerDrone'))
   patchActionGauge(app, 'craft-synthetic-food', craftViewByRecipe(state, 'syntheticFood'))
   patchActionGauge(app, 'craft-small-heal-potion', craftViewByRecipe(state, 'smallHealPotion'))
+  patchActionGauge(app, 'craft-junk-armor', craftViewByRecipe(state, 'junkArmor'))
+  patchActionGauge(app, 'craft-iron-armor', craftViewByRecipe(state, 'ironArmor'))
 
   patchGaugeTitle(app, 'craft-shovel', `${getResourceDisplay('shovel')} 제작 (${formatCost(getCraftRecipeCost(state, 'shovel'))})`)
   patchGaugeTitle(app, 'craft-module', `${getModuleCraftTierLabel(getActiveModuleCraftTier(state))} (${formatCost(getCraftRecipeCost(state, 'module'))})`)
@@ -505,6 +518,13 @@ export function patchCraftButtons(app: ParentNode, state: GameState): void {
   if (prev) prev.disabled = tier <= 1
   const next = app.querySelector<HTMLButtonElement>('#module-craft-tier-next')
   if (next) next.disabled = tier >= 3 || (tier >= 2 && !state.upgrades.moduleCraftingIII) || !state.upgrades.moduleCraftingII
+
+  const armorType = getSelectedArmorCraftType(state)
+  const armorPrev = app.querySelector<HTMLButtonElement>('#armor-craft-type-prev')
+  if (armorPrev) armorPrev.disabled = armorType === 'junkArmor'
+  const armorNext = app.querySelector<HTMLButtonElement>('#armor-craft-type-next')
+  if (armorNext) armorNext.disabled = armorType === 'ironArmor'
+  patchGaugeTitle(app, `craft-${armorType === 'junkArmor' ? 'junk-armor' : 'iron-armor'}`, `${CRAFT_RECIPE_DEFS[armorType].label} +${ARMOR_HP[armorType]}HP (${formatCost(getCraftRecipeCost(state, armorType))})`)
 
   const moduleCraftRow = app.querySelector<HTMLElement>('.module-craft-row')
   if (moduleCraftRow) {
