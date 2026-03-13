@@ -130,6 +130,8 @@ function getStructureSignature(): string {
     state.unlocks.miner,
     state.unlocks.droneController,
     state.unlocks.electricFurnace,
+    state.unlocks.lab,
+    state.unlocks.workbench,
   ].map((value) => (value ? '1' : '0')).join('')
 
   const buildingSig = [
