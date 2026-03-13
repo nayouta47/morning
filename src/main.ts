@@ -141,7 +141,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}|${state.ownerlessThingTriggered ? 1 : 0}|${state.isAndroidRecovered ? 1 : 0}|${state.tailorEndTriggered ? 1 : 0}|${state.tailorEndDismissed ? 1 : 0}|${state.rubyEquipped ? 1 : 0}|${state.selectedArmorCraftType}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}|${state.ownerlessThingTriggered ? 1 : 0}|${state.isAndroidRecovered ? 1 : 0}|${state.tailorEndTriggered ? 1 : 0}|${state.tailorEndDismissed ? 1 : 0}|${state.rubyEquipped ? 1 : 0}|${state.selectedArmorCraftType}|${state.upgrades.organicFilament ? 1 : 0}|${state.upgrades.moduleCraftingII ? 1 : 0}|${state.upgrades.moduleCraftingIII ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
