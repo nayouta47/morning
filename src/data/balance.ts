@@ -100,8 +100,8 @@ export const RESEARCH_PANEL_GROUPS = [
 
 export const RESEARCH_PANEL_UPGRADE_KEYS = RESEARCH_PANEL_GROUPS.flatMap((g) => g.keys)
 
-export const COMPANION_IDLE_MIN_MS = 15_000
-export const COMPANION_IDLE_MAX_MS = 45_000
+export const COMPANION_IDLE_MIN_MS = 3_000
+export const COMPANION_IDLE_MAX_MS = 3_000
 
 export const WEAPON_CRAFT_DURATION_MS = 30000
 
