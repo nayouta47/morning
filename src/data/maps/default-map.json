@@ -30,6 +30,29 @@
           "rewardMultiplier": 1
         }
       ]
+    },
+    {
+      "id": "d2",
+      "name": "뽕나무 숲",
+      "emoji": "🏚️",
+      "entryText": "",
+      "floors": [
+        {
+          "dialogText": "",
+          "enemyId": "siliconLifeform",
+          "rewardMultiplier": 1
+        },
+        {
+          "dialogText": "",
+          "enemyId": "siliconLifeform",
+          "rewardMultiplier": 1
+        },
+        {
+          "dialogText": "",
+          "enemyId": "siliconLifeform",
+          "rewardMultiplier": 1
+        }
+      ]
     }
   ],
   "tiles": [
