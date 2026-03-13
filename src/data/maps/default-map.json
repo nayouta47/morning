@@ -35,11 +35,11 @@
       "id": "d2",
       "name": "뽕나무 숲",
       "emoji": "🏚️",
-      "entryText": "가문비 나무 숲인 줄 알았던 곳은,",
+      "entryText": "가문비 나무 숲인 줄 알았던 곳은, 거대하고 뾰족한 믹싱ㅇ",
       "floors": [
         {
           "dialogText": "",
-          "enemyId": "siliconBug",
+          "enemyId": "staticHound",
           "rewardMultiplier": 1
         },
         {
