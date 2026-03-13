@@ -73,7 +73,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   rustGolem: {
     id: 'rustGolem',
-    name: '🧱 적철장',
+    name: '🐃 적철장',
     tier: 2,
     hp: 18,
     damage: 5,
@@ -85,7 +85,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
   },
   staticHound: {
     id: 'staticHound',
-    name: '🐕 뇌견',
+    name: '🐩 뇌견',
     tier: 1,
     hp: 5,
     damage: 2,
