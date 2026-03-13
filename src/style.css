@@ -118,13 +118,14 @@ h1 {
 .tabs {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
 }
 
-.tab-row-break {
-  flex-basis: 100%;
-  height: 0;
+.tab-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
 }
 
 .tab-btn {

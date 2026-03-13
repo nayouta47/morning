@@ -3,38 +3,38 @@ import type { OrganType, OrganDef } from './organs.ts'
 export const DOG_ORGAN_DEFS: Record<string, OrganDef> = {
   dogBrain: {
     id: 'dogBrain',
-    name: '안내견의 뇌',
-    emoji: '🧠',
+    name: '연산 코어',
+    emoji: '💾',
     organType: 'brain',
-    flavorText: '쓸모있는 것과 쓸모없는 것을 구분하는 능력이 내장되어 있다.',
+    flavorText: '구식 알고리즘이지만 판단은 정확하다. 쓸모있는 것과 쓸모없는 것을 분류하는 회로가 내장되어 있다.',
   },
   dogEyes: {
     id: 'dogEyes',
-    name: '안내견의 눈',
-    emoji: '👁️',
+    name: '광학 센서 모듈',
+    emoji: '📡',
     organType: 'eyes',
-    flavorText: '어둠 속에서도 길을 찾는다. 길을 잃은 건 항상 사람 쪽이다.',
+    flavorText: '어둠 속에서도 열상과 광학 두 채널을 동시에 처리한다. 길을 잃는 건 항상 센서 옆에 있는 인간 쪽이다.',
   },
   dogHeart: {
     id: 'dogHeart',
-    name: '안내견의 심장',
-    emoji: '🩷',
+    name: '구동 전지 팩',
+    emoji: '🔋',
     organType: 'heart',
-    flavorText: '한 번도 멈추지 않고 뛰어왔다. 앞으로도 그럴 것이다.',
+    flavorText: '한 번도 방전되지 않고 돌아왔다. 정비만 해주면 앞으로도 그럴 것이다.',
   },
   dogPaws: {
     id: 'dogPaws',
-    name: '안내견의 앞발',
-    emoji: '🐾',
+    name: '보행 관절 모듈',
+    emoji: '🔩',
     organType: 'arms',
-    flavorText: '땅을 짚고, 방향을 가리키고, 가끔 무릎 위에 올려진다.',
+    flavorText: '노면을 짚고, 방향을 정렬하고, 가끔 무릎 위에 올려진다.',
   },
   dogGut: {
     id: 'dogGut',
-    name: '안내견의 내장',
-    emoji: '⚙️',
+    name: '보조 저장 장치',
+    emoji: '💿',
     organType: 'intestines',
-    flavorText: '어디서든 잘 먹고, 어디서든 잘 소화한다. 부럽다.',
+    flavorText: '어디서든 데이터를 쌓는다. 어디서든 꺼내 쓴다. 부럽다.',
   },
 }
 
@@ -47,11 +47,11 @@ export const DOG_DEFAULT_ORGANS: Record<OrganType, string> = {
 }
 
 export const DOG_ORGAN_SLOT_LABELS: Record<OrganType, string> = {
-  brain: '뇌',
-  eyes: '눈',
-  heart: '심장',
-  arms: '앞발',
-  intestines: '내장',
+  brain: 'CPU',
+  eyes: '광학',
+  heart: '동력',
+  arms: '관절',
+  intestines: '저장',
 }
 
 // [left%, top%] — SVG viewBox="0 0 280 180"
