@@ -231,34 +231,19 @@ function getSlotUnlockerUnlockedSlots(
   return unlocked
 }
 
-function areSlotSetsEqual(left: Set<number>, right: Set<number>): boolean {
-  if (left.size !== right.size) return false
-  for (const index of left) {
-    if (!right.has(index)) return false
-  }
-  return true
-}
-
 function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Set<number>; slotPenaltyDisabled: boolean[]; usage: number; overloaded: boolean } {
   const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
-  let activeSlots = new Set(baseActiveSlots)
+  // Phase 1: 해금기는 base 슬롯 패널티만 보고 작동 여부 결정
+  const basePenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, baseActiveSlots)
+  const baseUsage = getPowerUsage(weapon, baseActiveSlots, basePenaltyDisabled)
+  const baseOverloaded = baseUsage > capacity
+  const unlockedSlots = getSlotUnlockerUnlockedSlots(weapon, baseActiveSlots, basePenaltyDisabled, baseOverloaded)
 
-  for (let i = 0; i < 6; i += 1) {
-    const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
-    const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
-    const overloaded = usage > capacity
-    const unlockedBySlotUnlocker = getSlotUnlockerUnlockedSlots(weapon, activeSlots, slotPenaltyDisabled, overloaded)
-    const nextActiveSlots = new Set([...baseActiveSlots, ...unlockedBySlotUnlocker])
+  const activeSlots = new Set([...baseActiveSlots, ...unlockedSlots])
 
-    if (areSlotSetsEqual(activeSlots, nextActiveSlots)) {
-      return { activeSlots, slotPenaltyDisabled, usage, overloaded }
-    }
-
-    activeSlots = nextActiveSlots
-  }
-
+  // Phase 2: 확정된 activeSlots 기준 최종 패널티 계산
   const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
   const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
   return { activeSlots, slotPenaltyDisabled, usage, overloaded: usage > capacity }
