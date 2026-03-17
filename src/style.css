@@ -1094,6 +1094,33 @@ li {
   background: #121212;
 }
 
+.slot-hint-list {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #0e0e0e;
+  border: 1px solid #222;
+  border-radius: 4px;
+  list-style: none;
+  font-size: 11px;
+  color: #7a7468;
+}
+
+.slot-hint-label {
+  display: inline-block;
+  min-width: 30px;
+  margin-right: 6px;
+  padding: 1px 5px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 3px;
+  font-size: 10px;
+  color: #9f9080;
+  text-align: center;
+}
+
 .weapon-list-top {
   margin-bottom: 10px;
 }
