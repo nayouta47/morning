@@ -129,7 +129,7 @@ export type ExplorationState = {
 export type ArmorType = 'junkArmor' | 'ironArmor'
 
 export type WeaponType = 'pistol' | 'rifle'
-export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight' | 'slotUnlocker'
+export type ModuleType = 'damage' | 'cooldown' | 'blockAmplifierUp' | 'blockAmplifierDown' | 'preheater' | 'heatAmplifierLeft' | 'heatAmplifierRight' | 'slotUnlocker' | 'generator'
 export type ModuleCraftTier = 1 | 2 | 3
 
 export type WeaponInstance = {
@@ -326,6 +326,7 @@ export const initialState: GameState = {
     heatAmplifierLeft: 0,
     heatAmplifierRight: 0,
     slotUnlocker: 0,
+    generator: 0,
   },
   craftProgress: {
     pistol: 0,

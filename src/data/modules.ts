@@ -9,6 +9,7 @@ export const MODULE_TYPES = [
   'heatAmplifierLeft',
   'heatAmplifierRight',
   'slotUnlocker',
+  'generator',
 ] as const satisfies readonly ModuleType[]
 
 type ModuleAliasMeta = {
@@ -135,6 +136,19 @@ export const MODULE_METADATA: Record<ModuleType, ModuleMetadata> = {
     craftLogLabel: '🗝️ 해금기(좌측 슬롯 2칸 해제)',
     aliases: { prefixes: ['UNL-'] },
   },
+  generator: {
+    type: 'generator',
+    nameKr: '발전기',
+    emoji: '⚡',
+    powerCost: -10,
+    weight: 2,
+    shortLabel: '전체 전력 +10 · 사방 열기 패널티 +5',
+    baseDescription: '전체 전력 +10 · 사방 슬롯에 열기 패널티 +5',
+    amplifiedDescription: '해당 없음',
+    equipmentLogName: '발전기(전력 +10)',
+    craftLogLabel: '⚡ 발전기(전력 +10)',
+    aliases: { prefixes: ['GEN-'] },
+  },
 }
 
 export const MODULE_POWER_COST: Record<ModuleType, number> = {
@@ -146,6 +160,7 @@ export const MODULE_POWER_COST: Record<ModuleType, number> = {
   heatAmplifierLeft: MODULE_METADATA.heatAmplifierLeft.powerCost,
   heatAmplifierRight: MODULE_METADATA.heatAmplifierRight.powerCost,
   slotUnlocker: MODULE_METADATA.slotUnlocker.powerCost,
+  generator: MODULE_METADATA.generator.powerCost,
 }
 
 export const MODULE_NAME_KR: Record<ModuleType, string> = {
@@ -157,6 +172,7 @@ export const MODULE_NAME_KR: Record<ModuleType, string> = {
   heatAmplifierLeft: MODULE_METADATA.heatAmplifierLeft.nameKr,
   heatAmplifierRight: MODULE_METADATA.heatAmplifierRight.nameKr,
   slotUnlocker: MODULE_METADATA.slotUnlocker.nameKr,
+  generator: MODULE_METADATA.generator.nameKr,
 }
 
 export const MODULE_EMOJI: Record<ModuleType, string> = {
@@ -168,6 +184,7 @@ export const MODULE_EMOJI: Record<ModuleType, string> = {
   heatAmplifierLeft: MODULE_METADATA.heatAmplifierLeft.emoji,
   heatAmplifierRight: MODULE_METADATA.heatAmplifierRight.emoji,
   slotUnlocker: MODULE_METADATA.slotUnlocker.emoji,
+  generator: MODULE_METADATA.generator.emoji,
 }
 
 export const MODULE_WEIGHT: Record<ModuleType, number> = {
@@ -179,6 +196,7 @@ export const MODULE_WEIGHT: Record<ModuleType, number> = {
   heatAmplifierLeft: MODULE_METADATA.heatAmplifierLeft.weight,
   heatAmplifierRight: MODULE_METADATA.heatAmplifierRight.weight,
   slotUnlocker: MODULE_METADATA.slotUnlocker.weight,
+  generator: MODULE_METADATA.generator.weight,
 }
 
 export function isKnownModuleType(value: unknown): value is ModuleType {

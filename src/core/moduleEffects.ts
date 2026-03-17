@@ -149,6 +149,15 @@ function getPenaltyFieldByAmplifier(
         heat[target] += SLOT_PENALTY_MINOR
       })
     }
+
+    if (moduleType === 'generator') {
+      ;(['up', 'down', 'left', 'right'] as Direction[]).forEach((dir) => {
+        const target = getNeighborIndex(index, dir, weapon.slots.length)
+        if (target == null) return
+        if (targetScope === 'activeOnly' && !activeSlots.has(target)) return
+        heat[target] += SLOT_PENALTY_MINOR
+      })
+    }
   })
 
   const total = heat.map((value, index) => value + block[index])

@@ -25,6 +25,7 @@ function getAmplifierMiniGrid(moduleType: ModuleType): InfluenceCell[] | null {
     && moduleType !== 'blockAmplifierDown'
     && moduleType !== 'heatAmplifierLeft'
     && moduleType !== 'heatAmplifierRight'
+    && moduleType !== 'generator'
   ) {
     return null
   }
@@ -50,6 +51,11 @@ function getAmplifierMiniGrid(moduleType: ModuleType): InfluenceCell[] | null {
     setInfluenceCell(grid, -1, 0, 'heatMajor')
     setInfluenceCell(grid, 0, -1, 'heatMinor')
     setInfluenceCell(grid, 0, 1, 'heatMinor')
+  } else if (moduleType === 'generator') {
+    setInfluenceCell(grid, 0, -1, 'heatMinor')
+    setInfluenceCell(grid, 0, 1, 'heatMinor')
+    setInfluenceCell(grid, -1, 0, 'heatMinor')
+    setInfluenceCell(grid, 1, 0, 'heatMinor')
   }
 
   return grid.flatMap((row, y) => row.map((kind, x) => ({ x, y, kind })))
