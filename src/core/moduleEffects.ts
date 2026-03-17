@@ -235,15 +235,25 @@ function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Se
   const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
-  // Phase 1: 해금기는 base 슬롯 패널티만 보고 작동 여부 결정
+  // Phase 1: base 기준으로 해금기 초기 작동 여부 결정
   const basePenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, baseActiveSlots)
   const baseUsage = getPowerUsage(weapon, baseActiveSlots, basePenaltyDisabled)
   const baseOverloaded = baseUsage > capacity
   const unlockedSlots = getSlotUnlockerUnlockedSlots(weapon, baseActiveSlots, basePenaltyDisabled, baseOverloaded)
 
-  const activeSlots = new Set([...baseActiveSlots, ...unlockedSlots])
+  const expandedActiveSlots = new Set([...baseActiveSlots, ...unlockedSlots])
 
-  // Phase 2: 확정된 activeSlots 기준 최종 패널티 계산
+  // Phase 2: 해금된 슬롯 포함 패널티 계산
+  const expandedPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, expandedActiveSlots)
+  const expandedUsage = getPowerUsage(weapon, expandedActiveSlots, expandedPenaltyDisabled)
+  const expandedOverloaded = expandedUsage > capacity
+
+  // Phase 3: Phase 2 패널티 기준으로 해금기 재확인
+  // — 해금된 모듈이 해금기를 차단한 경우 그 슬롯을 제거
+  const correctedUnlocked = getSlotUnlockerUnlockedSlots(weapon, expandedActiveSlots, expandedPenaltyDisabled, expandedOverloaded)
+  const activeSlots = new Set([...baseActiveSlots, ...correctedUnlocked])
+
+  // Final: 보정된 activeSlots 기준 최종 패널티/사용량
   const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
   const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
   return { activeSlots, slotPenaltyDisabled, usage, overloaded: usage > capacity }
