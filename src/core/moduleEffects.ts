@@ -165,10 +165,6 @@ function getPenaltyFieldByAmplifier(
   return { heat, block, total }
 }
 
-function getPenaltyDisabledByAmplifier(weapon: WeaponInstance, activeSlots: Set<number>): boolean[] {
-  const penaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots)
-  return penaltyField.total.map((penalty, index) => activeSlots.has(index) && penalty >= SLOT_PENALTY_MAJOR)
-}
 
 function getAmplificationCountForSlot(index: number, weapon: WeaponInstance, enabledSlots: Set<number>): number {
   if (!enabledSlots.has(index) || !weapon.slots[index]) return 0
@@ -208,53 +204,71 @@ function getRelativeLeftTargetIndex(originIndex: number, dx: number, maxSlots: n
   return target
 }
 
-function getSlotUnlockerUnlockedSlots(
-  weapon: WeaponInstance,
-  activeSlots: Set<number>,
-  slotPenaltyDisabled: boolean[],
-  overloaded: boolean,
-): Set<number> {
-  if (overloaded) return new Set<number>()
-
-  const unlocked = new Set<number>()
-  weapon.slots.forEach((moduleType, index) => {
-    if (moduleType !== 'slotUnlocker') return
-    if (!activeSlots.has(index) || slotPenaltyDisabled[index]) return
-
-    const left1 = getRelativeLeftTargetIndex(index, -1, weapon.slots.length)
-    if (left1 != null) unlocked.add(left1)
-
-    const left2 = getRelativeLeftTargetIndex(index, -2, weapon.slots.length)
-    if (left2 != null) unlocked.add(left2)
-  })
-
-  return unlocked
+/** slot sourceIndex 하나가 targetIndex에 기여하는 패널티 수치 반환 */
+function getPenaltyContributionToSlot(weapon: WeaponInstance, sourceIndex: number, targetIndex: number): number {
+  const field = getPenaltyFieldByAmplifier(weapon, new Set([sourceIndex]), 'all')
+  return field.total[targetIndex]
 }
 
 function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Set<number>; slotPenaltyDisabled: boolean[]; usage: number; overloaded: boolean } {
   const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
-  // Phase 1: base 기준으로 해금기 초기 작동 여부 결정
-  const basePenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, baseActiveSlots)
-  const baseUsage = getPowerUsage(weapon, baseActiveSlots, basePenaltyDisabled)
-  const baseOverloaded = baseUsage > capacity
-  const unlockedSlots = getSlotUnlockerUnlockedSlots(weapon, baseActiveSlots, basePenaltyDisabled, baseOverloaded)
+  const activeSlots = new Set<number>(baseActiveSlots)
+  const activationAncestors = new Map<number, Set<number>>()
 
-  const expandedActiveSlots = new Set([...baseActiveSlots, ...unlockedSlots])
+  const basePenaltyField = getPenaltyFieldByAmplifier(weapon, baseActiveSlots, 'all')
+  const penaltyTotals = [...basePenaltyField.total]
 
-  // Phase 2: 해금된 슬롯 포함 패널티 계산
-  const expandedPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, expandedActiveSlots)
-  const expandedUsage = getPowerUsage(weapon, expandedActiveSlots, expandedPenaltyDisabled)
-  const expandedOverloaded = expandedUsage > capacity
+  const isPenaltyDisabled = (idx: number) => activeSlots.has(idx) && penaltyTotals[idx] >= SLOT_PENALTY_MAJOR
 
-  // Phase 3: Phase 2 패널티 기준으로 해금기 재확인
-  // — 해금된 모듈이 해금기를 차단한 경우 그 슬롯을 제거
-  const correctedUnlocked = getSlotUnlockerUnlockedSlots(weapon, expandedActiveSlots, expandedPenaltyDisabled, expandedOverloaded)
-  const activeSlots = new Set([...baseActiveSlots, ...correctedUnlocked])
+  const isOverloaded = () => {
+    const disabled = penaltyTotals.map((p, i) => activeSlots.has(i) && p >= SLOT_PENALTY_MAJOR)
+    return getPowerUsage(weapon, activeSlots, disabled) > capacity
+  }
 
-  // Final: 보정된 activeSlots 기준 최종 패널티/사용량
-  const slotPenaltyDisabled = getPenaltyDisabledByAmplifier(weapon, activeSlots)
+  const queue: Array<[number, number]> = []
+
+  const enqueueTargets = (unlockerIdx: number) => {
+    if (isPenaltyDisabled(unlockerIdx)) return
+    const l1 = getRelativeLeftTargetIndex(unlockerIdx, -1, weapon.slots.length)
+    const l2 = getRelativeLeftTargetIndex(unlockerIdx, -2, weapon.slots.length)
+    if (l1 != null && !activeSlots.has(l1)) queue.push([l1, unlockerIdx])
+    if (l2 != null && !activeSlots.has(l2)) queue.push([l2, unlockerIdx])
+  }
+
+  for (const idx of baseActiveSlots) {
+    if (weapon.slots[idx] === 'slotUnlocker') enqueueTargets(idx)
+  }
+
+  while (queue.length > 0) {
+    const [candidate, unlocker] = queue.shift()!
+    if (activeSlots.has(candidate)) continue
+    if (isOverloaded()) continue
+    if (!activeSlots.has(unlocker) || isPenaltyDisabled(unlocker)) continue
+
+    const ancestors = new Set([...(activationAncestors.get(unlocker) ?? new Set<number>()), unlocker])
+
+    // 조상 차단 체크: candidate 추가 시 자신의 활성화 조상을 패널티로 차단하는가?
+    let safe = true
+    for (const ancestor of ancestors) {
+      const marginal = getPenaltyContributionToSlot(weapon, candidate, ancestor)
+      if (marginal > 0 && penaltyTotals[ancestor] + marginal >= SLOT_PENALTY_MAJOR) {
+        safe = false
+        break
+      }
+    }
+    if (!safe) continue
+
+    activeSlots.add(candidate)
+    activationAncestors.set(candidate, ancestors)
+    const candidateField = getPenaltyFieldByAmplifier(weapon, new Set([candidate]), 'all')
+    for (let i = 0; i < penaltyTotals.length; i++) penaltyTotals[i] += candidateField.total[i]
+
+    if (weapon.slots[candidate] === 'slotUnlocker') enqueueTargets(candidate)
+  }
+
+  const slotPenaltyDisabled = penaltyTotals.map((p, i) => activeSlots.has(i) && p >= SLOT_PENALTY_MAJOR)
   const usage = getPowerUsage(weapon, activeSlots, slotPenaltyDisabled)
   return { activeSlots, slotPenaltyDisabled, usage, overloaded: usage > capacity }
 }
