@@ -1584,6 +1584,11 @@ li {
   gap: 4px;
 }
 
+.legend-item.legend-note {
+  color: #7a7060;
+  font-style: italic;
+}
+
 .swatch {
   width: 8px;
   height: 8px;
