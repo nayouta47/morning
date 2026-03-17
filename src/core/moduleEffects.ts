@@ -64,6 +64,7 @@ export type ModuleLayerStats = {
   blockPenalty: number[]
   slotPenaltyDisabled: boolean[]
   slotDisabled: boolean[]
+  unlockerActivatedSlots: Set<number>
   hasPreheater: boolean
   power: WeaponPowerStatus
 }
@@ -286,6 +287,8 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   const slotPenaltyDisabled = resolved.slotPenaltyDisabled
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
   const enabledSlots = new Set(Array.from(activeSlots).filter((index) => !slotPenaltyDisabled[index]))
+  const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
+  const unlockerActivatedSlots = new Set(Array.from(activeSlots).filter((index) => !baseActiveSlots.has(index)))
   const power: WeaponPowerStatus = {
     usage: resolved.usage,
     capacity: WEAPON_POWER_CAPACITY[weapon.type],
@@ -310,6 +313,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
       blockPenalty: visualPenaltyField.block,
       slotPenaltyDisabled,
       slotDisabled,
+      unlockerActivatedSlots,
       hasPreheater: false,
       power,
     }
@@ -370,6 +374,7 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
     blockPenalty: visualPenaltyField.block,
     slotPenaltyDisabled,
     slotDisabled,
+    unlockerActivatedSlots,
     hasPreheater,
     power,
   }

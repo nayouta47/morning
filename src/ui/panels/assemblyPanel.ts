@@ -178,7 +178,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
   const active = getActiveSlots(selected)
   const stats = getWeaponStats(selected)
   const previewSig = powerPreview ? `${powerPreview.slotIndex}:${powerPreview.usage}:${powerPreview.capacity}:${powerPreview.overloaded ? 1 : 0}` : 'none'
-  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.totalPenalty.join('|')}:${stats.heatPenalty.join('|')}:${stats.blockPenalty.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${previewSig}`
+  const sig = `${selected.id}:${selected.slots.join('|')}:${stats.slotAmplification.join('|')}:${stats.slotAmplificationReduction.join('|')}:${stats.totalPenalty.join('|')}:${stats.heatPenalty.join('|')}:${stats.blockPenalty.join('|')}:${stats.slotPenaltyDisabled.map((v) => (v ? '1' : '0')).join('')}:${[...active].join(',')}:${[...stats.unlockerActivatedSlots].join(',')}:${previewSig}`
   if (board.dataset.signature === sig) return
 
   board.innerHTML = Array.from({ length: 50 }, (_, index) => {
@@ -201,11 +201,12 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
       ? `${MODULE_METADATA[moduleType].shortLabel} 장착됨${amplificationCount > 0 ? `, 증폭 +${amplificationCount}` : ''}${penaltyReduction > 0 ? `, 증폭 감소 -${penaltyReduction}` : ''}`
       : '비어 있음'
     const slotStatus = baseInactive ? '기본 차단' : activePenaltyStopped ? '총 패널티로 일시 정지' : '활성'
+    const isUnlockerActivated = stats.unlockerActivatedSlots.has(index)
     const previewClass = powerPreview?.slotIndex === index && isActive ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
     const penaltyState = penaltyTotal > 0 ? `, 총 패널티 ${penaltyTotal}(열기 패널티 ${penaltyHeat} + 전자파 패널티 ${penaltyBlock})` : ''
     const penaltyBreakdown = penaltyTotal > 0 ? `열기 ${penaltyHeat}/${SLOT_PENALTY_MAJOR}, 차단 ${penaltyBlock}/${SLOT_PENALTY_MAJOR}, 총합 ${penaltyTotal}/${SLOT_PENALTY_MAJOR}` : '패널티 없음'
     const ampBadge = amplificationCount > 0 ? `<span class="slot-amp-badge" aria-hidden="true">+${amplificationCount}</span>` : ''
-    return `<div class="slot ${baseInactive ? 'base-inactive inactive' : ''} ${activeUsable ? 'active active-usable' : ''} ${activePenaltyStopped ? 'active active-penalty-stopped penalty-disabled' : ''} ${isDisabled ? 'disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${activeUsable ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" title="${penaltyBreakdown}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `<span class="slot-module-emoji" aria-hidden="true">${MODULE_EMOJI[moduleType]}</span>` : ''}${ampBadge}${disableOverlay}</div>`
+    return `<div class="slot ${baseInactive ? 'base-inactive inactive' : ''} ${activeUsable ? 'active active-usable' : ''} ${activePenaltyStopped ? 'active active-penalty-stopped penalty-disabled' : ''} ${isDisabled ? 'disabled' : ''} ${isFilled ? 'filled' : ''} ${isUnlockerActivated ? 'slot-unlocker-activated' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${activeUsable ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" title="${penaltyBreakdown}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `<span class="slot-module-emoji" aria-hidden="true">${MODULE_EMOJI[moduleType]}</span>` : ''}${ampBadge}${disableOverlay}</div>`
   }).join('')
 
   board.dataset.signature = sig
