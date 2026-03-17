@@ -325,6 +325,8 @@ function normalizeState(raw: unknown): GameState | null {
   base.tailorEndTriggered = Boolean((loaded as Partial<GameState>).tailorEndTriggered)
   base.tailorEndDismissed = Boolean((loaded as Partial<GameState>).tailorEndDismissed)
   base.rubyEquipped = Boolean((loaded as Partial<GameState>).rubyEquipped)
+  base.labEventDismissed = Boolean((loaded as Partial<GameState>).labEventDismissed)
+  base.workbenchEventDismissed = Boolean((loaded as Partial<GameState>).workbenchEventDismissed)
   base.companionScrapGatherCount = Math.max(0, Math.floor(Number(loaded.companionScrapGatherCount) || 0))
   base.companionIdleRemainingMs = Math.min(COMPANION_IDLE_MAX_MS, Math.max(0, Number((loaded as Partial<GameState>).companionIdleRemainingMs) || 0))
   base.companionIsAutoGathering = Boolean((loaded as Partial<GameState>).companionIsAutoGathering)

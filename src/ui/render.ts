@@ -5,7 +5,7 @@ import { getResourceStorageCap } from '../core/resourceCaps.ts'
 import { getCompanionName } from '../core/companion.ts'
 import { RESEARCH_PANEL_UPGRADE_KEYS, UPGRADE_DEFS, getUpgradeCost } from '../data/balance.ts'
 import { getBuildingLabel } from '../data/buildings.ts'
-import { EVENT_NAMES } from '../data/events.ts'
+import { EVENT_NAMES, SIMPLE_EVENT_DEFS } from '../data/events.ts'
 import { formatCost, formatResourceAmount, formatResourceValue } from '../data/resources.ts'
 import type { ActionGaugeView, ActionUI, Handlers } from './types.ts'
 import { bindUIInteractions } from './interactions.ts'
@@ -27,46 +27,51 @@ function renderDogNamingModal(state: GameState): string {
   return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="강아지 이름 설정"><div class="modal-card"><h2>🐕 강아지 이름 정하기</h2><p class="hint">이름은 1~12자, 공백만은 불가합니다.</p><input id="dog-name-input" type="text" maxlength="12" value="강아지" autocomplete="off" /><button id="dog-name-confirm" type="button">확인</button></div></div>`
 }
 
-function renderCollapseEventModal(state: GameState): string {
-  if (state.walkCount < 3 || state.collapseEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="쓰러지는 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.collapse}</span></h2><p>시야에 어둠이 내려앉는다.<br>가까이 짖는 소리가 들린다.</p><button id="collapse-event-dismiss" type="button">의식을 잃는다</button></div></div>`
+function renderEventModalCard(ariaLabel: string, name: string, bodyHtml: string, buttonContent: string): string {
+  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="${ariaLabel}"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${name}</span></h2><p>${bodyHtml}</p>${buttonContent}</div></div>`
+}
+
+function renderSimpleEventModals(state: GameState): string {
+  return SIMPLE_EVENT_DEFS
+    .filter(def => def.visible(state))
+    .map(def => renderEventModalCard(
+      def.ariaLabel, def.name, def.bodyHtml(state),
+      `<button data-event-id="${def.id}" type="button">${def.buttonLabel}</button>`,
+    ))
+    .join('')
 }
 
 function renderTerminalIllnessModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
   if (!state.upgrades.visitHospital || state.terminalIllnessEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="불치병 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.terminalIllness}</span></h2><p>담당의는 종이를 내려놓았다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
-}
-
-function renderTimePassedModal(state: GameState): string {
-  if (!state.terminalIllnessEventDismissed || state.timePassedEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="시간 경과 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.timePassed}</span></h2><p>눈을 떴다. 천장이 낯설다.<br>아주 잠깐 낮잠을 잔 것 같다.<br>화면에는 숫자가 하나 떠 있었다. 72.</p><button id="time-passed-dismiss" type="button">현재를 받아들인다</button></div></div>`
+  return renderEventModalCard('불치병 이벤트', EVENT_NAMES.terminalIllness,
+    '담당의는 종이를 내려놓았다.<br>이름도 어려운 퇴행성 질환. 진행을 늦출 수 없다.<br>냉동 수면 프로그램이 있다고 했다.<br>깨어날 수 있다는 보장은 없다.',
+    renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction),
+  )
 }
 
 function renderRelapseModal(state: GameState, cryoSleepAction: ActionGaugeView): string {
   if (!state.timePassedEventDismissed || state.goToWorkPostEventCount < 5 || state.relapseEventDismissed) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="재발작 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.relapse}</span></h2><p>시야가 흐려졌다. 바닥이 기울어진다.<br>다시.</p>${renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction)}</div></div>`
+  return renderEventModalCard('재발작 이벤트', EVENT_NAMES.relapse,
+    '시야가 흐려졌다. 바닥이 기울어진다.<br>다시.',
+    renderGaugeButton('cryo-sleep-confirm', '냉동 수면을 받아들인다', '냉동 수면 확정', cryoSleepAction),
+  )
 }
 
 function renderLookAroundModal(state: GameState, recoverGuideRobot: ActionGaugeView): string {
   if (!state.relapseEventDismissed || state.isGuideRobotRecovered) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="주위를 바라보다 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.lookAround}</span></h2><p>천장이 보이지 않는 콘크리트 구조물들이 성벽을 이루며 매일매일 하늘을 삼키고 있다.<br>그러나 지표면을 뒤덮은 뼈와 사이버네틱스 쓰레기들이, 성벽의 부재를 증명하고 있다.</p>${renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot)}</div></div>`
-}
-
-function renderTailorEndModal(state: GameState): string {
-  if (!state.tailorEndTriggered || state.tailorEndDismissed) return ''
-  const name = getCompanionName(state)
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="재봉사의 끝 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.tailorEnd}</span></h2><p>재봉사를 ${name}이 물고 놓지 않는다.<br>연결된 실이 모두 끊어지고 마지막 한 겹이 천천히 내려앉는다.<br><br>${name}의 외장이 곳곳에 찢기고, 관절이 꺾여 있다.<br>구동부에서 기름이 흐른다.<br>가까이 다가가자 턱으로 바닥을 밀며 온다.<br><br>"이곳에는 충분한 시설이 있어. 재료는 부족하지만"</p><button id="tailor-end-dismiss" type="button">팔을 포기한다</button></div></div>`
-}
-
-function renderRubyModal(state: GameState): string {
-  if (!state.tailorEndDismissed || state.rubyEquipped) return ''
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="R.U.B.Y 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.ruby}</span></h2><p>당신에게 온다.<br>쓰다듬자, 체명악기가 튕기는 소리만 느낄 수 있다.<br>괘념치 않고 한참을 코를 대고 있다.</p><button id="ruby-equip" type="button">Robotic Universal Brachial Yoke 장착</button></div></div>`
+  return renderEventModalCard('주위를 바라보다 이벤트', EVENT_NAMES.lookAround,
+    '천장이 보이지 않는 콘크리트 구조물들이 성벽을 이루며 매일매일 하늘을 삼키고 있다.<br>그러나 지표면을 뒤덮은 뼈와 사이버네틱스 쓰레기들이, 성벽의 부재를 증명하고 있다.',
+    renderGaugeButton('recover-guide-robot', '파괴된 안내견 줍기', '파괴된 안내견 줍기', recoverGuideRobot),
+  )
 }
 
 function renderOwnerlessThingModal(state: GameState, takeAndroid: ActionGaugeView): string {
   if (!state.ownerlessThingTriggered || state.isAndroidRecovered) return ''
   const name = getCompanionName(state)
-  return `<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="주인 없는 것 이벤트"><div class="modal-card"><h2>사건 <span class="modal-subtitle">— ${EVENT_NAMES.ownerlessThing}</span></h2><p>밖으로 나왔다. 인간형 로봇이 입구에 남아 있다.<br>가던 길을 간다.<br>${name}이 멈춘다.<br>뒤를 돌아본다.<br>돌아간다.<br>인간형 로봇의 손상된 다리 근처에서 낑낑거린다.<br>"...뭐야. 나한테 그러는 거야?"<br>"됐어. 가라니까."<br>${name}이 움직이지 않는다.<br>"......이 장난감 정말 고장 난 거 아니야?"</p>${renderGaugeButton('take-android', '데리고 간다', '데리고 간다', takeAndroid)}</div></div>`
+  return renderEventModalCard('주인 없는 것 이벤트', EVENT_NAMES.ownerlessThing,
+    `밖으로 나왔다. 인간형 로봇이 입구에 남아 있다.<br>가던 길을 간다.<br>${name}이 멈춘다.<br>뒤를 돌아본다.<br>돌아간다.<br>인간형 로봇의 손상된 다리 근처에서 낑낑거린다.<br>"...뭐야. 나한테 그러는 거야?"<br>"됐어. 가라니까."<br>${name}이 움직이지 않는다.<br>"......이 장난감 정말 고장 난 거 아니야?"`,
+    renderGaugeButton('take-android', '데리고 간다', '데리고 간다', takeAndroid),
+  )
 }
 
 function renderRobotNamingModal(state: GameState): string {
@@ -342,7 +347,7 @@ export function renderApp(state: GameState, handlers: Handlers, actionUI: Action
   const assemblyUnlocked = state.buildings.workbench >= 1
   const codexUnlocked = state.collapseEventDismissed
 
-  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="cheat-codex-reveal" class="cheat-btn${state.codexRevealAll ? ' active' : ''}" type="button">치트 - 일기 전체${state.codexRevealAll ? ' ON' : ' OFF'}</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><div class="tab-row" role="presentation"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${!state.relapseEventDismissed && state.exploration.mode !== 'active' ? 'disabled' : ''}>${state.relapseEventDismissed ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '일기' : '일기(잠김)'}</button></div><div class="tab-row" role="presentation"><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체 프레임</button>${state.isGuideRobotRecovered ? `<button id="tab-dog" class="tab-btn ${state.activeTab === 'dog' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'dog'}" aria-controls="panel-dog" ${state.exploration.mode === 'active' ? 'disabled' : ''}>${getCompanionName(state)} 프레임</button>` : ''}${state.isAndroidRecovered ? `<button id="tab-android" class="tab-btn ${state.activeTab === 'android' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'android'}" aria-controls="panel-android" ${state.exploration.mode === 'active' ? 'disabled' : ''}>제비 프레임</button>` : ''}</div></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderAndroidPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}${renderDogPanel(state)}</div></div></main>${renderRobotNamingModal(state)}${renderDogNamingModal(state)}${renderCollapseEventModal(state)}${renderTerminalIllnessModal(state, actionUI.cryoSleep)}${renderTimePassedModal(state)}${renderRelapseModal(state, actionUI.cryoSleep)}${renderLookAroundModal(state, actionUI.recoverGuideRobot)}${renderOwnerlessThingModal(state, actionUI.takeAndroid)}${renderTailorEndModal(state)}${renderRubyModal(state)}`
+  app.innerHTML = `<main class="layout"><div class="top-controls"><button id="cheat-accelerate-base-time" class="cheat-btn" type="button">치트 - 시간 가속(10분)</button><button id="cheat-codex-reveal" class="cheat-btn${state.codexRevealAll ? ' active' : ''}" type="button">치트 - 일기 전체${state.codexRevealAll ? ' ON' : ' OFF'}</button><button id="delete-data" class="cheat-btn danger" type="button">데이터 삭제</button></div><h1>Morning</h1><section class="tabs" role="tablist" aria-label="메인 탭"><div class="tab-row" role="presentation"><button id="tab-base" class="tab-btn ${state.activeTab === 'base' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'base'}" aria-controls="panel-base" ${state.exploration.mode === 'active' ? 'disabled' : ''}>거점</button><button id="tab-assembly" class="tab-btn ${state.activeTab === 'assembly' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'assembly'}" aria-controls="panel-assembly" ${state.exploration.mode === 'active' || !assemblyUnlocked ? 'disabled' : ''}>${assemblyUnlocked ? '무기 조립' : '무기 조립(잠김)'}</button><button id="tab-exploration" class="tab-btn ${state.activeTab === 'exploration' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'exploration'}" aria-controls="panel-exploration" ${!state.relapseEventDismissed && state.exploration.mode !== 'active' ? 'disabled' : ''}>${state.relapseEventDismissed ? '탐험' : '탐험(잠김)'}</button><button id="tab-codex" class="tab-btn ${state.activeTab === 'codex' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'codex'}" aria-controls="panel-codex" ${state.exploration.mode === 'active' || !codexUnlocked ? 'disabled' : ''}>${codexUnlocked ? '일기' : '일기(잠김)'}</button></div><div class="tab-row" role="presentation"><button id="tab-body" class="tab-btn ${state.activeTab === 'body' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'body'}" aria-controls="panel-body" ${state.exploration.mode === 'active' ? 'disabled' : ''}>신체 프레임</button>${state.isGuideRobotRecovered ? `<button id="tab-dog" class="tab-btn ${state.activeTab === 'dog' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'dog'}" aria-controls="panel-dog" ${state.exploration.mode === 'active' ? 'disabled' : ''}>${getCompanionName(state)} 프레임</button>` : ''}${state.isAndroidRecovered ? `<button id="tab-android" class="tab-btn ${state.activeTab === 'android' ? 'active' : ''}" role="tab" aria-selected="${state.activeTab === 'android'}" aria-controls="panel-android" ${state.exploration.mode === 'active' ? 'disabled' : ''}>제비 프레임</button>` : ''}</div></section><div class="content-layout"><div class="content-panels">${renderBasePanel(state, actionUI, now)}${renderAssemblyPanel(state)}${renderBodyPanel(state)}${renderAndroidPanel(state)}${renderExplorationPanel(state, now)}${renderCodexPanel(state)}${renderDogPanel(state)}</div></div></main>${renderRobotNamingModal(state)}${renderDogNamingModal(state)}${renderSimpleEventModals(state)}${renderTerminalIllnessModal(state, actionUI.cryoSleep)}${renderRelapseModal(state, actionUI.cryoSleep)}${renderLookAroundModal(state, actionUI.recoverGuideRobot)}${renderOwnerlessThingModal(state, actionUI.takeAndroid)}`
 
   app.querySelector<HTMLButtonElement>('#gather-wood .gauge-title')?.setAttribute('id', 'gather-wood-title')
   app.querySelector<HTMLButtonElement>('#gather-scrap .gauge-title')?.setAttribute('id', 'gather-scrap-title')

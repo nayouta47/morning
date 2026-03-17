@@ -81,11 +81,8 @@ export type Handlers = {
   onGoForWalk: () => void
   onContactFamily: () => void
   onConfirmDogName: (name: string) => void
-  onDismissCollapseEvent: () => void
+  onConfirmSimpleEvent: (id: string) => void
   onStartCryoSleep: () => void
-  onDismissTimePassedEvent: () => void
-  onDismissTailorEnd: () => void
-  onEquipRuby: () => void
 }
 
 export type ActionUI = {

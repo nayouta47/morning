@@ -76,10 +76,12 @@ export function bindBaseInteractions(app: HTMLDivElement, state: GameState, hand
     const input = app.querySelector<HTMLInputElement>('#dog-name-input')
     handlers.onConfirmDogName(input?.value ?? '')
   })
-  app.querySelector<HTMLButtonElement>('#collapse-event-dismiss')?.addEventListener('click', handlers.onDismissCollapseEvent)
-  app.querySelector<HTMLButtonElement>('#time-passed-dismiss')?.addEventListener('click', handlers.onDismissTimePassedEvent)
-  app.querySelector<HTMLButtonElement>('#tailor-end-dismiss')?.addEventListener('click', handlers.onDismissTailorEnd)
-  app.querySelector<HTMLButtonElement>('#ruby-equip')?.addEventListener('click', handlers.onEquipRuby)
+  app.addEventListener('click', (event) => {
+    const btn = (event.target as Element).closest<HTMLButtonElement>('[data-event-id]')
+    if (!btn) return
+    const id = btn.getAttribute('data-event-id')
+    if (id) handlers.onConfirmSimpleEvent(id)
+  }, { signal })
   app.querySelector<HTMLButtonElement>('#cryo-sleep-confirm')?.addEventListener('click', handlers.onStartCryoSleep)
   app.querySelector<HTMLButtonElement>('#buy-lumber')?.addEventListener('click', handlers.onBuyLumberMill)
   app.querySelector<HTMLButtonElement>('#buy-miner')?.addEventListener('click', handlers.onBuyMiner)

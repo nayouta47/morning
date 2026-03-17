@@ -37,12 +37,12 @@ const UNLOCK_DEFS: UnlockDef[] = [
   },
   {
     id: 'lab',
-    requirements: [{ kind: 'companionGatherCount', count: 3 }],
+    requirements: [{ kind: 'building', building: 'workbench', count: 1 }],
     message: '연구할 수 있는 장비를 만들 수 있겠다.',
   },
   {
     id: 'workbench',
-    requirements: [{ kind: 'companionGatherCount', count: 8 }],
+    requirements: [{ kind: 'building', building: 'miner', count: 1 }],
     message: '정밀 가공 장비를 만들 수 있겠다.',
   },
 ]

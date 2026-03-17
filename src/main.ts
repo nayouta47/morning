@@ -53,7 +53,7 @@ import { addResourceWithCap, getResourceStorageCap } from './core/resourceCaps.t
 import { advanceBaseOnlyStateByElapsed, advanceState } from './core/tick.ts'
 import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
-import { EVENT_NAMES } from './data/events.ts'
+import { SIMPLE_EVENT_DEFS } from './data/events.ts'
 import { getGatherScrapDurationMs } from './core/rewards.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
@@ -143,7 +143,7 @@ function getStructureSignature(): string {
     state.buildings.laikaRepair,
   ].join(':')
 
-  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}|${state.ownerlessThingTriggered ? 1 : 0}|${state.isAndroidRecovered ? 1 : 0}|${state.tailorEndTriggered ? 1 : 0}|${state.tailorEndDismissed ? 1 : 0}|${state.rubyEquipped ? 1 : 0}|${state.selectedArmorCraftType}|${state.upgrades.organicFilament ? 1 : 0}|${state.upgrades.moduleCraftingII ? 1 : 0}|${state.upgrades.moduleCraftingIII ? 1 : 0}`
+  return `${state.activeTab}|${unlockSig}|${buildingSig}|${state.isGuideRobotRecovered ? 1 : 0}|${state.needsRobotNaming ? 1 : 0}|${state.upgrades.visitHospital ? 1 : 0}|${state.upgrades.adoptDog ? 1 : 0}|${state.needsDogNaming ? 1 : 0}|${state.collapseEventDismissed ? 1 : 0}|${state.walkCount >= 3 ? 1 : 0}|${state.terminalIllnessEventDismissed ? 1 : 0}|${state.timePassedEventDismissed ? 1 : 0}|${state.relapseEventDismissed ? 1 : 0}|${state.goToWorkPostEventCount >= 5 ? 1 : 0}|${state.ownerlessThingTriggered ? 1 : 0}|${state.isAndroidRecovered ? 1 : 0}|${state.tailorEndTriggered ? 1 : 0}|${state.tailorEndDismissed ? 1 : 0}|${state.rubyEquipped ? 1 : 0}|${state.labEventDismissed ? 1 : 0}|${state.workbenchEventDismissed ? 1 : 0}|${state.selectedArmorCraftType}|${state.upgrades.organicFilament ? 1 : 0}|${state.upgrades.moduleCraftingII ? 1 : 0}|${state.upgrades.moduleCraftingIII ? 1 : 0}`
 }
 
 function redraw(nowOverride?: number): void {
@@ -381,28 +381,11 @@ function redraw(nowOverride?: number): void {
           appMounted = false
           redraw()
         },
-        onDismissCollapseEvent: () => {
-          state.collapseEventDismissed = true
-          narrate(state, `사건 — ${EVENT_NAMES.collapse}`)
-          appMounted = false
-          redraw()
-        },
-        onDismissTimePassedEvent: () => {
-          state.timePassedEventDismissed = true
-          narrate(state, `사건 — ${EVENT_NAMES.timePassed}`)
-          appMounted = false
-          redraw()
-        },
-        onDismissTailorEnd: () => {
-          state.tailorEndDismissed = true
-          narrate(state, `사건 — ${EVENT_NAMES.tailorEnd}`)
-          appMounted = false
-          redraw()
-        },
-        onEquipRuby: () => {
-          state.rubyEquipped = true
-          state.equippedOrgans.arms = 'rubyArm'
-          narrate(state, `사건 — ${EVENT_NAMES.ruby}`)
+        onConfirmSimpleEvent: (id) => {
+          const def = SIMPLE_EVENT_DEFS.find(d => d.id === id)
+          if (!def) return
+          def.onConfirm(state)
+          narrate(state, `사건 — ${def.name}`)
           appMounted = false
           redraw()
         },

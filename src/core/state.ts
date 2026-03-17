@@ -197,6 +197,8 @@ export type GameState = {
   tailorEndTriggered: boolean
   tailorEndDismissed: boolean
   rubyEquipped: boolean
+  labEventDismissed: boolean
+  workbenchEventDismissed: boolean
   companionScrapGatherCount: number
   companionIdleRemainingMs: number
   companionIsAutoGathering: boolean
@@ -381,6 +383,8 @@ export const initialState: GameState = {
   tailorEndTriggered: false,
   tailorEndDismissed: false,
   rubyEquipped: false,
+  labEventDismissed: false,
+  workbenchEventDismissed: false,
   companionScrapGatherCount: 0,
   companionIdleRemainingMs: 0,
   companionIsAutoGathering: false,
