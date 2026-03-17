@@ -202,7 +202,7 @@ export function patchWeaponBoard(app: ParentNode, state: GameState): void {
       : '비어 있음'
     const slotStatus = baseInactive ? '기본 차단' : activePenaltyStopped ? '총 패널티로 일시 정지' : '활성'
     const previewClass = powerPreview?.slotIndex === index && isActive ? (powerPreview.overloaded ? 'preview-overload' : 'preview-safe') : ''
-    const penaltyState = penaltyTotal > 0 ? `, 총 패널티 ${penaltyTotal}(열기 패널티 ${penaltyHeat} + 차단 패널티 ${penaltyBlock})` : ''
+    const penaltyState = penaltyTotal > 0 ? `, 총 패널티 ${penaltyTotal}(열기 패널티 ${penaltyHeat} + 전자파 패널티 ${penaltyBlock})` : ''
     const penaltyBreakdown = penaltyTotal > 0 ? `열기 ${penaltyHeat}/${SLOT_PENALTY_MAJOR}, 차단 ${penaltyBlock}/${SLOT_PENALTY_MAJOR}, 총합 ${penaltyTotal}/${SLOT_PENALTY_MAJOR}` : '패널티 없음'
     return `<div class="slot ${baseInactive ? 'base-inactive inactive' : ''} ${activeUsable ? 'active active-usable' : ''} ${activePenaltyStopped ? 'active active-penalty-stopped penalty-disabled' : ''} ${isDisabled ? 'disabled' : ''} ${isFilled ? 'filled' : ''} ${previewClass}" role="gridcell" data-slot-index="${index}" data-accepts="${activeUsable ? 'true' : 'false'}" ${moduleType ? `data-module-type="${moduleType}" draggable="true"` : ''} aria-label="슬롯 ${index + 1} ${slotStatus} ${slotState}${penaltyState}" title="${penaltyBreakdown}" aria-disabled="${isDisabled ? 'true' : 'false'}" tabindex="0">${penaltyOverlay}${moduleType ? `<span class="slot-module-emoji" aria-hidden="true">${MODULE_EMOJI[moduleType]}</span>` : ''}${disableOverlay}</div>`
   }).join('')
