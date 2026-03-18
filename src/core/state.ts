@@ -83,30 +83,41 @@ export type LootEntry = {
   amount: number
 }
 
-export type FieldPos = { x: number; y: number }
-export type FieldTile = 'floor' | 'cover' | 'wall'
-export type FieldDirection = 'up' | 'down' | 'left' | 'right'
+export type CombatBullet = {
+  x: number; y: number
+  vx: number; vy: number
+  damage: number
+}
 
-export type FieldEnemy = {
+export type CombatEnemy = {
   instanceId: string
   enemyId: EnemyId
   name: string
-  hp: number
-  maxHp: number
+  emoji: string
+  x: number; y: number
+  hp: number; maxHp: number
   damage: number
+  radius: number
+  speed: number
   attackCooldownMs: number
   attackElapsedMs: number
-  moveElapsedMs: number
-  pos: FieldPos
-  facing: FieldDirection
 }
 
 export type FieldCombatState = {
-  field: FieldTile[][]
-  playerPos: FieldPos
-  playerFacing: FieldDirection
+  worldWidth: number
+  worldHeight: number
+  playerX: number
+  playerY: number
+  playerRadius: number
+  playerSpeed: number
+  playerAngle: number
+  playerAttackCooldownMs: number
   playerAttackElapsedMs: number
-  enemies: FieldEnemy[]
+  playerDamage: number
+  enemies: CombatEnemy[]
+  bullets: CombatBullet[]
+  bulletSpeed: number
+  bulletRadius: number
   fleeGaugeDurationMs: number
   fleeGaugeElapsedMs: number
   fleeGaugeRunning: boolean

@@ -2,7 +2,6 @@ import type { GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight } from '../../../core/explorationBackpack.ts'
 import { getBiomeAt, getDungeonDef, getTileAt } from '../../../data/maps/index.ts'
 import { getResourceDisplay, type ResourceId } from '../../../data/resources.ts'
-import { renderExplorationCombatOverlay } from '../combatOverlay.ts'
 import { getSyntheticFoodButtonState, renderBackpackHeatmap } from './loadoutView.ts'
 
 export function renderExplorationMap(state: GameState): string {
@@ -43,6 +42,7 @@ function renderDungeonProgress(state: GameState): string {
 }
 
 export function renderActiveBody(state: GameState, now = Date.now()): string {
+  void now
   const backpackWeight = getBackpackUsedWeight(state.exploration.backpack)
   const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
   const dungeonProgress = renderDungeonProgress(state)
@@ -69,7 +69,7 @@ export function renderActiveBody(state: GameState, now = Date.now()): string {
   }
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
-    return `<div class="exploration-active">${baseInfo}${renderExplorationCombatOverlay(state, now)}</div>`
+    return `<div class="exploration-active">${baseInfo}<p class="hint">전투 진행 중 — 전체화면 캔버스 오버레이 활성</p></div>`
   }
 
   if (state.exploration.phase === 'loot') {

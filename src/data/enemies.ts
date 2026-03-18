@@ -18,6 +18,7 @@ export type EnemyDef = {
   hp: number
   damage: number
   attackCooldownMs: number
+  speed: number
   drops: EnemyDropCandidate[]
 }
 
@@ -29,6 +30,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 20,
     damage: 2,
     attackCooldownMs: 3000,
+    speed: 70,
     drops: [
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 1 },
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.65 },
@@ -42,6 +44,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 3,
     damage: 1,
     attackCooldownMs: 2000,
+    speed: 90,
     drops: [
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.4 },
       { resource: 'scrap', minAmount: 1, maxAmount: 1, chance: 0.25 },
@@ -54,6 +57,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 4,
     damage: 3,
     attackCooldownMs: 4500,
+    speed: 100,
     drops: [
       { resource: 'scrap', minAmount: 10, maxAmount: 14, chance: 1 },
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.2 },
@@ -66,6 +70,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 10,
     damage: 3,
     attackCooldownMs: 2000,
+    speed: 95,
     drops: [
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.8 },
       { resource: 'iron', minAmount: 1, maxAmount: 1, chance: 0.35 },
@@ -78,6 +83,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 18,
     damage: 5,
     attackCooldownMs: 5000,
+    speed: 50,
     drops: [
       { resource: 'iron', minAmount: 2, maxAmount: 4, chance: 1 },
       { resource: 'scrap', minAmount: 3, maxAmount: 6, chance: 0.7 },
@@ -90,6 +96,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 5,
     damage: 2,
     attackCooldownMs: 1500,
+    speed: 110,
     drops: [
       { resource: 'scrap', minAmount: 1, maxAmount: 3, chance: 0.6 },
       { resource: 'carbon', minAmount: 1, maxAmount: 1, chance: 0.3 },
@@ -102,6 +109,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 14,
     damage: 2,
     attackCooldownMs: 2500,
+    speed: 65,
     drops: [
       { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.75 },
       { resource: 'siliconMass', minAmount: 1, maxAmount: 1, chance: 0.4 },
@@ -115,6 +123,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 30,
     damage: 5,
     attackCooldownMs: 4000,
+    speed: 55,
     drops: [
       { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.8 },
       { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.5 },
@@ -128,6 +137,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 15,
     damage: 4,
     attackCooldownMs: 1800,
+    speed: 85,
     drops: [
       { resource: 'scrap', minAmount: 1, maxAmount: 3, chance: 0.7 },
       { resource: 'cash', minAmount: 2, maxAmount: 5, chance: 0.5 },
@@ -141,6 +151,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 28,
     damage: 3,
     attackCooldownMs: 4000,
+    speed: 75,
     drops: [
       { resource: 'wood', minAmount: 2, maxAmount: 4, chance: 0.8 },
       { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.6 },
@@ -154,6 +165,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 12,
     damage: 4,
     attackCooldownMs: 2000,
+    speed: 100,
     drops: [
       { resource: 'iron', minAmount: 1, maxAmount: 2, chance: 0.7 },
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.5 },
@@ -167,6 +179,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 4,
     damage: 1,
     attackCooldownMs: 3000,
+    speed: 60,
     drops: [
       { resource: 'syntheticFood', minAmount: 1, maxAmount: 2, chance: 0.8 },
       { resource: 'carbon', minAmount: 1, maxAmount: 1, chance: 0.2 },
@@ -179,6 +192,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 16,
     damage: 3,
     attackCooldownMs: 2800,
+    speed: 70,
     drops: [
       { resource: 'carbon', minAmount: 1, maxAmount: 3, chance: 0.75 },
       { resource: 'scrap', minAmount: 1, maxAmount: 2, chance: 0.4 },
@@ -191,6 +205,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 30,
     damage: 5,
     attackCooldownMs: 3000,
+    speed: 80,
     drops: [
       { resource: 'carbon', minAmount: 2, maxAmount: 4, chance: 0.9 },
       { resource: 'chromium', minAmount: 1, maxAmount: 2, chance: 0.4 },
@@ -204,6 +219,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 40,
     damage: 4,
     attackCooldownMs: 3500,
+    speed: 60,
     drops: [
       { resource: 'scrap', minAmount: 8, maxAmount: 14, chance: 1 },
       { resource: 'iron', minAmount: 1, maxAmount: 3, chance: 0.6 },
@@ -216,6 +232,7 @@ export const ENEMY_DEFS: Record<EnemyId, EnemyDef> = {
     hp: 5,
     damage: 2,
     attackCooldownMs: 2000,
+    speed: 95,
     drops: [
       { resource: 'scrap', minAmount: 3, maxAmount: 6, chance: 0.9 },
       { resource: 'carbon', minAmount: 1, maxAmount: 2, chance: 0.4 },

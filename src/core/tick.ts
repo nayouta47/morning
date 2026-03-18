@@ -1,7 +1,7 @@
 import { BUILDING_CYCLE_MS, COMPANION_IDLE_MAX_MS, COMPANION_IDLE_MIN_MS, SMELTING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
-import type { FieldCombatState, FieldEnemy, FieldPos, GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
+import type { GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
 import { narrate, handleExplorationDeath } from './actions.ts'
-import { ENEMY_MOVE_INTERVAL_MS, FIELD_HEIGHT, FIELD_WIDTH, FLEE_SUCCESS_CHANCE, createEnemyLootTable } from './combat.ts'
+import { FLEE_SUCCESS_CHANCE, createEnemyLootTable } from './combat.ts'
 import { getDungeonDef } from '../data/maps/index.ts'
 import { evaluateUnlocks } from './unlocks.ts'
 import { advanceCountdownProcess, advanceCycleProgress } from './process.ts'
@@ -364,111 +364,10 @@ function processActionElapsed(state: GameState, key: 'goToWork' | 'gatherWood' |
   resolveGatherCompletion(state, key, storageCap)
 }
 
-function fieldHasLineOfSight(combat: FieldCombatState, from: FieldPos, to: FieldPos): boolean {
-  const dx = Math.sign(to.x - from.x)
-  const dy = Math.sign(to.y - from.y)
-  let cx = from.x + dx
-  let cy = from.y + dy
-  while (cx !== to.x || cy !== to.y) {
-    if (combat.field[cy]?.[cx] === 'wall') return false
-    cx += dx
-    cy += dy
-  }
-  return true
-}
-
-function fieldHasCoverBetween(combat: FieldCombatState, from: FieldPos, to: FieldPos): boolean {
-  const dx = Math.sign(to.x - from.x)
-  const dy = Math.sign(to.y - from.y)
-  let cx = from.x + dx
-  let cy = from.y + dy
-  while (cx !== to.x || cy !== to.y) {
-    const tile = combat.field[cy]?.[cx]
-    if (tile === 'cover') return true
-    if (tile === 'wall') return false
-    cx += dx
-    cy += dy
-  }
-  return false
-}
-
-function enemyCanAttackPlayer(combat: FieldCombatState, enemy: FieldEnemy): boolean {
-  const { pos } = enemy
-  const { playerPos } = combat
-  if (pos.y !== playerPos.y && pos.x !== playerPos.x) return false
-  return fieldHasLineOfSight(combat, pos, playerPos)
-}
-
-function tryMoveEnemyTowards(combat: FieldCombatState, enemy: FieldEnemy): void {
-  const { pos } = enemy
-  const { playerPos } = combat
-  const dx = Math.sign(playerPos.x - pos.x)
-  const dy = Math.sign(playerPos.y - pos.y)
-  const distX = Math.abs(playerPos.x - pos.x)
-  const distY = Math.abs(playerPos.y - pos.y)
-
-  const candidates: FieldPos[] = []
-  if (distX >= distY) {
-    if (dx !== 0) candidates.push({ x: pos.x + dx, y: pos.y })
-    if (dy !== 0) candidates.push({ x: pos.x, y: pos.y + dy })
-  } else {
-    if (dy !== 0) candidates.push({ x: pos.x, y: pos.y + dy })
-    if (dx !== 0) candidates.push({ x: pos.x + dx, y: pos.y })
-  }
-
-  for (const next of candidates) {
-    if (next.x < 0 || next.x >= FIELD_WIDTH || next.y < 0 || next.y >= FIELD_HEIGHT) continue
-    const tile = combat.field[next.y]?.[next.x]
-    if (tile === 'wall' || tile === 'cover') continue
-    if (next.x === combat.playerPos.x && next.y === combat.playerPos.y) continue
-    if (combat.enemies.some((e) => e !== enemy && e.hp > 0 && e.pos.x === next.x && e.pos.y === next.y)) continue
-    enemy.pos = next
-    return
-  }
-}
-
-function processFieldEnemyAI(state: GameState, elapsedMs: number): void {
-  const combat = state.exploration.combat
-  if (!combat) return
-
-  for (const enemy of combat.enemies) {
-    if (enemy.hp <= 0) continue
-
-    enemy.attackElapsedMs += elapsedMs
-    if (enemy.attackElapsedMs >= enemy.attackCooldownMs) {
-      enemy.attackElapsedMs -= enemy.attackCooldownMs
-      if (enemyCanAttackPlayer(combat, enemy)) {
-        let damage = enemy.damage
-        if (fieldHasCoverBetween(combat, enemy.pos, combat.playerPos)) {
-          if (Math.random() < 0.5) {
-            narrate(state, `${enemy.name}의 공격 — 엄폐물에 막혔다.`)
-          } else {
-            damage = Math.max(1, Math.floor(damage / 2))
-            state.exploration.hp = Math.max(0, state.exploration.hp - damage)
-            narrate(state, `${enemy.name}의 공격. (${state.exploration.hp}/${state.exploration.maxHp})`)
-          }
-        } else {
-          state.exploration.hp = Math.max(0, state.exploration.hp - damage)
-          narrate(state, `${enemy.name}의 공격. (${state.exploration.hp}/${state.exploration.maxHp})`)
-        }
-      }
-    }
-
-    enemy.moveElapsedMs += elapsedMs
-    if (enemy.moveElapsedMs >= ENEMY_MOVE_INTERVAL_MS) {
-      enemy.moveElapsedMs -= ENEMY_MOVE_INTERVAL_MS
-      tryMoveEnemyTowards(combat, enemy)
-    }
-  }
-}
-
 function processExplorationCombat(state: GameState, elapsedMs: number): void {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return
   const combat = state.exploration.combat
   if (!combat) return
-
-  combat.smallHealPotionCooldownRemainingMs = Math.max(0, combat.smallHealPotionCooldownRemainingMs - elapsedMs)
-  combat.playerAttackElapsedMs += elapsedMs
 
   if (combat.fleeGaugeRunning) {
     combat.fleeGaugeElapsedMs = Math.min(combat.fleeGaugeDurationMs, combat.fleeGaugeElapsedMs + elapsedMs)
@@ -484,8 +383,6 @@ function processExplorationCombat(state: GameState, elapsedMs: number): void {
       narrate(state, '도주 실패... 전투를 이어간다.')
     }
   }
-
-  processFieldEnemyAI(state, elapsedMs)
 
   if (state.exploration.hp <= 0) {
     handleExplorationDeath(state)

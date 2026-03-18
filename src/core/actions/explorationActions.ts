@@ -2,14 +2,12 @@ import {
   createFieldCombatState,
   ENCOUNTER_FIGHT_CHANCE,
   ENCOUNTER_FIGHT_DELAY,
-  FIELD_HEIGHT,
-  FIELD_WIDTH,
   getSelectedWeapon,
   getWeaponCombatStats,
   selectEncounterEnemyId,
 } from '../combat.ts'
 
-import type { ArmorType, FieldDirection, GameState } from '../state.ts'
+import type { ArmorType, GameState } from '../state.ts'
 import { ARMOR_HP } from '../../data/crafting.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { narrate } from './logging.ts'
@@ -196,7 +194,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
     const enemyId = selectEncounterEnemyId(biome.id)
     const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
-    const combatState = createFieldCombatState([enemyId], weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+    const combatState = createFieldCombatState([enemyId], weaponStats)
     state.exploration.combat = combatState
 
     const codex = state.enemyCodex[enemyId]
@@ -265,79 +263,23 @@ export function startExplorationFlee(state: GameState): boolean {
   return true
 }
 
-export function movePlayerOnField(state: GameState, direction: FieldDirection): boolean {
-  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
-  const combat = state.exploration.combat
-  if (!combat) return false
-
-  const { x, y } = combat.playerPos
-  let nx = x
-  let ny = y
-  switch (direction) {
-    case 'up': ny -= 1; break
-    case 'down': ny += 1; break
-    case 'left': nx -= 1; break
-    case 'right': nx += 1; break
-  }
-
-  combat.playerFacing = direction
-
-  if (nx < 0 || nx >= FIELD_WIDTH || ny < 0 || ny >= FIELD_HEIGHT) return false
-  const tile = combat.field[ny]?.[nx]
-  if (tile === 'wall' || tile === 'cover') return false
-  if (combat.enemies.some((e) => e.hp > 0 && e.pos.x === nx && e.pos.y === ny)) return false
-
-  combat.playerPos = { x: nx, y: ny }
-  return true
-}
-
 export function playerShoot(state: GameState): boolean {
   if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
   const combat = state.exploration.combat
   if (!combat) return false
 
-  const weapon = state.exploration.carriedWeaponId
-    ? (state.weapons.find((w) => w.id === state.exploration.carriedWeaponId) ?? null)
-    : getSelectedWeapon(state)
-  const weaponStats = getWeaponCombatStats(weapon)
-  if (combat.playerAttackElapsedMs < weaponStats.cooldownMs) return false
-
+  if (combat.playerAttackElapsedMs < combat.playerAttackCooldownMs) return false
   combat.playerAttackElapsedMs = 0
 
-  let dx = 0
-  let dy = 0
-  switch (combat.playerFacing) {
-    case 'up': dy = -1; break
-    case 'down': dy = 1; break
-    case 'left': dx = -1; break
-    case 'right': dx = 1; break
-  }
-
-  let cx = combat.playerPos.x + dx
-  let cy = combat.playerPos.y + dy
-  while (cx >= 0 && cx < FIELD_WIDTH && cy >= 0 && cy < FIELD_HEIGHT) {
-    const tile = combat.field[cy]?.[cx]
-    const enemy = combat.enemies.find((e) => e.hp > 0 && e.pos.x === cx && e.pos.y === cy)
-    if (enemy) {
-      enemy.hp = Math.max(0, enemy.hp - weaponStats.damage)
-      narrate(state, `${enemy.name}에게 타격. (${enemy.hp}/${enemy.maxHp})`)
-      return true
-    }
-    if (tile === 'wall') {
-      narrate(state, '빗나갔다.')
-      return true
-    }
-    if (tile === 'cover') {
-      if (Math.random() < 0.5) {
-        narrate(state, '엄폐물에 막혔다.')
-        return true
-      }
-    }
-    cx += dx
-    cy += dy
-  }
-
-  narrate(state, '빗나갔다.')
+  const cos = Math.cos(combat.playerAngle)
+  const sin = Math.sin(combat.playerAngle)
+  combat.bullets.push({
+    x: combat.playerX + cos * combat.playerRadius,
+    y: combat.playerY + sin * combat.playerRadius,
+    vx: cos * combat.bulletSpeed,
+    vy: sin * combat.bulletSpeed,
+    damage: combat.playerDamage,
+  })
   return true
 }
 
@@ -400,7 +342,7 @@ function startFloorCombat(
   floor: DungeonFloor,
 ): boolean {
   const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
-  const combatState = createFieldCombatState([floor.enemyId], weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+  const combatState = createFieldCombatState([floor.enemyId], weaponStats)
   state.exploration.combat = combatState
   state.exploration.phase = 'combat'
 

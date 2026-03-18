@@ -36,7 +36,6 @@ import {
   startRecoverGuideRobot,
   startTakeAndroid,
   startExplorationFlee,
-  movePlayerOnField,
   playerShoot,
   takeExplorationLoot,
   toggleBuildingRun,
@@ -57,6 +56,8 @@ import { patchAnimatedUI, renderApp } from './ui/render.ts'
 import { ACTION_DURATION_MS } from './data/balance.ts'
 import { SIMPLE_EVENT_DEFS } from './data/events.ts'
 import { getGatherScrapDurationMs } from './core/rewards.ts'
+import { pressedKeys, updateCombatFrame } from './core/combatPhysics.ts'
+import { hideCombatFullscreen, isCombatFullscreenActive, renderCombatCanvas, showCombatFullscreen } from './ui/panels/combatOverlay.ts'
 
 let state: GameState = loadGame() ?? structuredClone(initialState)
 
@@ -597,6 +598,8 @@ function redraw(nowOverride?: number): void {
   lastStructureSignature = structureSignature
 }
 
+let lastFrameTime = Date.now()
+
 function frameLoop(): void {
   if (document.hidden) {
     animationFrameId = null
@@ -604,6 +607,28 @@ function frameLoop(): void {
   }
 
   const now = Date.now()
+  const dtMs = Math.min(50, now - lastFrameTime)
+  lastFrameTime = now
+
+  const inCombat = state.exploration.mode === 'active' && state.exploration.phase === 'combat' && state.exploration.combat !== null
+
+  if (inCombat) {
+    updateCombatFrame(state, dtMs)
+    if (!isCombatFullscreenActive()) {
+      showCombatFullscreen(
+        state,
+        () => { syncState(); playerShoot(state) },
+        () => { syncState(); useSmallHealPotion(state) },
+        () => { syncState(); startExplorationFlee(state) },
+      )
+    }
+    renderCombatCanvas(state)
+  } else {
+    if (isCombatFullscreenActive()) {
+      hideCombatFullscreen()
+    }
+  }
+
   runSimulation(now)
   redraw(now)
   animationFrameId = requestAnimationFrame(frameLoop)
@@ -694,53 +719,21 @@ document.addEventListener('keydown', (event) => {
 
   if (state.exploration.phase === 'combat') {
     const key = event.key.toLowerCase()
-    if (key === 'w' || key === 'arrowup') {
+    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
       event.preventDefault()
-      syncState()
-      movePlayerOnField(state, 'up')
-      redraw()
-      return
-    }
-    if (key === 's' || key === 'arrowdown') {
-      event.preventDefault()
-      syncState()
-      movePlayerOnField(state, 'down')
-      redraw()
-      return
-    }
-    if (key === 'a' || key === 'arrowleft') {
-      event.preventDefault()
-      syncState()
-      movePlayerOnField(state, 'left')
-      redraw()
-      return
-    }
-    if (key === 'd' || key === 'arrowright') {
-      event.preventDefault()
-      syncState()
-      movePlayerOnField(state, 'right')
-      redraw()
-      return
-    }
-    if (key === 'f') {
-      event.preventDefault()
-      syncState()
-      playerShoot(state)
-      redraw()
+      pressedKeys.add(key)
       return
     }
     if (key === 'h') {
       event.preventDefault()
       syncState()
       useSmallHealPotion(state)
-      redraw()
       return
     }
     if (event.key === 'Shift') {
       event.preventDefault()
       syncState()
       startExplorationFlee(state)
-      redraw()
       return
     }
     return
@@ -752,6 +745,11 @@ document.addEventListener('keydown', (event) => {
   syncState()
   moveExplorationStep(state, move.dx, move.dy)
   redraw()
+})
+
+document.addEventListener('keyup', (event) => {
+  const key = event.key.toLowerCase()
+  pressedKeys.delete(key)
 })
 
 document.addEventListener('visibilitychange', () => {
