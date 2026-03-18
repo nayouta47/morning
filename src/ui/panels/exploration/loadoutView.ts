@@ -78,7 +78,7 @@ export function renderBackpackHeatmap(state: GameState): string {
   const maxWeight = state.exploration.backpackMaxWeight
   const weapon = state.weapons.find((w) => w.id === state.selectedWeaponId)
   const weaponWeight = weapon ? getWeaponWeight(weapon) : 0
-  const totalValue = weaponWeight + maxWeight  // always fills the square
+  const totalValue = maxWeight  // always 50 — fixed square
 
   const items: TmInput[] = []
 
@@ -94,7 +94,7 @@ export function renderBackpackHeatmap(state: GameState): string {
     items.push({ key: entry.resource, label: `${def.label} ${itemWeight.toFixed(1)}kg`, emoji: def.emoji, value: itemWeight, cls: 'tm-item' })
   }
 
-  const emptyWeight = maxWeight - usedWeight
+  const emptyWeight = maxWeight - weaponWeight - usedWeight
   if (emptyWeight > 0.001) {
     items.push({ key: 'empty', label: `여유 ${emptyWeight.toFixed(1)}kg`, emoji: '', value: emptyWeight, cls: 'tm-empty' })
   }
