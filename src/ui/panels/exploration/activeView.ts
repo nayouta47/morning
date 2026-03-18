@@ -69,7 +69,7 @@ export function renderActiveBody(state: GameState, now = Date.now()): string {
   }
 
   if (state.exploration.phase === 'combat' && state.exploration.combat) {
-    return `<div class="exploration-active">${baseInfo}<div class="exploration-map-stage"><pre class="exploration-map" id="exploration-map">${renderExplorationMap(state)}</pre><div class="exploration-combat-backdrop" aria-hidden="true"></div>${renderExplorationCombatOverlay(state, now)}</div><p class="hint">전투 중... 자동 사격이 진행됩니다. (도주 시도 가능: 성공률 30%)</p></div>`
+    return `<div class="exploration-active">${baseInfo}${renderExplorationCombatOverlay(state, now)}</div>`
   }
 
   if (state.exploration.phase === 'loot') {

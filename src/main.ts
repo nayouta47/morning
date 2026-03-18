@@ -36,6 +36,8 @@ import {
   startRecoverGuideRobot,
   startTakeAndroid,
   startExplorationFlee,
+  movePlayerOnField,
+  playerShoot,
   takeExplorationLoot,
   toggleBuildingRun,
   toggleSmeltingProcessRun,
@@ -689,6 +691,61 @@ document.addEventListener('keydown', (event) => {
   }
 
   if (state.exploration.mode !== 'active') return
+
+  if (state.exploration.phase === 'combat') {
+    const key = event.key.toLowerCase()
+    if (key === 'w' || key === 'arrowup') {
+      event.preventDefault()
+      syncState()
+      movePlayerOnField(state, 'up')
+      redraw()
+      return
+    }
+    if (key === 's' || key === 'arrowdown') {
+      event.preventDefault()
+      syncState()
+      movePlayerOnField(state, 'down')
+      redraw()
+      return
+    }
+    if (key === 'a' || key === 'arrowleft') {
+      event.preventDefault()
+      syncState()
+      movePlayerOnField(state, 'left')
+      redraw()
+      return
+    }
+    if (key === 'd' || key === 'arrowright') {
+      event.preventDefault()
+      syncState()
+      movePlayerOnField(state, 'right')
+      redraw()
+      return
+    }
+    if (key === 'f') {
+      event.preventDefault()
+      syncState()
+      playerShoot(state)
+      redraw()
+      return
+    }
+    if (key === 'h') {
+      event.preventDefault()
+      syncState()
+      useSmallHealPotion(state)
+      redraw()
+      return
+    }
+    if (event.key === 'Shift') {
+      event.preventDefault()
+      syncState()
+      startExplorationFlee(state)
+      redraw()
+      return
+    }
+    return
+  }
+
   const move = moveByKey[event.key.toLowerCase()]
   if (!move) return
   event.preventDefault()

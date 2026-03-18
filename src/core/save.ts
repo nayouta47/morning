@@ -1,7 +1,6 @@
 import type { GameState, ModuleType, TabKey, WeaponType } from './state.ts'
 import { initialState } from './state.ts'
 import { SHOVEL_MAX_STACK } from './rewards.ts'
-import { DEFAULT_ENEMY_ID } from './combat.ts'
 import { clampResourceAmount, clampResourcesToStorageCaps, getResourceStorageCap } from './resourceCaps.ts'
 import { COMPANION_IDLE_MAX_MS } from '../data/balance.ts'
 import { ENEMY_IDS, type EnemyId } from '../data/enemies.ts'
@@ -101,23 +100,10 @@ function normalizeExplorationState(base: GameState, loaded: LoadedSave): void {
       .slice(-4096)
   }
 
-  if (exploration.combat && typeof exploration.combat === 'object') {
-    base.exploration.combat = {
-      enemyId: ENEMY_IDS.includes(exploration.combat.enemyId as EnemyId)
-        ? (exploration.combat.enemyId as EnemyId)
-        : DEFAULT_ENEMY_ID,
-      enemyName: typeof exploration.combat.enemyName === 'string' ? exploration.combat.enemyName : '🧏‍♀️ 벌벌떠는 기인',
-      enemyHp: Math.max(0, Number(exploration.combat.enemyHp) || 0),
-      enemyMaxHp: Math.max(1, Number(exploration.combat.enemyMaxHp) || 20),
-      enemyDamage: Math.max(1, Number(exploration.combat.enemyDamage) || 2),
-      enemyAttackCooldownMs: Math.max(500, Number(exploration.combat.enemyAttackCooldownMs) || 3000),
-      enemyAttackElapsedMs: Math.max(0, Number(exploration.combat.enemyAttackElapsedMs) || 0),
-      playerAttackElapsedMs: Math.max(0, Number(exploration.combat.playerAttackElapsedMs) || 0),
-      fleeGaugeDurationMs: Math.max(500, Number(exploration.combat.fleeGaugeDurationMs) || 2500),
-      fleeGaugeElapsedMs: Math.max(0, Number(exploration.combat.fleeGaugeElapsedMs) || 0),
-      fleeGaugeRunning: Boolean(exploration.combat.fleeGaugeRunning),
-      smallHealPotionCooldownRemainingMs: Math.max(0, Number(exploration.combat.smallHealPotionCooldownRemainingMs) || 0),
-    }
+  // combat state is not persisted — any in-progress combat is abandoned on load
+  base.exploration.combat = null
+  if (base.exploration.phase === 'combat') {
+    base.exploration.phase = 'moving'
   }
 
   const startKey = `${base.exploration.start.x},${base.exploration.start.y}`

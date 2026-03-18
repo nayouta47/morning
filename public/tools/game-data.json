@@ -1,30 +1,110 @@
 {
   "events": [
-    { "id": "collapse", "name": "발작" },
-    { "id": "terminalIllness", "name": "불치병" },
-    { "id": "timePassed", "name": "얼마나 흐른거지?" },
-    { "id": "relapse", "name": "재발작" },
-    { "id": "lookAround", "name": "주위를 바라보다" },
-    { "id": "ownerlessThing", "name": "주인 없는 것" },
-    { "id": "tailorEnd", "name": "재봉사의 끝" },
-    { "id": "ruby", "name": "R.U.B.Y" }
+    {
+      "id": "collapse",
+      "name": "발작"
+    },
+    {
+      "id": "terminalIllness",
+      "name": "불치병"
+    },
+    {
+      "id": "timePassed",
+      "name": "얼마나 흐른거지?"
+    },
+    {
+      "id": "relapse",
+      "name": "재발작"
+    },
+    {
+      "id": "lookAround",
+      "name": "주위를 바라보다"
+    },
+    {
+      "id": "ownerlessThing",
+      "name": "주인 없는 것"
+    },
+    {
+      "id": "tailorEnd",
+      "name": "재봉사의 끝"
+    },
+    {
+      "id": "ruby",
+      "name": "R.U.B.Y"
+    },
+    {
+      "id": "labUnlock",
+      "name": "데이터 단말기"
+    },
+    {
+      "id": "workbenchUnlock",
+      "name": "정밀 부품"
+    }
   ],
   "enemies": [
-    { "id": "siliconLifeform", "name": "🧏‍♀️ 석화인" },
-    { "id": "siliconBug", "name": "🐛 석충" },
-    { "id": "wheelBug", "name": "🛞 윤각" },
-    { "id": "bareBonesMan", "name": "🩻 해골무사" },
-    { "id": "rustGolem", "name": "🐃 적철장" },
-    { "id": "staticHound", "name": "🐩 뇌견" },
-    { "id": "moldedWorker", "name": "👷 균역부" },
-    { "id": "chromiumCrawler", "name": "🦀 백갑장군" },
-    { "id": "hunterHunter", "name": "🏹 역포수" },
-    { "id": "divineElk", "name": "🦌 녹신" },
-    { "id": "steelEagle", "name": "🦅 철응" },
-    { "id": "willowFish", "name": "🐟 유사" },
-    { "id": "emberCrane", "name": "🦢 잔화학" },
-    { "id": "phoenixBird", "name": "🐦‍🔥 회염조" },
-    { "id": "tailor", "name": "🪡 재봉사" },
-    { "id": "webSpider", "name": "🕷️ 거미" }
+    {
+      "id": "siliconLifeform",
+      "name": "🧏‍♀️ 석화인"
+    },
+    {
+      "id": "siliconBug",
+      "name": "🐛 석충"
+    },
+    {
+      "id": "wheelBug",
+      "name": "🛞 윤각"
+    },
+    {
+      "id": "bareBonesMan",
+      "name": "🩻 해골무사"
+    },
+    {
+      "id": "rustGolem",
+      "name": "🐃 적철장"
+    },
+    {
+      "id": "staticHound",
+      "name": "🐩 뇌견"
+    },
+    {
+      "id": "moldedWorker",
+      "name": "👷 균역부"
+    },
+    {
+      "id": "chromiumCrawler",
+      "name": "🦀 백갑장군"
+    },
+    {
+      "id": "hunterHunter",
+      "name": "🏹 역포수"
+    },
+    {
+      "id": "divineElk",
+      "name": "🦌 녹신"
+    },
+    {
+      "id": "steelEagle",
+      "name": "🦅 철응"
+    },
+    {
+      "id": "willowFish",
+      "name": "🐟 유사"
+    },
+    {
+      "id": "emberCrane",
+      "name": "🦢 잔화학"
+    },
+    {
+      "id": "phoenixBird",
+      "name": "🐦‍🔥 회염조"
+    },
+    {
+      "id": "tailor",
+      "name": "🪡 재봉사"
+    },
+    {
+      "id": "webSpider",
+      "name": "🕷️ 거미"
+    }
   ]
 }

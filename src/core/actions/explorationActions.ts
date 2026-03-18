@@ -1,13 +1,15 @@
 import {
-  createEnemyCombatState,
+  createFieldCombatState,
   ENCOUNTER_FIGHT_CHANCE,
   ENCOUNTER_FIGHT_DELAY,
+  FIELD_HEIGHT,
+  FIELD_WIDTH,
   getSelectedWeapon,
   getWeaponCombatStats,
   selectEncounterEnemyId,
 } from '../combat.ts'
 
-import type { ArmorType, GameState } from '../state.ts'
+import type { ArmorType, FieldDirection, GameState } from '../state.ts'
 import { ARMOR_HP } from '../../data/crafting.ts'
 import { type ResourceId, getResourceDisplay } from '../../data/resources.ts'
 import { narrate } from './logging.ts'
@@ -194,7 +196,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
     const biome = getBiomeAt(state.exploration.position.x, state.exploration.position.y)
     const enemyId = selectEncounterEnemyId(biome.id)
     const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
-    const combatState = createEnemyCombatState(enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+    const combatState = createFieldCombatState([enemyId], weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
     state.exploration.combat = combatState
 
     const codex = state.enemyCodex[enemyId]
@@ -203,7 +205,7 @@ export function moveExplorationStep(state: GameState, dx: number, dy: number): b
       if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
     }
 
-    narrate(state, `어둠 사이에서 ${combatState.enemyName}이(가) 튀어나왔다.`)
+    narrate(state, `어둠 사이에서 ${combatState.enemies[0]?.name ?? enemyId}이(가) 튀어나왔다.`)
     return true
   }
 
@@ -260,6 +262,82 @@ export function startExplorationFlee(state: GameState): boolean {
   combat.fleeGaugeElapsedMs = 0
   combat.fleeGaugeRunning = true
   narrate(state, '도주를 시도한다...')
+  return true
+}
+
+export function movePlayerOnField(state: GameState, direction: FieldDirection): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
+  const combat = state.exploration.combat
+  if (!combat) return false
+
+  const { x, y } = combat.playerPos
+  let nx = x
+  let ny = y
+  switch (direction) {
+    case 'up': ny -= 1; break
+    case 'down': ny += 1; break
+    case 'left': nx -= 1; break
+    case 'right': nx += 1; break
+  }
+
+  combat.playerFacing = direction
+
+  if (nx < 0 || nx >= FIELD_WIDTH || ny < 0 || ny >= FIELD_HEIGHT) return false
+  const tile = combat.field[ny]?.[nx]
+  if (tile === 'wall' || tile === 'cover') return false
+  if (combat.enemies.some((e) => e.hp > 0 && e.pos.x === nx && e.pos.y === ny)) return false
+
+  combat.playerPos = { x: nx, y: ny }
+  return true
+}
+
+export function playerShoot(state: GameState): boolean {
+  if (state.exploration.mode !== 'active' || state.exploration.phase !== 'combat') return false
+  const combat = state.exploration.combat
+  if (!combat) return false
+
+  const weapon = state.exploration.carriedWeaponId
+    ? (state.weapons.find((w) => w.id === state.exploration.carriedWeaponId) ?? null)
+    : getSelectedWeapon(state)
+  const weaponStats = getWeaponCombatStats(weapon)
+  if (combat.playerAttackElapsedMs < weaponStats.cooldownMs) return false
+
+  combat.playerAttackElapsedMs = 0
+
+  let dx = 0
+  let dy = 0
+  switch (combat.playerFacing) {
+    case 'up': dy = -1; break
+    case 'down': dy = 1; break
+    case 'left': dx = -1; break
+    case 'right': dx = 1; break
+  }
+
+  let cx = combat.playerPos.x + dx
+  let cy = combat.playerPos.y + dy
+  while (cx >= 0 && cx < FIELD_WIDTH && cy >= 0 && cy < FIELD_HEIGHT) {
+    const tile = combat.field[cy]?.[cx]
+    const enemy = combat.enemies.find((e) => e.hp > 0 && e.pos.x === cx && e.pos.y === cy)
+    if (enemy) {
+      enemy.hp = Math.max(0, enemy.hp - weaponStats.damage)
+      narrate(state, `${enemy.name}에게 타격. (${enemy.hp}/${enemy.maxHp})`)
+      return true
+    }
+    if (tile === 'wall') {
+      narrate(state, '빗나갔다.')
+      return true
+    }
+    if (tile === 'cover') {
+      if (Math.random() < 0.5) {
+        narrate(state, '엄폐물에 막혔다.')
+        return true
+      }
+    }
+    cx += dx
+    cy += dy
+  }
+
+  narrate(state, '빗나갔다.')
   return true
 }
 
@@ -322,7 +400,7 @@ function startFloorCombat(
   floor: DungeonFloor,
 ): boolean {
   const weaponStats = getWeaponCombatStats(getSelectedWeapon(state))
-  const combatState = createEnemyCombatState(floor.enemyId, weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
+  const combatState = createFieldCombatState([floor.enemyId], weaponStats.startsPreloaded ? weaponStats.cooldownMs : 0)
   state.exploration.combat = combatState
   state.exploration.phase = 'combat'
 
@@ -332,7 +410,7 @@ function startFloorCombat(
     if (codex.firstEncounteredAt == null) codex.firstEncounteredAt = Date.now()
   }
 
-  narrate(state, `[${activeDungeon.currentFloor + 1}/${totalFloors}층] ${combatState.enemyName}이(가) 막아선다.`)
+  narrate(state, `[${activeDungeon.currentFloor + 1}/${totalFloors}층] ${combatState.enemies[0]?.name ?? floor.enemyId}이(가) 막아선다.`)
   return true
 }
 

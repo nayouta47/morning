@@ -83,15 +83,30 @@ export type LootEntry = {
   amount: number
 }
 
-export type CombatState = {
+export type FieldPos = { x: number; y: number }
+export type FieldTile = 'floor' | 'cover' | 'wall'
+export type FieldDirection = 'up' | 'down' | 'left' | 'right'
+
+export type FieldEnemy = {
+  instanceId: string
   enemyId: EnemyId
-  enemyName: string
-  enemyHp: number
-  enemyMaxHp: number
-  enemyDamage: number
-  enemyAttackCooldownMs: number
-  enemyAttackElapsedMs: number
+  name: string
+  hp: number
+  maxHp: number
+  damage: number
+  attackCooldownMs: number
+  attackElapsedMs: number
+  moveElapsedMs: number
+  pos: FieldPos
+  facing: FieldDirection
+}
+
+export type FieldCombatState = {
+  field: FieldTile[][]
+  playerPos: FieldPos
+  playerFacing: FieldDirection
   playerAttackElapsedMs: number
+  enemies: FieldEnemy[]
   fleeGaugeDurationMs: number
   fleeGaugeElapsedMs: number
   fleeGaugeRunning: boolean
@@ -120,7 +135,7 @@ export type ExplorationState = {
   backpack: LootEntry[]
   pendingLoot: LootEntry[]
   carriedWeaponId: string | null
-  combat: CombatState | null
+  combat: FieldCombatState | null
   activeDungeon: { id: string; currentFloor: number } | null
   clearedDungeonIds: string[]
   equippedArmor: ArmorType | null
