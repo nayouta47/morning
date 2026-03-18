@@ -12,8 +12,17 @@ export function equipModuleToSlot(state: GameState, weaponId: string, moduleType
   if (!weapon) return false
   if (slotIndex < 0 || slotIndex >= weapon.slots.length) return false
   if (!getEffectiveActiveWeaponSlots(weapon).has(slotIndex)) return false
-  if (weapon.slots[slotIndex]) return false
   if (state.modules[moduleType] <= 0) return false
+
+  const existing = weapon.slots[slotIndex]
+  if (existing) {
+    // swap: return existing module to inventory, equip new one
+    state.modules[existing] += 1
+    weapon.slots[slotIndex] = moduleType
+    state.modules[moduleType] -= 1
+    narrate(state, `교체: ${moduleName(existing)} -> ${moduleName(moduleType)} (${weapon.id} [${slotIndex + 1}])`)
+    return true
+  }
 
   weapon.slots[slotIndex] = moduleType
   state.modules[moduleType] -= 1
