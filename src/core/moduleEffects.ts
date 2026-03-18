@@ -204,37 +204,31 @@ function getRelativeLeftTargetIndex(originIndex: number, dx: number, maxSlots: n
   return target
 }
 
-/** slot sourceIndex 하나가 targetIndex에 기여하는 패널티 수치 반환 */
-function getPenaltyContributionToSlot(weapon: WeaponInstance, sourceIndex: number, targetIndex: number): number {
-  const field = getPenaltyFieldByAmplifier(weapon, new Set([sourceIndex]), 'all')
-  return field.total[targetIndex]
-}
-
 function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Set<number>; slotPenaltyDisabled: boolean[]; usage: number; overloaded: boolean } {
   const baseActiveSlots = getBaseActiveWeaponSlots(weapon.type)
   const capacity = WEAPON_POWER_CAPACITY[weapon.type]
 
+  // Rule 3: 배치된 모든 모듈에서 패널티 선계산 (활성화 여부 무관, 불변)
+  const allOccupied = new Set(weapon.slots.flatMap((m, i) => (m ? [i] : [])))
+  const penaltyTotals = getPenaltyFieldByAmplifier(weapon, allOccupied, 'all').total
+
+  const isModuleDisabled = (idx: number) => penaltyTotals[idx] >= SLOT_PENALTY_MAJOR
+
   const activeSlots = new Set<number>(baseActiveSlots)
-  const activationAncestors = new Map<number, Set<number>>()
-
-  const basePenaltyField = getPenaltyFieldByAmplifier(weapon, baseActiveSlots, 'all')
-  const penaltyTotals = [...basePenaltyField.total]
-
-  const isPenaltyDisabled = (idx: number) => activeSlots.has(idx) && penaltyTotals[idx] >= SLOT_PENALTY_MAJOR
 
   const isOverloaded = () => {
     const disabled = penaltyTotals.map((p, i) => activeSlots.has(i) && p >= SLOT_PENALTY_MAJOR)
     return getPowerUsage(weapon, activeSlots, disabled) > capacity
   }
 
-  const queue: Array<[number, number]> = []
+  const queue: number[] = []
 
   const enqueueTargets = (unlockerIdx: number) => {
-    if (isPenaltyDisabled(unlockerIdx)) return
+    if (isModuleDisabled(unlockerIdx)) return
     const l1 = getRelativeLeftTargetIndex(unlockerIdx, -1, weapon.slots.length)
     const l2 = getRelativeLeftTargetIndex(unlockerIdx, -2, weapon.slots.length)
-    if (l1 != null && !activeSlots.has(l1)) queue.push([l1, unlockerIdx])
-    if (l2 != null && !activeSlots.has(l2)) queue.push([l2, unlockerIdx])
+    if (l1 != null && !activeSlots.has(l1)) queue.push(l1)
+    if (l2 != null && !activeSlots.has(l2)) queue.push(l2)
   }
 
   for (const idx of baseActiveSlots) {
@@ -242,29 +236,10 @@ function resolveWeaponActiveSlotState(weapon: WeaponInstance): { activeSlots: Se
   }
 
   while (queue.length > 0) {
-    const [candidate, unlocker] = queue.shift()!
+    const candidate = queue.shift()!
     if (activeSlots.has(candidate)) continue
     if (isOverloaded()) continue
-    if (!activeSlots.has(unlocker) || isPenaltyDisabled(unlocker)) continue
-
-    const ancestors = new Set([...(activationAncestors.get(unlocker) ?? new Set<number>()), unlocker])
-
-    // 조상 차단 체크: candidate 추가 시 자신의 활성화 조상을 패널티로 차단하는가?
-    let safe = true
-    for (const ancestor of ancestors) {
-      const marginal = getPenaltyContributionToSlot(weapon, candidate, ancestor)
-      if (marginal > 0 && penaltyTotals[ancestor] + marginal >= SLOT_PENALTY_MAJOR) {
-        safe = false
-        break
-      }
-    }
-    if (!safe) continue
-
     activeSlots.add(candidate)
-    activationAncestors.set(candidate, ancestors)
-    const candidateField = getPenaltyFieldByAmplifier(weapon, new Set([candidate]), 'all')
-    for (let i = 0; i < penaltyTotals.length; i++) penaltyTotals[i] += candidateField.total[i]
-
     if (weapon.slots[candidate] === 'slotUnlocker') enqueueTargets(candidate)
   }
 
@@ -291,7 +266,8 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
   const resolved = resolveWeaponActiveSlotState(weapon)
   const activeSlots = resolved.activeSlots
   const gameplayPenaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots, 'activeOnly')
-  const visualPenaltyField = getPenaltyFieldByAmplifier(weapon, activeSlots, 'all')
+  const allOccupied = new Set(weapon.slots.flatMap((m, i) => (m ? [i] : [])))
+  const visualPenaltyField = getPenaltyFieldByAmplifier(weapon, allOccupied, 'all')
   const slotAmplificationReduction = gameplayPenaltyField.total.map((penalty) => Math.floor(penalty / SLOT_PENALTY_MAJOR))
   const slotPenaltyDisabled = resolved.slotPenaltyDisabled
   const slotDisabled = Array.from({ length: weapon.slots.length }, (_, index) => !activeSlots.has(index) || slotPenaltyDisabled[index])
