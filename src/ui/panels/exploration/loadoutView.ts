@@ -1,7 +1,7 @@
 import type { ArmorType, GameState } from '../../../core/state.ts'
 import { getBackpackUsedWeight, getBackpackResourceAmount } from '../../../core/explorationBackpack.ts'
 import { RESOURCE_DEFS, type ResourceId } from '../../../data/resources.ts'
-import { WEAPON_DISPLAY_STATS } from '../../../data/balance.ts'
+import { getWeaponModuleLayerStats, getWeaponWeight } from '../../../core/moduleEffects.ts'
 import { ARMOR_HP } from '../../../data/crafting.ts'
 const LOADOUT_ITEM_IDS: ResourceId[] = ['syntheticFood', 'smallHealPotion']
 
@@ -11,11 +11,11 @@ export function renderBackpackHeatmap(state: GameState): string {
   const ratio = maxWeight > 0 ? Math.min(1, usedWeight / maxWeight) : 0
 
   const selectedWeapon = state.weapons.find((w) => w.id === state.selectedWeaponId)
-  const weaponWeight = selectedWeapon ? WEAPON_DISPLAY_STATS[selectedWeapon.type].weight : 0
+  const weaponWeight = selectedWeapon ? getWeaponWeight(selectedWeapon) : 0
   const totalLoad = (usedWeight + weaponWeight).toFixed(1)
 
   const weaponCell = selectedWeapon
-    ? `<li class="backpack-heat-cell backpack-heat-weapon" style="--weight-share:${Math.max(1, Math.round(weaponWeight))}" aria-label="${selectedWeapon.type === 'rifle' ? '소총' : '권총'} ${weaponWeight}kg"><span class="backpack-heat-icon" aria-hidden="true">🔫</span><span class="backpack-heat-label">${selectedWeapon.type === 'rifle' ? '소총' : '권총'}</span><span class="backpack-heat-amount">${weaponWeight}kg</span></li>`
+    ? `<li class="backpack-heat-cell backpack-heat-weapon" style="--weight-share:${Math.max(1, Math.round(weaponWeight))}" aria-label="${selectedWeapon.type === 'rifle' ? '소총' : '권총'} ${weaponWeight.toFixed(1)}kg"><span class="backpack-heat-icon" aria-hidden="true">🔫</span><span class="backpack-heat-label">${selectedWeapon.type === 'rifle' ? '소총' : '권총'}</span><span class="backpack-heat-amount">${weaponWeight.toFixed(1)}kg</span></li>`
     : ''
 
   const itemCells = [...state.exploration.backpack]
@@ -39,8 +39,11 @@ function renderLoadoutWeaponSelection(state: GameState): string {
     .map((weapon) => {
       const selected = weapon.id === state.selectedWeaponId
       const label = weapon.type === 'rifle' ? '소총' : '권총'
-      const w = WEAPON_DISPLAY_STATS[weapon.type].weight
-      return `<button class="weapon-item ${selected ? 'selected' : ''}" type="button" data-weapon-id="${weapon.id}" aria-pressed="${selected}">${label} · ${w}kg</button>`
+      const w = getWeaponWeight(weapon)
+      const moduleCount = weapon.slots.filter((s) => s !== null).length
+      const stats = getWeaponModuleLayerStats(weapon)
+      const dps = (stats.finalDamage / stats.finalCooldownSec).toFixed(2)
+      return `<button class="weapon-item ${selected ? 'selected' : ''}" type="button" data-weapon-id="${weapon.id}" aria-pressed="${selected}">${label} · ${w.toFixed(1)}kg · 모듈 ${moduleCount}개 · DPS ${dps}</button>`
     })
     .join('')
 

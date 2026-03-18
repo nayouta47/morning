@@ -1,4 +1,4 @@
-import { MODULE_POWER_COST, SLOT_PENALTY_MAJOR, getEffectiveActiveWeaponSlots, getWeaponModuleLayerStats } from '../../core/moduleEffects.ts'
+import { MODULE_POWER_COST, SLOT_PENALTY_MAJOR, getEffectiveActiveWeaponSlots, getWeaponModuleLayerStats, getWeaponWeight } from '../../core/moduleEffects.ts'
 import { WEAPON_DISPLAY_STATS } from '../../data/balance.ts'
 import { MODULE_EMOJI, MODULE_METADATA, MODULE_NAME_KR, MODULE_TYPES } from '../../data/modules.ts'
 import type { GameState, ModuleType, WeaponInstance } from '../../core/state.ts'
@@ -68,7 +68,7 @@ function renderWeaponStatCards(stats: ReturnType<typeof getWeaponStats>, weapon:
         <div class="weapon-stat-item"><span class="weapon-stat-label">최종 쿨다운</span><strong class="weapon-stat-value ${finalClass}">${stats.finalCooldownSec.toFixed(1)}s${stats.totalHaste !== 0 ? `<span class="weapon-stat-haste-inline"> (가속 ${stats.totalHaste > 0 ? '+' : ''}${stats.totalHaste})</span>` : ''}</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">명중률</span><strong class="weapon-stat-value">${displayStats.accuracy}%</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">사거리</span><strong class="weapon-stat-value">${displayStats.range}m</strong></div>
-        <div class="weapon-stat-item"><span class="weapon-stat-label">중량</span><strong class="weapon-stat-value">${displayStats.weight.toFixed(1)}kg</strong></div>
+        <div class="weapon-stat-item"><span class="weapon-stat-label">중량</span><strong class="weapon-stat-value">${getWeaponWeight(weapon).toFixed(1)}kg</strong></div>
         <div class="weapon-stat-item"><span class="weapon-stat-label">DPS</span><strong class="weapon-stat-value ${finalClass}">${(stats.finalDamage / stats.finalCooldownSec).toFixed(2)}</strong></div>
       </div>
     </article>`

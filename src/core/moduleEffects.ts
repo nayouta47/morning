@@ -1,4 +1,4 @@
-import { WEAPON_BASE_STATS } from '../data/balance.ts'
+import { MODULE_EQUIPPED_KG, WEAPON_BASE_STATS, WEAPON_DISPLAY_STATS } from '../data/balance.ts'
 import { MODULE_POWER_COST as SHARED_MODULE_POWER_COST, isKnownModuleType } from '../data/modules.ts'
 import type { ModuleType, WeaponInstance, WeaponType } from './state.ts'
 import { getBaseActiveWeaponSlots } from './weaponSlots.ts'
@@ -367,4 +367,10 @@ export function getWeaponModuleLayerStats(weapon: WeaponInstance): ModuleLayerSt
 
 export function isModuleType(value: string | null | undefined): value is ModuleType {
   return isKnownModuleType(value)
+}
+
+export function getWeaponWeight(weapon: WeaponInstance): number {
+  const base = WEAPON_DISPLAY_STATS[weapon.type].weight
+  const moduleCount = weapon.slots.filter((s) => s !== null).length
+  return base + moduleCount * MODULE_EQUIPPED_KG
 }
