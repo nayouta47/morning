@@ -1,5 +1,5 @@
 import { MODULE_METADATA } from '../../data/modules.ts'
-import type { GameState, ModuleType } from '../state.ts'
+import type { GameState, ModuleType, WeaponInstance, WeaponType } from '../state.ts'
 import { getEffectiveActiveWeaponSlots } from '../moduleEffects.ts'
 import { narrate } from './logging.ts'
 
@@ -76,6 +76,19 @@ export function moveEquippedModuleBetweenSlots(
 
   narrate(state, `이동: ${weapon.id} [${fromSlotIndex + 1}] -> [${toSlotIndex + 1}]`)
   return true
+}
+
+export function addWeapon(state: GameState, type: WeaponType): WeaponInstance {
+  const prefix = type === 'pistol' ? 'PST' : 'RFL'
+  const weapon: WeaponInstance = {
+    id: `${prefix}-${String(state.nextWeaponId).padStart(4, '0')}`,
+    type,
+    slots: Array.from({ length: 50 }, () => null),
+  }
+  state.nextWeaponId += 1
+  state.weapons.push(weapon)
+  if (!state.selectedWeaponId) state.selectedWeaponId = weapon.id
+  return weapon
 }
 
 export function reorderWeapons(state: GameState, sourceWeaponId: string, targetWeaponId: string | null): boolean {
