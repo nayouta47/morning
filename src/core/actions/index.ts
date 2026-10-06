@@ -1,4 +1,5 @@
 export * from './baseActions.ts'
+export * from './cheatActions.ts'
 export * from './craftingActions.ts'
 export * from './equipmentActions.ts'
 export * from './explorationActions.ts'

@@ -1,6 +1,6 @@
 import { BUILDING_CYCLE_MS, COMPANION_IDLE_MAX_MS, COMPANION_IDLE_MIN_MS, SMELTING_CYCLE_MS, WEAPON_CRAFT_DURATION_MS } from '../data/balance.ts'
 import type { GameState, ModuleType, SmeltingProcessKey, WeaponType } from './state.ts'
-import { narrate, handleExplorationDeath } from './actions.ts'
+import { addWeapon, narrate, handleExplorationDeath } from './actions.ts'
 import { FLEE_SUCCESS_CHANCE, createEnemyLootTable } from './combat.ts'
 import { getDungeonDef } from '../data/maps/index.ts'
 import { evaluateUnlocks } from './unlocks.ts'
@@ -183,11 +183,7 @@ function processSmeltingElapsed(state: GameState, key: SmeltingProcessKey, elaps
 }
 
 function makeWeapon(state: GameState, type: WeaponType): void {
-  const prefix = type === 'pistol' ? 'PST' : 'RFL'
-  const id = `${prefix}-${String(state.nextWeaponId).padStart(4, '0')}`
-  state.nextWeaponId += 1
-  state.weapons.push({ id, type, slots: Array.from({ length: 50 }, () => null) })
-  if (!state.selectedWeaponId) state.selectedWeaponId = id
+  const { id } = addWeapon(state, type)
   narrate(state, `${type === 'pistol' ? '권총' : '소총'}이 완성됐다. ${id}.`)
 }
 

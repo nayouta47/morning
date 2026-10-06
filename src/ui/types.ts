@@ -73,6 +73,7 @@ export type Handlers = {
   onUnequipModule: (slotIndex: number) => void
   onCheatAccelerateBaseTime: () => void
   onCheatToggleCodexReveal: () => void
+  onCheatAssemblyTestKit: () => void
   onDeleteData: () => void
   onClearLog: () => void
   onCheatGrantCodexChip: (moduleType: ModuleType) => void

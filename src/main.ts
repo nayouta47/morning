@@ -46,6 +46,7 @@ import {
   useSyntheticFood,
   unlockAllEnemyCodex,
   toggleCodexRevealAll,
+  grantAssemblyTestKit,
 } from './core/actions.ts'
 import { clearGameSave, loadGame, saveGame, startAutosave } from './core/save.ts'
 import { initialState, type GameState } from './core/state.ts'
@@ -300,6 +301,12 @@ function redraw(nowOverride?: number): void {
           advanceBaseOnlyStateByElapsed(state, BASE_CHEAT_ACCELERATION_MS)
           narrate(state, '시간이 흘렀다.')
           simulationLastTickAt = Date.now()
+          redraw()
+        },
+        onCheatAssemblyTestKit: () => {
+          syncState()
+          grantAssemblyTestKit(state)
+          appMounted = false
           redraw()
         },
         onDeleteData: () => {
